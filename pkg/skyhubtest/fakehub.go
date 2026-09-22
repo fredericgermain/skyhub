@@ -39,7 +39,7 @@ type FakeHub struct {
 	mu         sync.Mutex
 	fixtures   map[string][]byte
 	nonce      string
-	lastNC     map[string]uint64
+	seen       map[string]bool // nonce+nc+cnonce replay guard
 	currentKey string
 	posts      []RecordedPost
 	handlers   map[string]PostHandler
@@ -66,7 +66,7 @@ func NewFakeHub(t testing.TB, dir, user, pass string) *FakeHub {
 		Pass:     pass,
 		Realm:    "Broadband Router",
 		fixtures: map[string][]byte{},
-		lastNC:   map[string]uint64{},
+		seen:     map[string]bool{},
 		handlers: map[string]PostHandler{},
 	}
 	entries, err := os.ReadDir(dir)
@@ -171,11 +171,17 @@ func (h *FakeHub) authenticate(r *http.Request) (bool, bool) {
 	if a["response"] != want {
 		return false, false
 	}
+	// Several clients may share one nonce (e.g. one per terraform command),
+	// so nc is not required to increase globally; exact replays are rejected.
 	nc, err := strconv.ParseUint(a["nc"], 16, 64)
-	if err != nil || nc <= h.lastNC[h.nonce] {
+	if err != nil || nc == 0 {
 		return false, false
 	}
-	h.lastNC[h.nonce] = nc
+	key := h.nonce + ":" + a["nc"] + ":" + a["cnonce"]
+	if h.seen[key] {
+		return false, false
+	}
+	h.seen[key] = true
 	return true, false
 }
 
