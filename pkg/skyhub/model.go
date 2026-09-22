@@ -30,6 +30,9 @@ func (d Duration) Std() time.Duration { return time.Duration(d) }
 type Addr struct{ netip.Addr }
 
 func (a Addr) MarshalJSON() ([]byte, error) { return json.Marshal(addrString(a.Addr)) }
+
+// String returns the address, or "" when unset.
+func (a Addr) String() string { return addrString(a.Addr) }
 func (a *Addr) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
@@ -43,6 +46,9 @@ func (a *Addr) UnmarshalJSON(b []byte) error {
 type Prefix struct{ netip.Prefix }
 
 func (p Prefix) MarshalJSON() ([]byte, error) { return json.Marshal(prefixString(p.Prefix)) }
+
+// String returns the prefix, or "" when unset.
+func (p Prefix) String() string { return prefixString(p.Prefix) }
 func (p *Prefix) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
@@ -256,11 +262,11 @@ type FirewallRule struct {
 
 	// Fields only known when writing (the list page does not show them).
 	LANType    string `json:"lan_type,omitempty"`
-	LANStart   Addr   `json:"lan_start,omitempty"`
-	LANEnd     Addr   `json:"lan_end,omitempty"`
+	LANStart   string `json:"lan_start,omitempty"`
+	LANEnd     string `json:"lan_end,omitempty"`
 	WANType    string `json:"wan_type,omitempty"`
-	WANStart   Addr   `json:"wan_start,omitempty"`
-	WANEnd     Addr   `json:"wan_end,omitempty"`
+	WANStart   string `json:"wan_start,omitempty"`
+	WANEnd     string `json:"wan_end,omitempty"`
 	LANIPv6    string `json:"lan_ipv6,omitempty"`
 	WANIPv6    string `json:"wan_ipv6,omitempty"`
 	WANIPv6End string `json:"wan_ipv6_end,omitempty"`

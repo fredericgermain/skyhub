@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/netip"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -19,15 +20,17 @@ type Form struct {
 	Action string
 	Values url.Values
 
-	fields []formField // document order
-	byName map[string]*formField
+	fields    []formField // document order
+	byName    map[string]*formField
+	overrides map[string]string // applied after ApplyDataToHidden
 }
 
 type formField struct {
-	name    string
-	typ     string   // hidden|text|password|checkbox|radio|select|textarea|...
-	value   string   // static value attr (checkbox/radio) or "on"
-	options []string // select
+	name     string
+	typ      string   // hidden|text|password|checkbox|radio|select|textarea|...
+	value    string   // static value attr (checkbox/radio) or "on"
+	options  []string // select
+	disabled bool     // browsers do not submit disabled controls
 }
 
 // Forms returns every <form> on the page, in document order.
@@ -109,27 +112,29 @@ func (f *Form) collect(form *html.Node) {
 			}
 			typ := strings.ToLower(attrOr(n, "type", "text"))
 			val := attrOr(n, "value", "")
+			_, disabled := attr(n, "disabled")
 			switch typ {
 			case "checkbox":
 				if val == "" {
 					val = "on"
 				}
 				_, checked := attr(n, "checked")
-				f.add(formField{name: name, typ: typ, value: val}, checked, val)
+				f.add(formField{name: name, typ: typ, value: val, disabled: disabled}, checked && !disabled, val)
 			case "radio":
 				_, checked := attr(n, "checked")
-				f.add(formField{name: name, typ: typ, value: val}, checked, val)
+				f.add(formField{name: name, typ: typ, value: val, disabled: disabled}, checked && !disabled, val)
 			case "submit", "button", "image", "reset", "file":
-				f.add(formField{name: name, typ: typ, value: val}, false, "")
+				f.add(formField{name: name, typ: typ, value: val, disabled: disabled}, false, "")
 			default:
-				f.add(formField{name: name, typ: typ, value: val}, true, val)
+				f.add(formField{name: name, typ: typ, value: val, disabled: disabled}, !disabled, val)
 			}
 		case "select":
 			name, ok := attr(n, "name")
 			if !ok || name == "" {
 				return true
 			}
-			ff := formField{name: name, typ: "select"}
+			_, disabled := attr(n, "disabled")
+			ff := formField{name: name, typ: "select", disabled: disabled}
 			selected := ""
 			hasSel := false
 			walk(n, func(o *html.Node) bool {
@@ -149,7 +154,7 @@ func (f *Form) collect(form *html.Node) {
 			if !hasSel && len(ff.options) > 0 {
 				selected = ff.options[0]
 			}
-			f.add(ff, len(ff.options) > 0, selected)
+			f.add(ff, len(ff.options) > 0 && !disabled, selected)
 			return false
 		case "textarea":
 			name, ok := attr(n, "name")
@@ -161,6 +166,28 @@ func (f *Form) collect(form *html.Node) {
 		}
 		return true
 	})
+}
+
+// Enable makes a disabled control submittable again (the hub's JavaScript
+// enables e.g. the WAN range inputs when "Address Range" is selected).
+// The value is left as the template default until Set is called.
+func (f *Form) Enable(name string) {
+	ff, ok := f.byName[name]
+	if !ok || !ff.disabled {
+		return
+	}
+	ff.disabled = false
+	switch ff.typ {
+	case "checkbox", "radio":
+	case "select":
+		if len(ff.options) > 0 && f.Get(name) == "" {
+			f.Set(name, ff.options[0])
+		}
+	default:
+		if _, present := f.Values[name]; !present {
+			f.Set(name, ff.value)
+		}
+	}
 }
 
 // Has reports whether the form declares a field with this name.
@@ -218,6 +245,15 @@ func (f *Form) SetCheckbox(name string, on bool) {
 	f.Set(name, val)
 }
 
+// SetAfterHidden sets a value that must survive ApplyDataToHidden, for pages
+// whose JavaScript overwrites an h_ mirror after calling dataToHidden().
+func (f *Form) SetAfterHidden(name, value string) {
+	if f.overrides == nil {
+		f.overrides = map[string]string{}
+	}
+	f.overrides[name] = value
+}
+
 // Options returns the option values of a select field.
 func (f *Form) Options(name string) []string {
 	if ff, ok := f.byName[name]; ok {
@@ -265,7 +301,42 @@ func (f *Form) ApplyDataToHidden() {
 			f.Set("h_"+ff.name, f.Get(ff.name))
 		}
 	}
+	for k, v := range f.overrides {
+		f.Set(k, v)
+	}
 }
 
-// Encode returns the urlencoded body.
-func (f *Form) Encode() string { return f.Values.Encode() }
+// Encode returns the urlencoded body in document order, like a browser
+// (the hub's CGI handlers can be sensitive to parameter order). Values for
+// names the form does not declare are appended in sorted order.
+func (f *Form) Encode() string {
+	var b strings.Builder
+	done := map[string]bool{}
+	emit := func(name string) {
+		for _, v := range f.Values[name] {
+			if b.Len() > 0 {
+				b.WriteByte('&')
+			}
+			b.WriteString(url.QueryEscape(name))
+			b.WriteByte('=')
+			b.WriteString(url.QueryEscape(v))
+		}
+		done[name] = true
+	}
+	for _, ff := range f.fields {
+		if _, ok := f.Values[ff.name]; ok && !done[ff.name] {
+			emit(ff.name)
+		}
+	}
+	var rest []string
+	for name := range f.Values {
+		if !done[name] {
+			rest = append(rest, name)
+		}
+	}
+	sort.Strings(rest)
+	for _, name := range rest {
+		emit(name)
+	}
+	return b.String()
+}

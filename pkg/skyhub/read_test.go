@@ -223,8 +223,12 @@ func TestParseFirewallConfig(t *testing.T) {
 	}
 	want := []string{"SvcA", "VPN IPSEC", "SvcB", "SvcC", "Any(All)", "SvcD"}
 	for i, r := range fw.Inbound {
-		if r.Service != want[i] || r.Position != i+1 || !r.Enabled || r.IPVersion != 4 || r.Direction != skyhub.Inbound {
+		if r.Service != want[i] || r.Position != i+1 || r.IPVersion != 4 || r.Direction != skyhub.Inbound {
 			t.Errorf("rule %d = %+v", i, r)
+		}
+		// Fixture bitmask in_enable=000111 (rows are rendered checked regardless).
+		if r.Enabled != (i >= 3) {
+			t.Errorf("rule %d enabled = %v (bitmask 000111)", i, r.Enabled)
 		}
 		if r.Action != skyhub.ActionAllowAlways {
 			t.Errorf("rule %d action = %q", i, r.Action)

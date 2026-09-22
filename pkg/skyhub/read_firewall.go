@@ -41,6 +41,14 @@ func ParseFirewallConfig(p *Page) (*FirewallConfig, error) {
 			return nil, &ParseError{Page: p.Path, What: "missing table " + t.id}
 		}
 		rules := parseFirewallTable(tbl, t.dir, t.sel)
+		// The hub stores the enable flags in the <dir>_enable bitmask and
+		// re-serves it, but renders every row checkbox as checked. Trust the
+		// bitmask when it matches the row count.
+		if mask := f.Get(string(t.dir) + "_enable"); len(mask) == len(rules) {
+			for i := range rules {
+				rules[i].Enabled = mask[i] == '1'
+			}
+		}
 		if t.dir == Inbound {
 			cfg.Inbound = rules
 		} else {

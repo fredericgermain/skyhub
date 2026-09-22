@@ -1,0 +1,19 @@
+[Unit]
+Description=Sky Hub MQTT exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+EnvironmentFile=/etc/skyhub-mqtt.env
+ExecStart=/usr/local/bin/skyhub-mqtt
+Restart=on-failure
+RestartSec=10
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,6 +1,7 @@
 package skyhub
 
 import (
+	"bytes"
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
@@ -162,6 +163,16 @@ func cloneRequest(req *http.Request) (*http.Request, error) {
 }
 
 func (t *digestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.Body != nil && req.Body != http.NoBody && req.GetBody == nil {
+		// Buffer so the request can be replayed after a challenge.
+		buf, err := io.ReadAll(req.Body)
+		req.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+		req.Body = io.NopCloser(bytes.NewReader(buf))
+		req.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(buf)), nil }
+	}
 	first, err := cloneRequest(req)
 	if err != nil {
 		return nil, err
@@ -189,4 +200,14 @@ func (t *digestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	t.authorize(second)
 	return t.next.RoundTrip(second)
+}
+
+// NewDigestTransport returns an http.RoundTripper that adds HTTP Digest
+// authentication (qop=auth) for user/pass on top of next (nil = default).
+// It is exported for tools such as the authenticating proxy in cmd/skyhub.
+func NewDigestTransport(user, pass string, next http.RoundTripper) http.RoundTripper {
+	if next == nil {
+		next = defaultTransport()
+	}
+	return &digestTransport{next: next, user: user, pass: pass}
 }

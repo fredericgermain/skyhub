@@ -2,6 +2,7 @@
 //
 //	skyhub get <page>            print a raw page (digest-authed)
 //	skyhub capture --out DIR     save sanitised fixtures of every known page
+//	skyhub proxy --listen :8089  authenticating reverse proxy that records form POSTs
 //	skyhub <reader>              stats | wan | info | devices | wifi | syslog |
 //	                             lan | dhcp | firewall | services | wanconfig |
 //	                             upnp | alg | eth   (JSON output)
@@ -55,6 +56,19 @@ func main() {
 			fatal(err)
 		}
 		os.Stdout.Write(p.Body)
+	case "proxy":
+		fs := flag.NewFlagSet("proxy", flag.ExitOnError)
+		listen := fs.String("listen", "127.0.0.1:8089", "address to serve the hub UI on (no auth needed by the browser)")
+		record := fs.String("record", "", "append every form POST as a JSON line to this file")
+		allowAll := fs.Bool("allow-all", false, "forward even the blocked (LAN/WAN/eth/wireless/reboot) handlers")
+		_ = fs.Parse(args)
+		cr, err := skyhub.LoadCredentials()
+		if err != nil {
+			fatal(err)
+		}
+		if err := runProxy(cr, *listen, *record, *allowAll); err != nil {
+			fatal(err)
+		}
 	case "capture":
 		fs := flag.NewFlagSet("capture", flag.ExitOnError)
 		out := fs.String("out", "", "output directory (required)")
@@ -179,7 +193,7 @@ func runReader(ctx context.Context, c *skyhub.Client, cmd string, args []string)
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
+	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR | proxy [--listen ADDR --record FILE] | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
 }
 
 func fatal(err error) {

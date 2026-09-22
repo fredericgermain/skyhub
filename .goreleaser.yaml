@@ -1,0 +1,78 @@
+version: 2
+project_name: skyhub
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: skyhub
+    main: ./cmd/skyhub
+    binary: skyhub
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags: ["-s -w -X main.version={{.Version}}"]
+  - id: skyhub-mcp
+    main: ./cmd/skyhub-mcp
+    binary: skyhub-mcp
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags: ["-s -w -X main.version={{.Version}}"]
+  - id: skyhub-mqtt
+    main: ./cmd/skyhub-mqtt
+    binary: skyhub-mqtt
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64, arm]
+    goarm: ["7"]
+    ignore:
+      - goos: darwin
+        goarch: arm
+      - goos: windows
+        goarch: arm
+    ldflags: ["-s -w -X main.version={{.Version}}"]
+
+archives:
+  - id: default
+    ids: [skyhub, skyhub-mcp, skyhub-mqtt]
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+      - deploy/*
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
+
+kos:
+  - id: skyhub-mqtt
+    build: skyhub-mqtt
+    repositories: [ghcr.io/fredericgermain/skyhub-mqtt]
+    base_image: gcr.io/distroless/static:nonroot
+    platforms: [linux/amd64, linux/arm64, linux/arm/v7]
+    tags: ["{{ .Version }}", latest]
+    bare: true
+    preserve_import_paths: false
+  - id: skyhub-mcp
+    build: skyhub-mcp
+    repositories: [ghcr.io/fredericgermain/skyhub-mcp]
+    base_image: gcr.io/distroless/static:nonroot
+    platforms: [linux/amd64, linux/arm64]
+    tags: ["{{ .Version }}", latest]
+    bare: true
+    preserve_import_paths: false
+
+changelog:
+  sort: asc
+  filters:
+    exclude: ["^docs:", "^test:", "^chore:"]
+
+release:
+  draft: false
+  prerelease: auto
