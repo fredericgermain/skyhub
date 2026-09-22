@@ -35,17 +35,30 @@ builds:
     ldflags: ["-s -w -X main.version={{.Version}}"]
 
 archives:
-  - id: default
-    ids: [skyhub, skyhub-mcp, skyhub-mqtt]
+  - id: skyhub
+    ids: [skyhub]
     formats: [tar.gz]
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}"
+    name_template: "skyhub_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
         formats: [zip]
-    files:
-      - LICENSE
-      - README.md
-      - deploy/*
+    files: [LICENSE, README.md]
+  - id: skyhub-mcp
+    ids: [skyhub-mcp]
+    formats: [tar.gz]
+    name_template: "skyhub-mcp_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files: [LICENSE, README.md]
+  - id: skyhub-mqtt
+    ids: [skyhub-mqtt]
+    formats: [tar.gz]
+    name_template: "skyhub-mqtt_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files: [LICENSE, README.md, "deploy/*"]
 
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
