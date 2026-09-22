@@ -1,0 +1,462 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; WAN Setup</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript" src="assets/js/util.js"></script>
+<script type="text/javascript">
+var cgnNetwork = '0';
+var if_allow_submit=false;
+var good_words_ip6 = "0123456789abcdefABCDEF:";
+var isROI = false;
+
+function showhide(element, sh)
+{
+    var status;
+    if (sh == 1) {
+        status = "block";
+    }
+    else {
+        status = "none"
+    }
+
+    if (document.getElementById)
+    {
+	// standard
+	document.getElementById(element).style.display = status;
+    }
+    else if (document.all)
+    {
+	// old IE
+	document.all[element].style.display = status;
+    }
+    else if (document.layers)
+    {
+	// Netscape 4
+	document.layers[element].display = status;
+    }
+}
+
+function routerModeChange(element)
+{
+	var idx = element.selectedIndex;
+	if( element.options[idx].value == "WANOE" )
+	{
+		showhide("OpenReach", 1);
+	}
+	else
+	{
+		showhide("OpenReach", 0);
+	}
+	
+}
+
+function checkData()
+{
+    var cf = document.forms[0];
+    var Ipaddr;
+    var msg = "";
+    var modeflg=false;	
+    var modelName    = 'SR204';
+
+    if (cf.dmz_enable.checked)
+    {
+	    if (badLANIP(cf.dmzip1, cf.dmzip2, cf.dmzip3, cf.dmzip4, 255) )
+	    {
+		    msg += "Invalid DMZ IP Address\n";			
+	    }
+
+	    if ((cf.dmzip1.value == "127") && (cf.dmzip2.value == "0") && (cf.dmzip3.value == "0") && (cf.dmzip4.value == "1"))
+	    {
+		    msg += "Invalid DMZ IP Address, DMZ IP Address cannot be 127.0.0.1, please re-enter.\n";
+	    }
+	    cf.address.value=cf.dmzip1.value+'.'+cf.dmzip2.value+'.'+cf.dmzip3.value+'.'+cf.dmzip4.value;
+    }
+
+        if(cf.rspToPing.checked)
+         cf.rspToPing.value=1;
+        else
+         cf.rspToPing.value=0;
+
+        if(cf.rspToPing6.checked)
+         cf.rspToPing6.value=1;
+        else
+         cf.rspToPing6.value=0;
+//MTU minimum supported changed to 1280 from 500 since IPV6 supports only minimum 1280(RFC 2460)
+        if(modelName == 'SR101') 
+        {
+            msg += checkInt(cf.mtu_size, "MTU value", 1280, 1500, true);
+        }
+        else
+        {
+            msg += checkInt(cf.mtu_size, "MTU value", 1280, 1534, true);
+        }
+
+         
+	if (msg.length > 1)
+	{
+		alert(msg);
+		if_allow_submit=false;
+		 cf.mtu_size.value=!parseInt('1500')?'1500':'1500';
+		cf.address.value="";
+		return false;
+	}
+     for(var i=0;i<cf.router_mode.options.length;i++)
+     {
+     	  if (cf.router_mode.options[i].selected==true)
+  	  {
+            cf.h_rmode.value=cf.router_mode.options[i].value;
+	     modeflg=true;   
+         }
+
+     }
+    if(modeflg==false)
+	alert("Please select the mode");	
+     cf.h_wanport.value=cf.wanport.value;
+	dataToHidden(cf);
+	cf.submit();
+	return true;	
+}
+
+function dodChk()
+{
+    var cf = document.forms[0];
+	if(cf.dod.value == "false")
+		alert("This setting has no effect with your current connection method.");
+}
+
+function checkEnableDMZ()
+{
+    var cf = document.forms[0];
+    if(cf.dmz_enable.checked)
+    {
+		if(cf.rspToPing.checked)
+			cf.rspToPing.value=1;
+		else
+			cf.rspToPing.value=0; 
+
+		cf.dmzip1.disabled = false;
+		cf.dmzip2.disabled = false;
+		cf.dmzip3.disabled = false;
+		cf.dmzip4.disabled = false;
+
+		if(cgnNetwork == "0")
+		{
+			cf.dmz_enable.disabled = false;
+		}
+	}
+	else
+    {   
+        if(cf.rspToPing.checked)
+			cf.rspToPing.value=1;
+		else
+			cf.rspToPing.value=0; 
+
+		cf.dmzip1.disabled = true;
+		cf.dmzip2.disabled = true;
+		cf.dmzip3.disabled = true;
+		cf.dmzip4.disabled = true;
+		cf.dmz_enable.checked = false;
+	}
+        if(cf.rspToPing6.checked)
+		cf.rspToPing6.value=1;
+	else
+		cf.rspToPing6.value=0; 
+	return;
+}
+
+function checkEnableDMZ1()
+{
+    var cf = document.forms[0];
+    var Ipaddr='192.168.50.200';
+    var Iarr= Ipaddr.split('.');
+    var pingenbl='enable';
+    var pingenbl6='enable';
+    var mtu='1500';
+
+    if(Ipaddr != "")
+    {
+	    if(pingenbl=="enable")
+		    cf.rspToPing.checked=true;
+	    else
+		    cf.rspToPing.checked=false;
+	    cf.dmzip1.value=Iarr[0];
+	    cf.dmzip2.value=Iarr[1];
+	    cf.dmzip3.value=Iarr[2];
+	    cf.dmzip4.value=Iarr[3];
+	    cf.dmz_enable.checked=true;
+	    cf.dmzip1.disabled = false;
+	    cf.dmzip2.disabled = false;
+	    cf.dmzip3.disabled = false;
+	    cf.dmzip4.disabled = false;
+    }
+    else
+    {   
+	    if(pingenbl=="enable")
+		    cf.rspToPing.checked=true;
+	    else
+		    cf.rspToPing.checked=false;
+	    cf.dmzip1.value=0;
+	    cf.dmzip2.value=0;
+	    cf.dmzip3.value=0;
+	    cf.dmzip4.value=0;
+	    cf.dmz_enable.checked=false;  
+	    cf.dmzip1.disabled = true;
+	    cf.dmzip2.disabled = true;
+	    cf.dmzip3.disabled = true;
+	    cf.dmzip4.disabled = true;
+    }
+
+	if(pingenbl6 == "enable")
+            cf.rspToPing6.checked = true;
+        else
+            cf.rspToPing6.checked = false;
+			
+     if(mtu==0)
+      cf.mtu_size.value=1500;
+     else
+      cf.mtu_size.value=mtu;
+     for(var i=0;i<cf.router_mode.options.length;i++)
+     {
+     	  if (cf.router_mode.options[i].value==cf.h_rmode.value)
+  	  {
+            cf.router_mode.options[i].selected ="selected";
+			if( cf.router_mode.options[i].value == "WANOE" )
+			{
+				showhide("OpenReach", 1);
+			}
+			else
+			{
+				showhide("OpenReach", 0);
+			}
+	  }
+
+     }
+      if(cf.h_wanport.value=='disable')
+	cf.wanport.value='0';
+      else	  
+      cf.wanport.value=cf.h_wanport.value;
+	
+    if(cgnNetwork == "1")
+    {
+        cf.dmzip1.disabled=true;
+        cf.dmzip2.disabled=true;
+        cf.dmzip3.disabled=true;
+        cf.dmzip4.disabled=true;
+        cf.dmz_enable.disabled=true;
+        cf.rspToPing.disabled=true;
+        document.getElementById("cgn_content_text").style.display = 'block';
+        document.getElementById("div_dmz_server").style.display = 'none';
+        document.getElementById("div_rsp_ping").style.display = 'none';
+        document.getElementById("link_help").style.display = 'block';
+    }
+	return;
+}
+
+function dmzIp4Selection()
+{
+	var cf = document.forms[0];
+	if ( cf.dmz_enable.checked == true ) 
+	{		
+		cf.dmzip1.disabled=false;
+		cf.dmzip2.disabled=false;
+		cf.dmzip3.disabled=false;
+		cf.dmzip4.disabled=false;
+	}
+	else
+	{
+		cf.dmzip1.disabled=true;
+		cf.dmzip2.disabled=true;
+		cf.dmzip3.disabled=true;
+		cf.dmzip4.disabled=true;
+	}
+}
+
+
+   </script>
+</head>
+<body onload="dataToVisible(document.forms[0]);loadhelp('sstatus_w');checkEnableDMZ1();">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li class="selected"><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-advanced" class="selected">
+          <li class="selected"><a href="sky_wan_setup.html">WAN Setup</a></li>
+          <li ><a href="sky_dynamic_dns.html">Dynamic DNS</a></li>
+          <li ><a href="sky_lan_ip_setup.html">LAN IP Setup</a></li>
+          <!-- %ejGetOther(skyRemoteManagementMenu,0)% -->
+          <li ><a href="sky_upnp.html">UPnP</a></li>
+          <li ><a href="sky_alg.html">ALG</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>WAN Setup</h1>
+        <p class="black">Using this page you can setup several parameters related to the WAN (Wide Area Network) connection. You shouldn't  change these parameters unless you have a specific reason to do so and you are an advanced user.</p>
+        <p>Specifying a Default DMZ Server allows you to set up a computer or server that is available to anyone on the Internet for services that you haven't defined. There are security issues with doing this, so only do this if you're willing to have open access to your network. If you don't assign a Default DMZ Server, your Sky Hub discards any incoming service requests which are undefined. This can be a security risk.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top" />
+        <form name="frmRules" method="post" action="sky_wansetup.sky" onsubmit="return if_allow_submit;">
+        <div class="row-holder" id="cgn_content_text" style="display: none;">
+        <p><b>It is not possible to enable the Sky Hub to Respond to Ping on Internet WAN Port (IPv4) or configure a DMZ server due to a feature enabled on your Sky Broadband connection.</b></p>
+        <br class="clear-break" />
+        <p ><b>If you wish to set up either of these please contact Sky Technical Support.</b></p>
+        <br class="clear-break" />
+        </div>
+        <div class="row-holder" id= "div_dmz_server">
+            <input checked="checked" name="dmz_enable" value="dmz_enable" onchange="checkEnableDMZ()" type="checkbox"/>
+            <label class="right" id="dmzserverlabel">Default DMZ Server:</label>
+            <span class="abs250">
+            <input name="dmzip1" size="4" maxlength="3" value="0" type="text"/>
+            .
+            <input name="dmzip2" size="4" maxlength="3" value="0" type="text"/>
+            .
+            <input name="dmzip3" size="4" maxlength="3" value="0" type="text"/>
+            .
+            <input name="dmzip4" size="4" maxlength="3" value="0" type="text"/>
+            </span>     
+            <a class="help-btn" href="#" name="help1">help</a>
+          </div>
+
+          <div class="row-holder" id="div_rsp_ping">
+            <input checked="" name="rspToPing" value="" type="checkbox"/>
+            <label class="right" id="respondtoping">Respond to Ping on Internet WAN Port</label>
+          </div>
+          <div class="row-holder">          
+            <a class="help-btn" href="#" name="help1" id="link_help" style="display: none;">help</a>
+            <input checked="" name="rspToPing6" value="" type="checkbox"/>
+            <label class="right" id="respondtoping6">Respond to Ping on Internet WAN Port (IPv6)</label>
+          </div>
+          <div class="row-holder">
+            <label class="w250">MTU Size (in bytes)</label>
+            <input name="mtu_size" size="5" maxlength="4" value="" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w250">Router Mode</label>
+            <select name='router_mode' size='1' onchange="routerModeChange(this);">
+              <option value='ADSL'>DSL Only</option>
+              <script type="text/javascript">
+                  document.write("<option value='WANOE'>WANoE Only</option>");
+              </script>              
+              <option value='AUTO'>Auto</option>              
+            </select>
+          </div>
+		  <div class="row-holder" id="OpenReach" style="display: none;">
+		<p>Please connect your Sky Hub to a modem via Ethernet cable using Ethernet port 4 of your Sky Hub, as shown below.</p>
+		<div id="wanoe-img"> </div>
+			</div>
+          <div class="row-holder">
+          </div>
+         <!-- WAN port shold be disabled-->
+          <input  name='wanport' value="0" type='hidden'/>
+          <input name="address" value="" type="hidden"/>
+		  <input name="dmzipV6" value="" type="hidden"/>
+          <input name="h_rspToPing" value="enable" type="hidden"/>
+          <input name="h_rspToPing6" value="enable" type="hidden"/>
+          <input name="dod" value="true" type="hidden"/>
+          <input name="todo" value="save" type="hidden"/>
+          <input name="h_rmode" value="AUTO" type="hidden"/>
+          <input name="h_wanport" value="" type="hidden"/>
+          <input name="this_file" value="sky_wan_setup.html" type="hidden"/>
+          <input name="next_file" value="sky_wan_setup.html" type="hidden"/>
+          <input name="h_enable_dmz4" value="" type="hidden"/>
+          <input name="h_enable_dmz6" value="" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+        </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_wan_setup.html'" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: if_allow_submit=true; return checkData();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1" style="margin-top:0px"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <script type="text/javascript">
+                if(cgnNetwork == "1") {
+                    document.write("<p>It is not possible to enable the Sky Hub to Respond to Ping on Internet WAN Port (IPv4) or configure a DMZ server due to a feature enabled on your Sky Broadband connection.<p>");
+                    document.write("<p>If you wish to set up either of these please contact Sky Technical Support.<p>");
+                }
+            </script>
+          <h3>Default DMZ Server</h3>
+             <p>To assign a computer or server to be a DMZ server:</p>
+             <ul>
+             <li>Select the <b>Default DMZ Server</b> checkbox.</li>
+             <li>Type the IPv4 address for that IPv4 server.</li>
+             <li>Select <b>Apply</b>.</li>
+             </ul>
+             <h3>Respond to Ping on Internet WAN Port</h3>
+             <p>If you wish your Sky Hub to respond to a 'Ping' from the Internet, select this check box This feature is enabled as the default option in your Sky Hub and it can be used as a diagnostic tool.</p>
+            <h3>Respond to Ping on Internet WAN Port (IPv6)</h3>
+            <p>If you wish your Sky Hub to respond to a 'Ping' from the Internet using IPv6 address format, select this check box. This feature is enabled as the default option in your Sky Hub and it can be used as a diagnostic tool.</p>
+            <h3>MTU Size</h3>
+            <p>The normal MTU (Maximum Transmit Unit) value for most Ethernet networks is 1500 Bytes, or 1492 Bytes for PPPoE connections. We'll set this value automatically.  Changing it may impact the performance of your network connection, and should not be done without good reason.</p>
+            <h3>Router Mode</h3>
+            <p>
+            The default configuration, <b>Auto</b>, automatically selects the Router Mode to DSL or WANOE. However, the Router Mode can be explicitly set to DSL Only or WANoE Only.
+            </p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

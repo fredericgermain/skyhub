@@ -1,0 +1,503 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; LAN IP Setup</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+
+var if_allow_submit=false;
+var lan_ip="";
+
+var attach_dev='02:00:00:00:00:02<br>UNKNOWN<br>192.168.50.49<lf>02:00:00:00:00:03<br>UNKNOWN<br>192.168.50.4<lf>02:00:00:00:00:04<br>UNKNOWN<br>192.168.50.2<lf>02:00:00:00:00:05<br>UNKNOWN<br>192.168.50.51<lf>02:00:00:00:00:06<br>UNKNOWN<br>192.168.50.19<lf>02:00:00:00:00:07<br>laptop<br>192.168.50.9<lf>02:00:00:00:00:08<br>macbook<br>192.168.50.3<lf>02:00:00:00:00:09<br>phone<br>192.168.50.6<lf>02:00:00:00:00:0a<br>nanobox<br>192.168.50.200<lf>02:00:00:00:00:0b<br>macbook<br>192.168.50.23';
+var dev_arr=attach_dev.split('<lf>');
+
+function f_check_IP(obj)
+{
+      var re=/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/;
+       if(re.test( obj.value ))
+      {
+          if( RegExp.$1 <256 && RegExp.$2<256 && RegExp.$3<256 && RegExp.$4<256)
+		 	return true;
+       }
+      return false;
+   
+}
+
+
+function validateReserveIp()
+{
+	var cf=document.forms[0];
+	var lanIpObj = '192.168.50.1';
+	var dhcpStartObj = '192.168.50.2';
+	var dhcpEndObj = '192.168.50.254';
+
+	var lanIpArray = lanIpObj.split(".");
+	var dhcpStartArray = dhcpStartObj.split(".");
+	var dhcpEndArray = dhcpEndObj.split(".");
+
+//  if (badLANIP(cf.new_lan_ip_addr1, cf.new_lan_ip_addr2, cf.new_lan_ip_addr3, cf.new_lan_ip_addr4, 254)
+//    || (parseInt(cf.new_lan_ip_addr4.value) == 0))
+//  {
+//    alert("Invalid IP Address. Valid IP address range is between 203.0.113.6 to 203.0.113.7\n");
+//    return false;
+//  }
+
+  if ((cf.new_lan_ip_addr1.value == "127") && (cf.new_lan_ip_addr2.value == "0")
+    && (cf.new_lan_ip_addr3.value == "0") && (cf.new_lan_ip_addr4.value == "1"))
+  {
+  	alert("Invalid IP Address. Reserved IP address cannot be 127.0.0.1\n");
+  	return false ;
+  }
+
+	if (cf.new_lan_ip_addr1.value != lanIpArray[0])
+  {
+    alert("Reserved IP address is out of range!");
+		return false;
+  }
+
+  tmpValue = parseInt(cf.new_lan_ip_addr2.value)
+
+	if ((isNaN(tmpValue) == true) || (tmpValue < dhcpStartArray[1]) || (tmpValue > dhcpEndArray[1]))
+  {
+    alert("Reserved IP address is out of range!");
+	  return false;
+  }
+
+  tmpValue = parseInt(cf.new_lan_ip_addr3.value)
+
+	if ((isNaN(tmpValue) == true) || (tmpValue < dhcpStartArray[2]) || (tmpValue > dhcpEndArray[2]))
+  {
+    alert("Reserved IP address is out of range!");
+	  return false;
+  }
+
+	tmpValue = parseInt(cf.new_lan_ip_addr4.value);
+
+	if ((isNaN(tmpValue) == true) || (tmpValue < dhcpStartArray[3]) || (tmpValue > dhcpEndArray[3]))
+  {
+    alert("Reserved IP address is out of range!");
+	  return false;
+  }
+
+	return true;
+}
+
+
+function check_if_allow_submit()
+{
+	var cf = document.forms[0];
+	var result=false;
+        var ip_mac_array;
+	if (if_allow_submit)
+	{
+		if (cf.mac.value=="addnewmac")
+		{
+			var staticIPList = '02:00:00:00:00:0a<br>192.168.50.10<br>nanobox<lf>02:00:00:00:00:02<br>192.168.50.49<br>smartplug-0A0B0C-';
+                        var staticIPItemArray = staticIPList.split('<lf>');
+			var staticIPItem; 
+			var LoopCnt;
+			var newMacAddr;                        
+                        cf.action.value="add";
+			newMacAddr = cf.new_lan_mac.value;
+			result=checkMacStr(cf.new_lan_mac);
+			if (result==false)
+			{
+				alert("Invalid MAC address! The MAC address must be 12 hexadecimal digits and seperated by colon  (e.g 02:00:00:00:00:0d).");
+				return false;
+			}
+			//cf.mac.value=cf.new_lan_mac.value;
+
+			dataToHidden(cf);
+
+			cf.static_ip.value=cf.new_lan_ip_addr1.value +'.'+cf.new_lan_ip_addr2.value+'.'+cf.new_lan_ip_addr3.value+'.'+cf.new_lan_ip_addr4.value;
+
+			result=f_check_IP(cf.static_ip);
+			if (result==false)
+			{
+				alert("Invalid IP address!");
+				return false;
+			}
+
+			result=validateReserveIp();
+			if (result==false)
+			{
+				return false;
+			}
+
+			if(0 == cf.new_lan_devname.value.length)
+			{
+				alert("Device name cannot be blank!");
+				return false;
+			}
+
+			result=checkNormalStr(cf.new_lan_devname.value);
+			if (result==false)
+			{
+				alert("Device name contains invalid character(s)!");
+				return false;
+			}
+
+			/* Check for duplicate entries in current address reservation table */
+                        for(LoopCnt=0; LoopCnt < staticIPItemArray.length; LoopCnt++)
+			{
+				staticIPItem = staticIPItemArray[LoopCnt].split('<br>');
+
+				/* Check MAC address duplication */
+				if(staticIPItem[0].toLowerCase() == newMacAddr.toLowerCase())
+				{
+					alert("MAC address already exists in Reserved IP address list.");
+					result = false;
+					break;
+				}
+
+				if(staticIPItem[1] == cf.static_ip.value)
+				{
+					alert("IP address already exists in Reserved IP Address list");
+					result = false;
+					break;
+				}
+
+				if(staticIPItem[2] == cf.new_lan_devname.value)
+				{
+					alert("Device name already exists in Reserved IP Address list");
+					result = false;
+					break;
+				}
+
+			}
+			if (result==false)
+			{
+				return false;
+			}
+
+            if( result == true){
+
+                var i,devices_len=dev_arr.length;
+                var single_device;
+                var conflict_flag=false;
+                for(i=0;i<devices_len;i++)
+                 {
+                     single_device=dev_arr[i].split('<br>');                
+                     if(single_device[0] != cf.new_lan_mac.value)
+                     {
+                         if (cf.static_ip.value==single_device[2])
+                         {
+                             conflict_flag=true;
+                             var ret=confirm("IP address is already in use. This change will cause the Sky Hub to restart. Are you sure you would like to continue?");
+                             if(ret==true){
+                                  cf.todo.value="reboot";
+                                  stdAction(cf, "reboot");
+                             }else{
+                                 result=false;
+                             }
+                             break;
+                         }
+                      } 
+                 }
+
+                 if(conflict_flag==false)
+                 {
+                      var ret1=confirm("In order to use the new Reserved IP addresses immediately, a restart of the Sky Hub will be required. Select OK to restart Sky Hub now or Cancel to do it later");
+                      if(ret1==true){
+                          cf.todo.value="reboot";
+                          //stdAction(cf, "reboot");
+                      }
+                      
+                 }
+            }
+            
+			ip_mac_array=cf.new_lan_mac.value.split(":");
+
+			if(result != false)
+				cf.new_lan_mac.value=ip_mac_array[0]+ip_mac_array[1]+ip_mac_array[2]+ip_mac_array[3]+ip_mac_array[4]+ip_mac_array[5];
+			if(result == true)
+			{
+				cf.submit();
+				return result;
+			}
+			return false;
+		}
+		cf.submit();
+		return true;
+	}
+	return false ;
+}
+
+function copy_ip_mac_values()
+{
+	var cf=document.forms[0];
+	var ip_mac_array,i ;//= obj_string.split("-");
+	var strval;
+	var ip_array;// = ip_mac_array[0].split(".");
+       for(i=0;i<cf.attach_arptable.length;i++)
+       {
+            if(cf.attach_arptable[i].checked==true)
+		break;
+
+       }
+	if(i==0 && cf.attach_arptable.length>1)
+ 	{
+	   strval=cf.attach_arptable[i].value;
+ 	}
+	else if(i==0)
+	{
+	   strval=cf.attach_arptable.value;	
+	}
+	else
+ 	{
+	    strval=cf.attach_arptable[i].value;
+	    
+ 	}
+	ip_mac_array=strval.split('<lf>');	
+	ip_array=ip_mac_array[0].split('.');
+	
+	cf.new_lan_ip_addr1.value =Trailing_Space( ip_array[0]);
+	cf.new_lan_ip_addr2.value = ip_array[1];
+	cf.new_lan_ip_addr3.value = ip_array[2];
+	cf.new_lan_ip_addr4.value = ip_array[3];
+	cf.new_lan_mac.value = ip_mac_array[1];
+	cf.new_lan_devname.value=ip_mac_array[2];
+	return;
+}
+
+function Trailing_Space(obj)
+{
+   for(var i=0; i<obj.length; i++)
+   {
+        var c = obj.substring(i, i+1);
+        if("0" <= c && c <= "9") {
+	    continue;
+        }
+	 else
+	 {
+        return (obj.substring(i+1));	   
+	 }
+
+   }
+   return (obj);
+}
+
+function setRadioBox(radio_value)
+{
+	var radios = document.getElementsByName("attach_arptable");
+	for(var i=0; i<radios.length; i++)
+	{
+		radios[i].checked = false;
+		if(radios[i].value == radio_value)
+		{
+			radios[i].checked = true;
+		}
+	}
+}
+
+   </script>
+</head>
+<body onload="loadhelp('atdev');">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li class="selected"><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-advanced" class="selected">
+          <li ><a href="sky_wan_setup.html">WAN Setup</a></li>
+          <li ><a href="sky_dynamic_dns.html">Dynamic DNS</a></li>
+          <li class="selected"><a href="sky_lan_ip_setup.html">LAN IP Setup</a></li>
+          <!-- %ejGetOther(skyRemoteManagementMenu,0)% -->
+          <li ><a href="sky_upnp.html">UPnP</a></li>
+          <li ><a href="sky_alg.html">ALG</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>LAN IP Setup: Address Reservation</h1>
+        <p class="black">When you specify a reserved IP address for a device on the LAN, that device will always receive the same IP address each time it accesses the DHCP server. Reserved IP addresses should be assigned to servers that require permanent IP settings.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top" />
+        <form method="post" action="sky_lanaddmac.sky" onsubmit="return check_if_allow_submit();">
+          <div class="section-heading">
+            <h3>Attached Devices Table</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <table style="" class="nospace" width="650" border="0" cellpadding="0" cellspacing="0">
+            <tbody>
+              <tr class="header">
+              	<td width="5%">&nbsp;</td>
+                <td width="5%">#</td>
+                <td>IP Address</td>
+                <td>Device Name</td>
+                <td>MAC Address</td>
+              </tr>
+              <script type="text/javascript">
+			  <!--hide
+			  // done hiding -->
+			  var i, j, k;
+			  var len = dev_arr.length;
+			  var each_line = new Array(len);
+			  var bval, str;
+			  if(attach_dev != '&nbsp;') {
+				  for( i = 0; i < len; i++) {
+					  each_line[i] = dev_arr[i].split('<br>');
+				  }
+				  for( i = 0; i < len; i++) {
+			  
+					  for( j = 0; j < len; j++) {
+						  if(i == j)
+							  continue;
+						  else if(each_line[i][0] == each_line[j][0]) {
+							  if(each_line[i][1] != each_line[j][1]) {
+								  if((each_line[i][1] == "UNKNOWN") && (each_line[j][1] != "UNKNOWN")) {
+									  each_line[i][0] = each_line[j][0];
+									  each_line[i][1] = each_line[j][1];
+									  each_line[i][2] = each_line[j][2]
+								  }
+							  }
+							  k = j;
+							  len--;
+							  while(k < len) {
+								  each_line[k][0] = each_line[k+1][0];
+								  each_line[k][1] = each_line[k+1][1];
+								  each_line[k][2] = each_line[k+1][2];
+								  k++;
+							  }
+							  j = 0;
+						  }
+					  }
+				  }
+				  each_line.sort(sortByIPv4); // custom algorithm to sort by IPv4 address
+				  for( i = 0; i < len; i++) {
+					  bval = each_line[i][2] + "<lf>" + each_line[i][0] + "<lf>" + each_line[i][1];
+					  document.write("<tr>");
+					  document.write("<td>");
+					  str = "<input name=\"attach_arptable\" value=\" " + bval + "\"  onclick=\"javascript: copy_ip_mac_values();\" type=\"radio\"/>";
+					  document.write(str);
+					  //document.write("<input name=\"attach_arptable\" value=\"0\" onclick=\"javascript: copy_ip_mac_values();\" type=\"radio\">");
+			  
+					  document.write("</td>");
+					  document.write("<td>" + (i + 1) + "</td>");
+					  document.write("<td>" + each_line[i][2] + "</td>");
+					  document.write("<td style=\"word-wrap: break-word\">" + each_line[i][1] + "</td>");
+					  document.write("<td>" + each_line[i][0] + "</td>");
+					  document.write("</tr>");
+				  }
+			  } 		
+			  </script>
+            </tbody>
+          </table>
+          <hr />
+          <div class="section-heading">
+            <h3>Reserve An IP Address</h3>
+            <a class="help-btn" href="#" name="help2">help</a>
+          </div>
+          <div class="row-holder">
+            <label class="w250">IP Address</label>
+            <input name="new_lan_ip_addr1" class="num" size="4" maxlength="3" type="text"/>
+            .
+            <input name="new_lan_ip_addr2" class="num" size="4" maxlength="3" type="text"/>
+            .
+            <input name="new_lan_ip_addr3" class="num" size="4" maxlength="3" type="text"/>
+            .
+            <input name="new_lan_ip_addr4" class="num" size="4" maxlength="3" type="text"/>
+            <input name="new_lan_ip_num" readonly="true" value="{new_mac_num}" type="hidden"/>
+          </div>
+          <div class="row-holder">
+            <label class="w250">MAC Address</label>
+            <input name="new_lan_mac" class="num" size="17" maxlength="17" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w250"> Device Name</label>
+            <input name="new_lan_devname" class="num" size="17" maxlength="17" type="text"/>
+          </div>
+          <input name="mac" value="addnewmac" type="hidden"/>
+          <input name="static_ip" value="" type="hidden"/>
+          <input name="action" value="" type="hidden"/>
+          <input name="todo" value="save" type="hidden"/>
+          <input name="this_file" value="sky_lan_ip_setup_addmac.html" type="hidden"/>
+          <input name="next_file" value="sky_lan_ip_setup.html" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+        </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: window.location.href='sky_lan_ip_setup_addmac.html'" class="btn42 btn-clr-secondary png"><span class="png">Refresh</span></a> <a href="javascript: if_allow_submit=false; window.location.href='sky_lan_ip_setup.html'" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a> <a href="javascript:;" onclick = "document.forms[0].mac.value='addnewmac'; if_allow_submit=true; return check_if_allow_submit();" {if_lan_rev_disable}="" class="btn42 btn-clr-primary png"><span class="png">Add</span></a> </div>
+        </div>
+        <!-- main-panel end -->
+        <!-- side-panel -->
+        <div class="side-panel">
+          <!-- HELP 1 -->
+          <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+            <div class="content">
+              <h3>Attached Devices Table</h3>
+              <p>The Attached Devices Table displays the attached devices on your network that are available for IP reservation</p>
+            </div>
+            <span class="arrow arrow-l png"></span> </div>
+          <!-- HELP 2 -->
+          <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+            <div class="content">
+              <h3>To Reserve An IP Address</h3>
+              <ul>
+                <li>Select the <b>radio button</b> of the device you wish to add from the Address Reservation Table</li>
+                <li>If the device you wish to add isn't on the list click <b>Refresh</b> to update the table</li>
+                <li>If the device is still not on the Address Reservation Table enter the IP Address, MAC Address, and Device Name of the device you wish to add</li>
+                <li>Select <b>Add</b> when finished</li>
+              </ul>
+            </div>
+            <span class="arrow arrow-l png"></span> </div>
+        </div>
+        <!-- side-panel end -->
+        <br class="clear-break" />
+      </div>
+    </div>
+    <!-- layout end -->
+  </div>
+  <!-- content end -->
+</div>
+</body>
+</html>

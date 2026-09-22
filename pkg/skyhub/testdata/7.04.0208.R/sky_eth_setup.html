@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Ethernet Setup</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript" src="assets/js/util.js"></script>
+<script type="text/javascript">
+
+
+var ethtype='Gigabit';
+var pname = 'Sky Hub';
+var eee = 'disabled';
+
+function submitForm()
+{
+    var cf = document.forms[0];
+    var ret = false;
+    
+    if(if_allow_submit==false)
+        return ret;
+
+    if ((ethtype != cf.ethernet_type.value)|| (eee != cf.ethernet_eee.value))
+    {
+        ret = confirm('This change in Ethernet Settings will reboot your '+ pname + '.');
+
+        if(ret == true)
+        {
+            cf.submit();
+
+        }
+        else
+        {
+            location.reload(true);
+        }
+    }
+    else
+    {
+        location.reload(true);
+    }
+
+    return true;
+}
+
+function selectEthsettings()
+{
+    var cf = document.forms[0];
+
+    if(ethtype == "Fast")
+        cf.ethernet_type.options[1].selected = "selected";
+    else
+        cf.ethernet_type.options[0].selected = "selected";
+
+    if (eee == "enabled")
+       cf.ethernet_eee.options[0].selected = "selected";
+    else
+       cf.ethernet_eee.options[1].selected = "selected";
+
+    return;
+}
+
+</script>
+</head>
+<body onload="dataToVisible(document.forms[0]);loadhelp('sstatus_w');selectEthsettings();">
+<!-- head -->
+<div id="head">
+  <div id="header">
+        <div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li class="selected"><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+  <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Ethernet Setup</h1>
+        <p class="black">Enable/disable Ethernet Configuration.</p>
+       </div>
+       <div id="content-header-image"></div>
+        <br class="clear-break" />
+  </div>     
+         <div id="content-body">
+          <!-- main-panel -->
+            <div class="main-panel">
+                <hr class="top" />
+                <form name="frm1Rules" method="post" action="sky_eth_setup.sky" onsubmit="return if_allow_submit;">
+                <div class="row-holder">
+                <div class="section-heading">
+                <label class="w250">Ethernet Type</label>
+                <select name='ethernet_type' size='1'>
+                      <option value='Gigabit'>Gigabit Ethernet</option>
+                      <option value='Fast'>Fast Ethernet</option>
+                </select>
+                <a class="help-btn" href="#" name="help1">help</a>
+                </div>
+                </div>
+                <div class="row-holder">
+                <label class="w250">Energy Efficient Ethernet</label>
+                <select name='ethernet_eee' size='1'>
+                      <option value='enabled'>Enabled</option>
+                      <option value='disabled'>Disabled</option>
+                </select>
+                </div>
+                <input name="sessionKey" value="1234567890" type="hidden"/>
+                <input name="this_file" value="sky_eth_setup.html" type="hidden"/>
+                </form>
+                <hr />
+                <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_eth_setup.html'" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: if_allow_submit=true; return submitForm();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+            </div>
+        <!-- main-panel end -->
+        <!-- side-panel -->
+              <div class="side-panel">
+               <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+                <div class="content">
+                    <h3>Ethernet Type</h3>
+                    <p>Setup the Ethernet type as Gigabit Ethernet or Fast Ethernet.</p>
+                    <ul>
+                    <li><b>Gigabit Ethernet</b> will provide data speed up to 1000 Mbps.</li>
+                    <li><b>Fast Ethernet</b> will provide data speed up to 100 Mbps.</li>
+                    </ul>
+                    <h3>Energy Efficient Ethernet</h3>
+                    <ul>
+                    <li><b>Enabled:</b> Energy Efficient Ethernet is enabled.</li>
+                    <li><b>Disabled:</b> Energy Efficient Ethernet is disabled.</li>
+                    </ul>
+                 </div>
+                 <span class="arrow arrow-l png"></span> 
+                 </div>
+            </div>
+          <!-- side-panel end -->           
+         <br class="clear-break" />
+       </div>
+  </div>
+   <!-- layout end -->
+</div>
+<!-- content end -->
+</body>
+</html>

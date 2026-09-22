@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Attached Devices</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+var if_allow_submit=false;
+</script>
+</head>
+<body onload="loadhelp('atdev');">
+<!-- head -->
+<div id="head">
+  <div id="header">
+	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li class="selected"><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-maintenance" class="selected">
+          <li ><a href="sky_router_status.html">Router Status</a></li>
+          <li class="selected"><a href="sky_attached_devices.html">Attached Devices</a></li>
+          <li ><a href="sky_backup_settings.html">Backup Settings</a></li>
+          <li ><a href="sky_set_password.html">Set Password</a></li>
+          <li ><a href="sky_diagnostics.html">Diagnostics</a></li>
+          <li ><a href="sky_router_upgrade.html">Router Upgrade</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Attached Devices</h1>
+        <p class="black">This page shows the IP Address and MAC (Media Access Control) Address for each device attached to your Sky Hub.</p>
+        <p>To update this page and to show the current attached devices, select <b>Refresh</b>.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+      
+      
+      <hr class="top"/>
+        <form method="get" action="" onsubmit="return false;">
+          <div class="section-heading">
+            <h3>Attached Devices</h3>
+			<a class="help-btn" href="#" name="help1">help</a>
+					</div>
+          <table id="attached-devices-ipv4" style="table-layout:fixed;" class="nospace" width="800" border="0" cellpadding="0" cellspacing="0">
+            <tbody> 	
+              <tr class="header">
+                <td width="5%">#</td>
+                <td width="38%"> IPv4 Address</td>
+             	<td width="30%"> Device Name</td>
+                <td>MAC Address</td>
+              </tr>
+              <script   type="text/javascript">
+			  var i, j, k, attach_dev = '02:00:00:00:00:02<br>UNKNOWN<br>192.168.50.49<br>-<br>-<lf>02:00:00:00:00:03<br>UNKNOWN<br>192.168.50.4<br>-<br>-<lf>02:00:00:00:00:04<br>UNKNOWN<br>192.168.50.2<br>-<br>-<lf>02:00:00:00:00:05<br>UNKNOWN<br>192.168.50.51<br>-<br>-<lf>02:00:00:00:00:06<br>UNKNOWN<br>192.168.50.19<br>-<br>-<lf>02:00:00:00:00:07<br>laptop<br>192.168.50.9<br>laptop<br>2001:db8:3::80\n\n<lf>02:00:00:00:00:08<br>macbook<br>192.168.50.3<br>macbook<br>fd12:3456:789a:0:1c32:c50f:8d84:6d90\n\n<lf>02:00:00:00:00:09<br>phone<br>192.168.50.6<br>phone<br>fd12:3456:789a:0:e873:f348:92c1:da37\n\n<lf>02:00:00:00:00:0a<br>nanobox<br>192.168.50.200<br>nanobox<br>2001:db8:4::4f\n\n<lf>02:00:00:00:00:0b<br>macbook<br>192.168.50.23<br>macbook<br>fe80::1c2:3ff:fe04:506\n\n';
+			  if(attach_dev != '&nbsp;') {
+                  var dev_arr = attach_dev.split('<lf>');
+                  var len = dev_arr.length;
+                  var each_line = new Array(0);              
+                  var row_count = 1;
+				  for( i = 0; i < len; i++) {
+                      var line = dev_arr[i].split('<br>');
+                      if((line[1] != '-') && ( line[2] !='-'))
+                      {   
+					  each_line.push(line);
+                      }
+				  }
+                  len = each_line.length;
+				  each_line.sort(sortByIPv4); // custom algorithm to sort by IPv4 address
+				  for( i = 0; i < len; i++) { 
+					  document.write("<tr>");
+					  document.write("<td width='5%'>" + (row_count) + "</td>");
+					  document.write("<td width='38%'>" + each_line[i][2] + "</td>");
+					  document.write("<td width='30%' style=\"word-wrap: break-word\">" + each_line[i][1] + "</td>");
+					  document.write("<td>" + each_line[i][0] + "</td>");
+                      document.write("</tr>");
+                      row_count++;
+				  }
+			  }
+             </script>
+            </tbody>
+        </table>
+        <br>
+          <table id="attached-devices-ipv6" style="table-layout:fixed;" class="nospace" width="800" border="0" cellpadding="0" cellspacing="0">
+            <tbody> 	
+              <tr class="header">
+                <td width="5%">#</td>
+                <td width="38%"> IPv6 Address</td>
+             	<td width="30%"> Device Name</td>
+                <td>MAC Address</td>
+              </tr>
+              <script   type="text/javascript">
+			  var i, j, k, attach_dev = '02:00:00:00:00:02<br>UNKNOWN<br>192.168.50.49<br>-<br>-<lf>02:00:00:00:00:03<br>UNKNOWN<br>192.168.50.4<br>-<br>-<lf>02:00:00:00:00:04<br>UNKNOWN<br>192.168.50.2<br>-<br>-<lf>02:00:00:00:00:05<br>UNKNOWN<br>192.168.50.51<br>-<br>-<lf>02:00:00:00:00:06<br>UNKNOWN<br>192.168.50.19<br>-<br>-<lf>02:00:00:00:00:07<br>laptop<br>192.168.50.9<br>laptop<br>2001:db8:3::80\n\n<lf>02:00:00:00:00:08<br>macbook<br>192.168.50.3<br>macbook<br>fd12:3456:789a:0:1c32:c50f:8d84:6d90\n\n<lf>02:00:00:00:00:09<br>phone<br>192.168.50.6<br>phone<br>fd12:3456:789a:0:e873:f348:92c1:da37\n\n<lf>02:00:00:00:00:0a<br>nanobox<br>192.168.50.200<br>nanobox<br>2001:db8:4::4f\n\n<lf>02:00:00:00:00:0b<br>macbook<br>192.168.50.23<br>macbook<br>fe80::1c2:3ff:fe04:506\n\n';
+			  if(attach_dev != '&nbsp;') {
+                  var dev_arr = attach_dev.split('<lf>');
+                  var len = dev_arr.length;
+                  var each_line = new Array(0);              
+                  var row_count = 1;
+				  for( i = 0; i < len; i++) {
+					  var line = dev_arr[i].split('<br>');
+                      if((line[3] != '-') && ( line[4] !='-'))
+                      {   
+					  each_line.push(line);
+                      }
+				  }
+				  len = each_line.length;
+                  each_line.sort(sortByIPv6); // custom algorithm to sort by IPv6 address
+                  for( i = 0; i < len; i++) {
+					  document.write("<tr>");
+                      document.write("<td width='5%'>" + (row_count) + "</td>");
+                      document.write("<td width='38%' style=\"word-wrap: break-word\">"+each_line[i][4]+"</td>");
+                      document.write("<td width='30%' style=\"word-wrap: break-word\">" + each_line[i][3] + "</td>");
+					  document.write("<td>" + each_line[i][0] + "</td>");
+                      document.write("</tr>");
+                      row_count++;
+				  }
+			  }
+             </script>
+            </tbody>
+          </table>
+          <input name="todo" value="nbtscan" type="hidden"/>
+          <input name="this_file" value="sky_attached_devices.html" type="hidden"/>
+          <input name="next_file" value="sky_attached_devices.html" type="hidden"/>
+        </form>
+        <div class="buttons-holder"> <a href="javascript: window.location.reload();" class="btn32 btn-clr-primary png" id="attached-devices-refresh-button"><span class="png">Refresh</span></a></div>
+      
+      
+      
+      
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+	          <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Attached Devices</h3>
+            <p>This page shows the IP Address and MAC (Media Access Control) Address for each computer attached to your Sky Hub Router.</p>
+			<p>You cannot change any of the values on this page. To update this page and to show the current attached devices, click on the <b>Refresh</b> button.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

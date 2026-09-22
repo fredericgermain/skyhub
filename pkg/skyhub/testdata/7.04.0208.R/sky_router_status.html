@@ -1,0 +1,786 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Status</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+   <!--// Open Status Window
+var mode='AUTO';   //ADSL/AUTO WANOE to get the old GUI
+var isROI = false;
+var isSBR = false;
+var trafficMode = 'PTM';
+var isWANOE = ( (mode == 'WANOE') || (mode == 'AUTO' && (trafficMode == '' || trafficMode == 'Inactive') ));
+var pppoemac = '';
+var Router_soft='LOMOND';  //IHR LOMOND to get the old gui -NK
+var empty = '0';
+var syncNvram = '1';
+var wanoeStatus='Disconnected_None_0_0_Disconnected';
+var wanoeparam=wanoeStatus.split('_'); 
+var wanDslLinkConfig = '1_ipoe_0_1_0.101_203.0.113.1_02:00:00:00:00:01_255.255.252.0_203.0.113.2_ptm0.1_203.0.113.3, 203.0.113.4_67:03:03_2001:db8:1::1/64_fe80::22_&nbsp;_&nbsp;_2001:db8:2::/56_fe80::2aa:bbff:fecc:dde2'; // it's like: "1_PPPoE_8_32"
+var wanOEstat='&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;_&nbsp;';
+var wanInterfaceInfo = 'ipoe_0_1_0.101/ptm0.1';
+var isConnected = false;
+var Modemstat=wanDslLinkConfig.split('_');
+var wanOEobj=wanOEstat.split('_');
+//var elementWanDslLinkConfig = wanDslLinkConfig.split('_');
+var wlRefreshStatus = '0'; // bug 3520
+var wlRefreshParameters = '0'; // bug 4071
+var sky_WirelessAllSSIDs = 'TestSSID';
+sky_WirelessAllSSIDs = sky_WirelessAllSSIDs.replace(/ /g,"&nbsp;");
+var dslInterfaceType = Modemstat[9].substring(0,3);
+var if_allow_submit=false;
+var isPPPOE = ((isROI || isSBR) && isWANOE);
+var ext = ' ex0_0 = "79740142";';
+function openStatusWindow()
+{
+    var winoptions;
+    winoptions = "width=750,height=400,status=yes,resizable=no,scrollbars=yes";
+    openDataSubWin('sky_wanstat.html',winoptions);
+}
+     //-->
+   </script>
+</head>
+<body onload="dataToVisible(document.forms[0]);loadhelp('sstatus_w');">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li class="selected"><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-maintenance" class="selected">
+          <li class="selected"><a href="sky_router_status.html">Router Status</a></li>
+          <li ><a href="sky_attached_devices.html">Attached Devices</a></li>          
+          <li ><a href="sky_backup_settings.html">Backup Settings</a></li>
+          <li ><a href="sky_set_password.html">Set Password</a></li>
+          <li ><a href="sky_diagnostics.html">Diagnostics</a></li>
+          <li ><a href="sky_router_upgrade.html">Router Upgrade</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Sky Hub Status</h1>
+        <p class="black">This page shows the current settings for your Sky Hub. We have preconfigured your Sky Hub with the optimum settings. This is a read only summary page. If you wish to change settings use the menus at the top of this page.</p>
+        <script type="text/javascript">
+         var skyExtender = '';
+         if (skyExtender == '')
+         {
+            document.write("<ul>");
+            document.write("<li>Select <b>Show Statistics</b> to see your Sky Hub performance statistics such as the number of packets sent and number of packets received for each port.</li>");
+            document.write("<li>Select <b>Connection Status</b> to see information about your current connection.</li>");
+            document.write("</ul>");
+        }
+        </script>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top" />
+        <form name="formname" method="post" action="set.cgi" onsubmit="return if_allow_submit;">
+          <div class="section-heading">
+            <h3>System Details</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <div class="row-holder"> <span id="router-status-manufacture-text" class="label w250">Manufacturer</span><span id="router-status-manufacture-value">Sky
+</span></div>
+          <div class="row-holder"> <span id="router-status-model-text" class="label w250">Model</span><span id="router-status-model-value">SR204</span></div>
+          <div class="row-holder"> <span id="router-status-fwversion-text" class="label w250">Firmware Version</span><span id="router-status-fwversion-value">7.04.0208.R</span></div>
+		<script   type="text/javascript">
+
+                /* Display 'Unique Version Number' field only when running build is Dev build.
+                   Sky Dev builds use software version in format 9.99.xxxx. */
+                var sky_firmware_version = '7.04.0208.R';
+                if (sky_firmware_version.indexOf('9.99.') != -1)
+                {
+                    document.write('<div class="row-holder"> <span id="router-status-uniqver-text" class="label w250">Unique Version Number</span><span id="router-status-uniqver-value">');
+                    document.write('SKY-SR200-7-0-4-0208-R(08)260803-172358');
+                    document.write('</span></div>');
+                }
+
+	<!-- hide NK
+		var sky_extender = '';
+		if (sky_extender == '')
+		{
+			document.write('<div class="row-holder"> <span id="router-status-dslfwver-text" class="label w250">DSL Firmware Version</span><span id="router-status-dslfwver-value">');
+			document.write('A2pvfbH043p1.d26u');
+			document.write('</span></div>');
+		}
+
+		// done hiding -->
+		</script>
+	    
+		  <hr />
+            <div >
+            <script type="text/javascript">
+            <!-- hide
+            document.write('<div class="section-heading">');
+            document.write('<h3>Modem</h3>');
+            document.write('<a class="help-btn" href="#" name="help2">help</a>');
+            document.write('</div>');
+            document.write('<div class="row-holder"> <span id="router-status-modemstatus-text" class="label w250">Modem Status</span><span id="router-status-modemstatus-value">');
+
+            if (Modemstat[0] == 1)
+            {
+                isConnected =  true;
+            }
+            else if ((wanoeparam[0] == 'Connected') || (wanoeparam[4] == 'Connected'))
+            {
+                isConnected =  true;
+            }
+            else
+            {
+                isConnected =  false;
+            }
+
+            isConnected ? document.write("Connected") : document.write("Disconnected");
+
+            document.write('</span></div>');
+
+			var buildAtm = '1';
+			var buildPtm = '1';
+			var VdslIncluded = '0';
+			var DslBondingEnabled = '0';
+            var adjIndex = 0;
+			if(DslBondingEnabled == 1) {
+				
+				document.write('<div class="row-holder"> <span id="router-status-traffic-type-text" class="label w250">Traffic Type:</span><span id="router-status-traffic-type-value">');
+						 document.write('PTM');
+						 document.write('</span></div>');
+				document.write('<div class="row-holder"> <span id="router-status-linerate-up-text" class="label w250">Aggregate Line Rate - Upstream (Kbps):</span><span id="router-status-linerate-up-value">');
+						 document.write('29552');
+						 document.write('</span></div>');
+				document.write('<div class="row-holder"> <span id="router-status-linerate-down-text" class="label w250">Aggregate Line Rate - Downstream (Kbps):</span><span id="router-status-linerate-down-value">');
+						 document.write('159749');
+						 document.write('</span></div>');
+			} else if(VdslIncluded == 1) {
+				document.write('<div class="row-holder"> <span id="router-status-traffic-type-text" class="label w250">Traffic Type:</span><span id="router-status-traffic-type-value">');
+						 document.write('PTM');
+						 document.write('</span></div>');
+				
+				document.write('<div class="row-holder"> <span id="router-status-linerate-up-text" class="label w250">Line Rate - Upstream (Kbps):</span><span id="router-status-linerate-up-value" >');
+						 document.write('29552');
+						 document.write('</span></div>');
+			
+				document.write('<div class="row-holder"> <span id="router-status-linerate-down-text" class="label w250">Line Rate - Downstream (Kbps):</span><span id="router-status-linerate-down-value">');
+						 document.write('159749');
+						 document.write('</span></div>');
+			    //We should show one Traffic Type in Case of VDSL
+			    if(buildPtm != 1) {
+				document.write('<div class="row-holder"> <span class="label w250">Traffic Type:</span><span>');
+						 document.write('Inactive');
+						 document.write('</span></div>');
+				
+				document.write('<div class="row-holder"> <span id="router-status-linerate-up-text" class="label w250">Line Rate - Upstream (Kbps):</span><span id="router-status-linerate-up-value">');
+						 document.write('0');
+						 document.write('</span></div>');
+				
+				document.write('<div class="row-holder"> <span id="router-status-linerate-down-text" class="label w250">Line Rate - Downstream (Kbps):</span><span id="router-status-linerate-down-value">');
+						 document.write('0');
+						 document.write('</span></div>');
+				}		 
+						 
+			   adjIndex = 0;
+			
+			} else if(buildAtm == 1 || buildPtm == 1) {
+                if (!isPPPOE)
+                {
+                    document.write('<div class="row-holder"> <span id="router-status-downstream-speed-text" class="label w250">DownStream Connection Speed</span><span id="router-status-downstream-speed-value">');
+                    if (wanoeparam[0] == 'Connected')
+                    {
+                      document.write(wanoeparam[3]);
+                    }
+                    else
+                    {
+                      document.write('159749');
+                    }
+                    document.write('</span></div>');
+
+                    document.write('<div class="row-holder"> <span id="router-status-upstream-speed-text" class="label w250">UpStream Connection Speed</span><span id="router-status-upstream-speed-value">');
+                    if (wanoeparam[0] == 'Connected')
+                    {
+                      document.write(wanoeparam[2]);
+                    }
+                    else
+                    {
+                      document.write('29552');
+                    }
+                    document.write('</span></div>');
+                }
+                if ((wanoeparam[0] != 'Connected') && (wanoeparam[4] != 'Connected'))
+                {
+                    if ( !isWANOE )
+                    {
+                        document.write('<div class="row-holder"> <span class="label w250">VPI</span><span>');
+                        document.write(Modemstat[3]);
+                        document.write('</span></div>');
+                        document.write('<div class="row-holder"> <span class="label w250">VCI</span><span>');                                        
+                        document.write(Modemstat[4]);
+                        document.write('</span></div>');
+                    }
+
+                    adjIndex = 0;
+                }
+			}
+		    if(((Modemstat[1] != "ipoa") && (wanOEobj[7] =='WANOE') ) || (isWANOE) ){
+                Modemstat[12] = wanOEobj[10]; //IPV6 Global Address
+		    }
+			document.write('<div class="row-holder"> <span id="router-status-ipv6-loopback-text" class="label w250">IPv6 Loopback Address</span><span id="router-status-ipv6-loopback-value" >');
+            if((Modemstat[12].indexOf('&nbsp')) == -1)
+            {
+                var ipV6GlobalAddress = Modemstat[12];
+                var ipV6GlobalPrefix = ipV6GlobalAddress.split('::');
+                var ipV6GlobalLoopBack = ipV6GlobalPrefix[0]+"::1/128";
+                document.write(ipV6GlobalLoopBack);
+            }
+  		    document.write('</span></div>');
+			// done hiding -->
+            </script>
+			<hr />
+
+          <div >
+          <div class="section-heading">
+            <h3>Broadband Port</h3>
+            <a class="help-btn" href="#" name="help3">help</a></div>
+          <script type="text/javascript">
+	<!-- hide NK
+        document.write('<div class="row-holder"> <span id="router-status-mac-addr-text" class="label w250">MAC Address</span><span id="router-status-mac-addr-value">');
+         if( isWANOE || wanOEobj[1] == "ipoe" ) {
+			 document.write(isPPPOE ? pppoemac : wanOEobj[4]);
+         }
+         else {
+            document.write(Modemstat[6]);
+         }
+         document.write('</span></div>');
+		if((((Modemstat[1] != "ipoa") || (Modemstat[1] != "pppoe")) && (wanOEobj[7] =='WANOE') ) || (isWANOE) ){
+                Modemstat[1] = wanOEobj[1]; //Network Type
+                Modemstat[5] = wanOEobj[3]; //IP Address
+                Modemstat[7] = wanOEobj[5]; //IP Subnet Mask
+                Modemstat[8] = wanOEobj[6]; //Gateway IP Address
+                Modemstat[10] = wanOEobj[8]; //Domain Name Server
+                Modemstat[13] = wanOEobj[11]; //IPV6 Gateway Address
+                Modemstat[15] = wanOEobj[13]; //IPV6 Domain Name Server
+                Modemstat[12] = wanOEobj[10]; //IPV6 Global Address
+                Modemstat[17] = wanOEobj[15]; //IPV6 Link Local Address
+                Modemstat[16] = wanOEobj[14]; //IPV6 Delegated Prefix
+		}
+		document.write('<div class="row-holder"> <span id="router-status-ipv4-addr-text" class="label w250">IPv4 Address</span><span id="router-status-ipv4-addr-value">');
+		document.write(Modemstat[5 - adjIndex]);
+		document.write('</span></div>');
+	
+		document.write('<div class="row-holder"> <span id="router-status-net-type-text" class="label w250">Network Type</span><span id="router-status-net-type-value" >');
+		switch(Modemstat[1]) {
+		  case "bridge":
+			  document.write("BRIDGE");
+			  break;
+		  case "pppoa":
+			  document.write("PPPoA");
+			  break;
+		  case "pppoe":
+			  document.write("PPPoE");
+			  break;
+		  case "ipoa":
+			  document.write("IPoA");
+			  break;
+		  case "ipoe":
+			  document.write("MER");
+			  break;
+		  default:
+			  document.write("MER/PPPoA");
+		}
+		document.write('</span></div>');
+	
+		document.write('<div class="row-holder"> <span id="router-status-ipv4-subnetmask-text" class="label w250">IPv4 Subnet Mask</span><span id="router-status-ipv4-subnetmask-value" >');
+		document.write(Modemstat[7 - adjIndex]);
+		document.write('</span></div>');
+	
+		document.write('<div class="row-holder"> <span id="router-status-ipv4-gateway-text" class="label w250">Gateway IPv4 Address</span><span id="router-status-ipv4-gateway-value" >');
+		document.write(Modemstat[8 - adjIndex]);
+		document.write('</span></div>');
+	
+        document.write('<div class="row-holder"> <span id="router-status-ipv4-dns-text" class="label w250">IPv4 Domain Name Server</span><span id="router-status-ipv4-dns-value" >');
+        {
+            var dsnAddresses=Modemstat[10-adjIndex];
+            if((dsnAddresses.indexOf('&nbsp')) == -1)
+            {
+                var dsnAddress=dsnAddresses.split(',');
+                if((dsnAddress.length > 1) && ((dsnAddress[1].indexOf('0.0.0.0')) == -1))
+                {
+                    document.write(Modemstat[10-adjIndex]);
+                }
+                else
+                {
+                    document.write(dsnAddress[0]);
+                }
+                }
+            else
+            {
+                document.write(Modemstat[10-adjIndex]);
+            }
+        }
+		document.write('</span></div>');
+		
+		document.write('<div class="row-holder"> <span id="router-status-ipv6-addr-text" class="label w250">Gateway IPv6 Address</span><span id="router-status-ipv6-addr-value" >');
+               document.write(Modemstat[13 - adjIndex]);
+		document.write('</span></div>');
+
+		document.write('<div class="row-holder"> <span id="router-status-ipv6-dns-text" class="label w250">IPv6 Domain Name Server</span><span id="router-status-ipv6-dns-value" >');
+               document.write(Modemstat[15 - adjIndex]);
+		document.write('</span></div>');
+	
+		document.write('<div class="row-holder"> <span id="router-status-ipv6-globaladdr-text" class="label w250">IPv6 Global Address</span><span id="router-status-ipv6-globaladdr-value" >');
+               document.write(Modemstat[12 - adjIndex]);
+		document.write('</span></div>');
+		
+		document.write('<div class="row-holder"> <span id="router-status-ipv6-linklocal-text" class="label w250">IPv6 Link Local Address</span><span id="router-status-ipv6-linklocal-value" >');
+            if (isWANOE)
+            {
+                if (Modemstat[1] == 'ipoe' || Modemstat[1] == 'ipoa' || Modemstat[1] == "pppoe")
+                {
+                   var ipLinkLocalAddrPrefix = wanOEobj[15];
+                }
+                else
+                {
+                   var ipLinkLocalAddrPrefix = 'fe80::2aa:bbff:fecc:dde0/64';
+                }
+                var ipLinkLocalAddr = ipLinkLocalAddrPrefix.split('/');
+                document.write(ipLinkLocalAddr[0]);
+            }
+            else
+            {
+                if (Modemstat[1] == 'pppoa')
+                {
+                    var ipV6LinkLocalAddressPrefix = '';
+                    var ipV6LinkLocalAddr = ipV6LinkLocalAddressPrefix.split('/');
+                    document.write(ipV6LinkLocalAddr[0]); 
+                }
+                else
+                if ((Modemstat[17 - adjIndex].indexOf('&nbsp')) == -1)
+                {
+                    var ipV6LinkLocalAddressPrefix = Modemstat[17 - adjIndex];
+                    var ipV6LinkLocalAddr = ipV6LinkLocalAddressPrefix.split('/');
+                    document.write(ipV6LinkLocalAddr[0]);
+                }
+                else
+                {
+                    document.write("&nbsp;");
+                }
+            }
+        document.write('</span></div>');
+			
+		document.write('<div class="row-holder"> <span id="router-status-ipv6-deligated-text" class="label w250">IPv6 Delegated Prefix</span><span id="router-status-ipv6-deligated-value" >');
+               Modemstat[16] ? document.write(Modemstat[16]) : document.write("&nbsp;");
+		document.write('</span></div>');
+
+	// done hiding -->
+	</script>
+          <script type="text/javascript">
+		  <!-- hide
+		   var wanportStatus='Disconnected_None_0_0_Disconnected';
+           var wanportnumber=wanportStatus.split('_');
+		   
+		   if((mode=='AUTO') && wanOEobj[7] =='WANOE') // This when AUTO and WANOE is active
+		   {
+			    document.write('<hr />');
+			    document.write('<div class="section-heading"><h3>WAN Port</h3><a class="help-btn" href="#" name="help4">help</a></div>');
+
+			    document.write('<div class="row-holder"> <span span id="router-status-wan-port-status-text" class="label w250">WAN Port Status</span><span span id="router-status-wan-port-status-value" >');
+				document.write(wanportnumber[0]);
+				document.write('</span></div>');
+				
+				document.write('<div class="row-holder"> <span id="router-status-wan-port-detail-text" class="label w250">Port Detail</span><span id="router-status-wan-port-detail-value" >');
+			    document.write("<td>Port "+wanportnumber[1]+"</td>");
+			    document.write('</span></div>');
+
+			}
+			else if(isWANOE) // This is explicit to display WAN port if WANOE is selected
+			{
+			    document.write('<hr />');
+			    document.write('<div class="section-heading"><h3>WAN Port</h3><a class="help-btn" href="#" name="help4">help</a></div>');
+
+			    document.write('<div class="row-holder"> <span id="router-status-wan-port-status-text" class="label w250">WAN Port Status</span><span id="router-status-wan-port-status-value">');
+				if (isConnected)
+                {
+                    document.write('Connected');
+                }
+                else
+                {
+                    document.write('Disconnected');
+                }
+				document.write('</span></div>');
+				
+			    document.write('<div class="row-holder"> <span id="router-status-wan-port-detail-text" class="label w250">Port Detail</span><span id="router-status-wan-port-detail-value" ><td>');
+			    document.write("Port "+ wanportnumber[1]);
+			    document.write('</td></span></div>');
+
+		   }
+		  // done hiding -->
+		   </script>
+		   <hr />
+           </div>
+          
+          <div class="section-heading">
+            <h3>LAN Port</h3>
+            <a class="help-btn" href="#" name="help5">help</a></div>
+            <script   type="text/javascript">
+            document.write('<div class="row-holder"> <span id="router-status-lan_mac_addr-text" class="label w250">MAC Address</span><span id="router-status-lan_mac_addr-value" >');
+            document.write('02:00:00:00:00:0c');
+            document.write('</span></div>');
+
+            document.write('<div class="row-holder"> <span id="router-status-lan_ipv4_addr-text" class="label w250">IPv4 Address</span><span id="router-status-lan_ipv4_addr-value">');
+            document.write('192.168.50.1');
+            document.write('</span></div>');
+
+            var enblDhcpClnt = '1';
+            if (enblDhcpClnt == '1') {
+            enblDhcpClnt = 'On';
+            }
+            else {
+            enblDhcpClnt = 'Off';
+            }
+
+            document.write('<div class="row-holder" > <span id="router-status-lan_dhcpv4-text" class="label w250">DHCPv4</span><span id="router-status-lan_dhcpv4-value" >');
+            document.write(enblDhcpClnt);
+            document.write('</span></div>');
+
+            document.write('<div class="row-holder"> <span id="router-status-lan_ipv4-subnet-text" class="label w250">IPv4 Subnet Mask</span><span id="router-status-lan-ipv4-subnet-value" >');
+            document.write('255.255.255.0');
+            document.write('</span></div>');
+
+            document.write('<div class="row-holder" > <span id="router-status-lan_ipv6-ula-text" class="label w250">IPv6 ULA</span><span id="router-status-lan_ipv6-ula-value" >');
+            document.write('fd12:3456:789a:0:2aa:bbff:fecc:dde0/64');
+            document.write('</span></div>');
+
+            var ip6GlobalAddressPrefix = '2001:db8:1::1/64';
+            var ip6GlobalAddr = ip6GlobalAddressPrefix.split('/');
+
+            document.write('<div class="row-holder" > <span id="router-status-lan_ipv6-global-text" class="label w250">IPv6 Global Address</span><span id="router-status-lan_ipv6-global-value" >');
+            document.write(ip6GlobalAddr[0]);
+            document.write('</span></div>');
+
+            var ip6LinkLocalAddrPrefix = 'fe80::2aa:bbff:fecc:dde1/64';
+            var ip6LinkLocalAddr = ip6LinkLocalAddrPrefix.split('/');
+
+            document.write('<div class="row-holder" > <span id="router-status-lan_ipv6-linklocal-text"  class="label w250">IPv6 Link Local Address</span><span id="router-status-lan_ipv6-linklocal-value" >');
+            document.write(ip6LinkLocalAddr[0]);
+            document.write('</span></div>');
+
+            var enblDhcpV6Server = '1';
+            var lansideIPV6 = '1';
+            // DHCPv6 is ON only when both  DHCPv6Server and lansideIPV6 is ON
+            if (enblDhcpV6Server == '1' && lansideIPV6 == '1') {
+                enblDhcpV6Server = 'On';
+            }
+            else {
+                enblDhcpV6Server = 'Off';
+            }
+
+            document.write('<div class="row-holder"  > <span id="router-status-lan_dhcpv6-text" class="label w250">DHCPv6</span><span id="router-status-lan_dhcpv6-value" >');
+            document.write(enblDhcpV6Server);
+            document.write('</span></div>');
+
+            </script>
+			
+          <hr />
+          <div class="section-heading">
+            <h3>WiFi Port</h3>
+            <a class="help-btn" href="#" name="help6">help</a></div>
+          <div class="row-holder"> <span id="router-status-wifi-name-text" class="label w250">Name (SSID)</span> <span id="router-status-wifi-name-value">
+          <script   type="text/javascript">
+                document.writeln("<span>" + sky_WirelessAllSSIDs + "</span>");
+          </script>
+            </span> </div>
+          <div class="row-holder"> <span id="router-status-wifi-region-text" class="label w250">Region</span> <span id="router-status-wifi-region-value"> Europe </span> </div>
+          <div class="row-holder"> <span id="router-status-wifi-channel-text" class="label w250">Current Channel</span> <span id="router-status-wifi-channel-value" >
+              11 (2.4 GHz), 36 (5 GHz)
+            </span> </div>
+
+          <div class="row-holder">
+            <span id="router-status-wifi-ap-text" class="label w250">WiFi AP</span>
+            <span id="router-status-wifi-ap-value" >Enabled</span>
+          </div>
+          <div class="row-holder">
+            <span id="router-status-wifi-broadcast-name-text" class="label w250">Broadcast Name</span>
+            <span id="router-status-wifi-broadcast-name-value" >Yes</span>
+          </div>
+          <script type="text/javascript">
+              var tmple = ' le0_0 = "1";'
+              if(tmple.search('1') != -1)
+              {
+                  var tmpls = ' ls0_0 = "Up";'
+                  var dispname =  dn0_0 = "";
+                  var status = 'Disconnected';
+                  if(tmpls.search('Unregistering') != -1 || tmpls.search('Up') != -1)
+                  {
+                      status = 'Connected';
+                  }
+                  else if(tmpls.search('Registering') != -1)
+                  {
+                      status = 'Connecting';
+                  }
+                  document.writeln("<hr />");
+                  document.writeln("<div class=\"section-heading\">");
+                  document.writeln("<h3>Voice</h3>");
+                  document.writeln("<a class=\"help-btn\" href=\"#\" name=\"help8\">help</a>");
+                  document.writeln("</div>");
+                  document.write("<div class=\"row-holder\"> <span id=\"router-status-voice-status-text\" class=\"label w250\">Voice Status</span> <span id=\"router-status-voice-status-value\" >");
+                  document.writeln(status); 
+                  document.writeln("</span></div>");
+                  if(dispname!='')
+                  {
+                      document.write("<div class=\"row-holder\"> <span class=\"label w250\">Phone Number</span>");
+                      dispname = dispname.replace(/['" ]/g,'');
+                      document.writeln(dispname);
+                      document.writeln("</div>");
+                  }
+              }
+          </script>
+          <hr />
+          <div style="display: none;">
+          <div class="section-heading">
+            <h3>Attached Devices</h3>
+            <a class="help-btn" href="#" name="help7">help</a></div>
+          <script type="text/javascript">
+		  <!-- hide
+		  // done hiding -->
+			var i,j,k,attach_dev='UNKNOWN,02:00:00:00:00:02,Cabled<lf>UNKNOWN,02:00:00:00:00:03,Cabled<lf>UNKNOWN,02:00:00:00:00:04,Cabled<lf>UNKNOWN,02:00:00:00:00:05,Cabled<lf>UNKNOWN,02:00:00:00:00:06,Wireless<lf>laptop,02:00:00:00:00:07,Wireless<lf>macbook,02:00:00:00:00:08,Wireless<lf>phone,02:00:00:00:00:09,Wireless<lf>nanobox,02:00:00:00:00:0a,UnKnown<lf>macbook,02:00:00:00:00:0b,Wireless';
+            if(attach_dev != '&nbsp;') {
+                var ind_dev=attach_dev.split('<lf>');
+                var len=ind_dev.length;
+                var each_line=new Array(len);
+                if(attach_dev!=' ') {
+                    for(i=0;i<len;i++) {
+                        each_line[i]=ind_dev[i].split(',');
+                       }
+                      for(var j=0;j<len;j++) {
+                        document.write('<div class="row-holder"> <span class="label w250">'+each_line[j][0]+'</span><span>');
+                        document.write(each_line[j][2]);
+                        document.write('</span></div>');
+                      }
+                  }
+            }
+		   </script>
+          <input name="wantype" value="dhcp" type="hidden"/>
+          <input name="this_file" value="sky_router_status.html" type="hidden"/>
+          <input name="next_file" value="sky_router_status.html" type="hidden"/>
+          <input name="h_w_channel" value="11" type="hidden"/>
+        <hr />
+		</div>
+		</form>
+        
+        <div class="buttons-holder">
+				<a id="router-status-connection-status-button" href="javascript: if_allow_submit=false; openStatusWindow()" class="link" >Connection Status</a>
+				<a id="router-status-show-statistics-button" href="javascript: if_allow_submit=false; openDataSubWin('sky_system.html','width=700,height=720,status=yes,resizable=no,scrollbars=yes');" class="link" >Show Statistics</a>
+      </div>
+      </div>
+	</div> <!--- SV-1091 Not Connected to the internet, 'Help' Context is showing at the bottom of the Maintenance page-->
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>System Details</h3>
+            <p>Basic information about your Sky Hub.</p>
+            <ul>
+              <li><b>Manufacturer</b> - The maker of your Sky Hub.</li>
+              <li><b>Model</b> - The model number.</li>
+              <li><b>Firmware Version</b> - This is the current software your Sky Hub is using.</li>
+              <script type="text/javascript">
+
+                  /* Display 'Unique Version Number' field only when running build is Dev build.
+                     Sky Dev builds use software version in format 9.99.xxxx. */
+                  var sky_firmware_version = '7.04.0208.R';
+                  if (sky_firmware_version.indexOf('9.99.') != -1)
+                  {
+                      document.write('<li><b>Unique Version Number</b> - This is the current unique version number your Sky Hub is using.</li>');
+                  }
+
+                  document.write("<li ><b>DSL Firmware Version</b> - This is the version number of the low-level DSL firmware. This is contained within the Sky Hub Firmware.</li>");
+              </script>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 2 -->
+        <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+          <div class="content" >
+            <h3>Modem</h3>
+            <p>The current Modem status and settings are shown in this section.</p>
+            <ul>
+                <script type="text/javascript">
+                        if( dslInterfaceType == "ptm" )
+                        {
+                            document.write("<li><b>Modem Status</b> - The current state of the DSL connection to your phone company.</li>");
+                            document.write("<li><b>Traffic Type</b> - This is the current DSL traffic type your Sky Hub is using.</li>");
+                            document.write("<li><b>Line Rate - Upstream (Kbps)</b> - The connection speed of the DSL connection from your Sky Hub to the Sky Network.</li>");
+                            document.write("<li><b>Line Rate - Downstream (Kbps)</b> - The connection speed of the DSL connection from the Sky Network to your Sky Hub.</li>");
+                        }
+                        else
+                        {
+                            document.write("<li><b>Modem Status</b> - The current state of the DSL connection to your phone company.</li>");
+                            document.write("<li><b>DownStream Connection Speed</b> - The connection speed of the DSL connection from the Sky Network to your Sky Hub.</li>");
+                            document.write("<li><b>UpStream Connection Speed</b> - The connection speed of the DSL connection from your Sky Hub to the Sky Network.</li>");
+                            if (isWANOE == false)
+                            {
+                                document.write("<li><b>VPI</b> - Current VPI (Virtual Path Identifier) settings of DSL.</li>");
+                                document.write("<li><b>VCI</b> - Current VCI (Virtual Circuit Identifier) settings of DSL.</li>");
+                            }
+                        }
+                        document.write("<li><b>IPv6 Loopback Address</b> - The address of the loopback network interface of the router in IPv6 address space.</li>");
+                </script>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 3 -->
+        <div class="pod pod-help" id="help3"><a href="#close" class="help-close"></a>
+          <div class="content" >
+            <h3>Broadband Port</h3>
+            <p>These are the current DSL settings. We have configured these settings by default for you.</p>
+            <ul>
+              <li><b>MAC Address</b> - The physical address of the Sky Hub, as seen from the Internet.</li>
+              <li><b>IPv4 Address</b> - The current Internet IP Address in IPv4 address space. If assigned
+                dynamically, and no Internet connection exists, this will be blank (or
+                0.0.0.0).</li>
+              <li><b>Network Type</b> - This indicates the connection type (e.g. PPPoE, IPoE) used on the DSL port.</li>
+              <li><b>IPv4 Subnet Mask</b> - The subnet mask associated with the Internet IPv4 Address.</li>
+              <li><b>Gateway IPv4 Address</b> - The Gateway associated with the Internet IPv4 Address.</li>
+              <li><b>IPv4 Domain Name Server</b> - This displays the Address of the current DNS in IPv4 address space.</li>
+              <li><b>Gateway IPv6 Address</b> - The Gateway associated with the Internet IPv6 Address.</li>
+              <li><b>IPv6 Domain Name Server</b> - This displays the address of the current DNS in IPv6 address space.
+                 This may be empty if the addresses can be resolved using IPv4 DNS server itself.</li>
+              <li><b>IPv6 Global Address</b> - The current globally routable Internet IP Address in IPv6 address space. If 
+                 no Internet connection exists, this will be blank.</li>
+              <li><b>IPv6 Link Local Address</b> - The IPv6 Private Address assigned for the router in the WAN link. It is
+                 unique only on that link and is globally non-routable.</li>
+              <li><b>IPv6 Delegated Prefix</b> - The IPv6 Prefix obtained from the ISP router that can be assigned by the
+                 CPE to the devices connecting to it on the LAN and requesting an IPv6 Address.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 4 -->
+        <div class="pod pod-help" id="help4"><a href="#close" class="help-close"></a>
+          <div class="content" >
+            <h3>WAN Port</h3>
+			<p>The current WAN status and Port details are shown in this section.</p>
+            <ul>
+			  <li><b>WAN Port Status</b> - The current state of the WAN connection.</li>
+              <li><b>Port Detail</b> - The Ethernet port number used for the WAN connection.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 5 -->
+        <div class="pod pod-help" id="help5"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>LAN Port</h3>
+            <p>These are the current settings, as set in the LAN IP Setup page.</p>
+            <ul>
+              <li><b>MAC Address</b> - The physical address of the Sky Hub, as seen from the local LAN.</li>
+              <li><b>IPv4 Address</b> - The LAN IP Address of the Sky Hub in IPv4 address space.</li>
+              <li ><b>DHCPv4</b> - This indicates if the Sky Hub is acting as a DHCP Server for devices on your LAN
+                  in IPv4 address space.</li>
+              <li><b>IPv4 Subnet Mask</b> - The Subnet Mask associated with the LAN IPv4 address.</li>
+              <li ><b>IPv6 ULA</b> - The IPv6 Address to be used by the router in the private (LAN) network.
+                   It is globally non-routable.</li>
+              <li ><b>IPv6 Global Address</b> - The current globally routable Internet IP Address in IPv6 address space. If no Internet connection exists, this will be blank.</li>
+              <li ><b>IPv6 Link Local Address</b> - The IPv6 Private Address assigned for the router in the LAN link. It is
+                   unique only on that link and is globally non-routable.</li>
+              <li ><b>DHCPv6</b> - This indicates if the Sky Hub is acting as a DHCP Server for devices on your LAN
+                  in IPv6 address space.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 6 -->
+        <div class="pod pod-help" id="help6"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>WiFi Port</h3>
+            <p>These are the current settings as set in the WiFi Settings page.</p>
+            <ul>
+              <li><b>Name (SSID)</b> - The SSID of your Sky Hub.</li>
+              <li><b>Region</b> - This should be set to Europe.</li>
+              <li><b>Current Channel</b> - The current channel(s) in use by your Sky Hub.</li>
+              <li><b>WiFi AP</b> - This indicates if the Access Point feature of your
+                Sky Hub is enabled or not. If not enabled, the WiFi LED on the
+                front panel of your Sky Hub will be off.</li>
+              <li><b>Broadcast Name</b> - This indicates if your Sky Hub is broadcasting its SSID.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 7 -->
+        <div class="pod pod-help" id="help7"><a href="#close" class="help-close"></a>
+          <div class="content" >
+            <h3>Attached Devices</h3>
+            <p>This page shows the device name for each device attached to your Sky Hub.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> 
+        </div>
+        <!-- HELP 8 -->
+        <div class="pod pod-help" id="help8"><a href="#close" class="help-close"></a>
+          <div class="content" >
+            <h3>Voice</h3>
+            <ul>
+            <li><b>Voice Status</b>
+            <p><b>Disconnected</b> - The Voice function is not currently connected and you will not be able to make or receive calls.</p>
+            <p><b>Connected</b> - The Voice function is connected and you will be able to make and receive calls using the phone plugged into your Sky Hub.</p>
+            <p><b>Connecting</b> - Trying to establish the Voice connection, you will not be able to make or receive calls until the status changes to Connected.</p>
+            </li>
+            <li><b>Phone Number</b> - Customers assigned phone number.</li>
+            <ul>
+          </div>
+          <span class="arrow arrow-l png"></span> 
+         </div>        
+      </div>
+      
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Services</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+     <!--//
+
+var if_allow_submit=false;
+var TOTAL_ROW = 8;
+var appName = '';
+var remain = 31;
+var  NO_SEL_MSG = 'There is no application is selected';
+var RE_ALL_MSG = 'Require BOTH Trigger/Open port range(Start/End values)';
+     <!--//
+	 
+function check_if_allow_submit()
+{
+ 	var cf = document.forms[0];	
+	var msg = "";
+	var good_words = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_"; // bug 3516 Fix: debar special characters
+
+  cf.service_name.value = $.trim(cf.service_name.value);
+	if (if_allow_submit)
+	{
+		msg+= checkBlank(cf.service_name, "Service Name");
+		msg+= checkLength(cf.service_name, "Service Name", 1, 12, true);//bug 693 Fix: string length in input box on web page is not checked
+		
+		if (!check_goodwords(cf.service_name.value , good_words)) // bug 3516 Fix: debar special characters
+		    msg+= "Service Name contains characters which are not allowed '~!@#$%^&*()=+[]}{\\|;:'\",.<>/ and ?\n";
+		if(isNumeric(cf.serv_sport,65535))
+			msg+= "Start port is invalid, please re-enter value between 1 to 65535\n";
+		if(isNumeric(cf.serv_endport,65535))
+			msg+= "Finish port is invalid, please re-enter value between 1 to 65535\n";
+		if (parseInt(cf.serv_sport.value)==0)
+			msg+= "Start port is 0, please re-enter value between 1 to 65535\n";
+		if (parseInt(cf.serv_endport.value)==0)
+			msg+= "Finish port is 0, please re-enter value between 1 to 65535\n";
+		if(	parseInt(cf.serv_sport.value) > parseInt(cf.serv_endport.value))
+			msg+= "Start port value should be less than finish port value, please re-enter value.\n";	
+		if (msg.length > 1)
+		{
+			alert(msg);
+			return false;
+		}
+		else
+		{
+                  var services_string='Any(All),Any(TCP),Any(UDP),AIM,AH,6IN4,BGP,BOOTP CLIENT,BOOTP SERVER,CU SEEME,DNS,ESP,GRE,FINGER,FTP,H323,HTTP,HTTPS,ICMPECHOREQ,ICMPECHOREP,IDENT,IPINIP,IRC,NEWS,NFS,NNTP,POP3,RCMD,REAL AUDIO,REXEC,RLOGIN,RTELNET,RTSP,SCTP,SFTP,SMTP,SNMP,SNMP TRAPS,SQL NET,SSH,STRM WORKS,TACACS,TELNET,TFTP,VDOLIVE,VPN IPSEC,VPN L2TP,VPN PPTP,SvcA,SvcB,SvcC,SvcD,';
+                  var services_array=services_string.split(",");
+                  //if(services_array.indexOf(cf.service_name.value)>=0)
+				  // IE <9 has not added support of Indexof with Array.
+				  if($.inArray(cf.service_name.value, services_array)>=0)
+                  {
+                   alert("Service name is already present in the existing firewall or custom services.\nPlease re-enter service name.\n");
+                   return false;
+                  }
+			cf.submit();
+		}
+	}
+	return true;	
+}
+     //-->
+   </script>
+</head>
+<body onload="dataToVisible(document.forms[0]);loadhelp('_fwsv');document.forms[0].elements[0].focus();">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li class="selected"><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-security" class="selected">
+          <li ><a href="sky_logs.html">Logs</a></li>
+          <li ><a href="sky_block_sites.html">Block Sites</a></li>
+          <li ><a href="sky_firewall_rules.html">Firewall Rules</a></li>
+          <li class="selected"><a href="sky_services.html">Services</a></li>
+          <li ><a href="sky_schedule.html">Schedule</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Services</h1>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+      <hr class="top" />
+        <form method="post" action="sky_service_custom-add.sky" onsubmit="return check_if_allow_submit();">
+          <div class="section-heading">
+            <h3>Add Custom Service - Port Forwarding </h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <div class="row-holder">
+            <label class="w250">Name:</label>
+            <input name="service_name" size="12" maxlength="12" value="" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w250">Type:</label>
+            <select name="svc_type" size="1">
+              <!-- Bug684 Configuration lost when Firewall rules using defined custom services -->
+              <option selected="selected" value="TCP">TCP</option>
+              <option value="UDP">UDP</option>
+              <option value="TCP_UDP">TCP/UDP</option>
+              <!-- end of Bug684 -->
+            </select>
+          </div>
+          <div class="row-holder">
+            <label class="w250">Start Port:</label>
+            <input size="6" maxlength="5" name="serv_sport" value="" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w250">Finish Port:</label>
+            <input size="6" maxlength="5" name="serv_endport" value="" type="text"/>
+          </div>
+          <input name="todo" value="save" type="hidden"/>
+          <input name="this_file" value="sky_services_custom-add.html" type="hidden"/>
+          <input name="next_file" value="sky_services.html" type="hidden"/>
+          <input name="error_file" value="sky_services_custom-add_error.html" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+        </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_services.html'" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: document.forms[0].todo.value='add'; if_allow_submit=true; return check_if_allow_submit();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+       <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+    <div class="content">
+		<h3>Services Help</h3>
+        <p>The Services menu contains a list of user-defined Services for creating firewall rules.</p>
+        <p>If a service does not appear in the predefined Services list 
+             in the Firewall Rules menu, you can define the service in this menu.  
+             The new service will then appear in the Firewall Rules menu Services 
+             list.</p>
+        <a name="table"></a>
+        <h3>Service Table</h3>
+        <p>This table lists all Services you have defined. If you have not defined any Services, the table will be empty.</p>
+        <p>To Create a Service:</p>
+        <ul>
+             <li>Click <b>Add Custom Service</b>.</li>
+             <li>Enter the data for the service as required.</li>
+             <li>Click <b>Apply</b> to save the new service.</li>
+           </ul>
+        <p>To Edit a Service:</p>
+        <ul>
+             <li>Click the radio button next to a service in the table.</li>
+             <li>Click <b>Edit Service</b> to display the service's data in the "Service Definition" section.</li>
+             <li>Change the data for the service as required.</li>
+             <li>Click <b> Apply</b> to save your changes.</li>
+           </ul>
+        <p>To Delete a Service:</p>
+        <ul>
+             <li>Click the radio button next to a service in the table.</li>
+             <li>Click <b>Delete Service</b> to delete the selected service.</li>
+           </ul>
+		</div>
+		<span class="arrow arrow-l png"></span>
+		</div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

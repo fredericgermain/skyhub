@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Backup Settings</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script   type="text/javascript">
+<!--//
+var if_allow_submit=false;
+var progress = 0;
+var sessionId = '1234567890';
+
+function isInProgress()
+{
+var cf=document.forms[1];
+if (cf.filename.value == '')
+{
+alert('No filename selected!');
+return ;
+}
+if ( progress == 0 ) 
+{
+progress = 1;
+cf.submit();//bug 520 Enchancement: Upgrade configuration has error infomation,but function is ok
+return true;
+}
+alert('Updating settings is in progress. The Sky Hub will reboot automatically when updates have completed. Please wait.');
+return ;
+}
+
+function backupClick() {
+var loc = 'backupsettings.conf';
+
+var code = 'location="' + loc + '"';
+eval(code);
+}
+
+
+function updateSessionId() {
+	document.forms[0].sessionKey.value = sessionId;
+	document.forms[2].sessionKey.value = sessionId;
+}
+
+//-->
+</script>
+</head>
+<body onload="updateSessionId(); dataToVisible(document.forms[0]);loadhelp('sstatus_w');">
+<!-- head -->
+<div id="head">
+  <div id="header">
+	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li class="selected"><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-maintenance" class="selected">
+          <li ><a href="sky_router_status.html">Router Status</a></li>
+          <li ><a href="sky_attached_devices.html">Attached Devices</a></li>
+          <li class="selected"><a href="sky_backup_settings.html">Backup Settings</a></li>
+          <li ><a href="sky_set_password.html">Set Password</a></li>
+          <li ><a href="sky_diagnostics.html">Diagnostics</a></li>
+          <li ><a href="sky_router_upgrade.html">Router Upgrade</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Backup Settings</h1>
+        <p class="black">This page allows you to back up, restore and erase your Sky Hub's current settings.</p>
+        <p>Once you have your Sky Hub configured to your requirements you should back up the information so it's available if something goes wrong. When you back up the settings they are saved as a file on your computer. You can restore your Sky Hub's settings from this file.</p>
+        <p>The config file contains your Wi-Fi and router password in plain text. Please store the configuration file in secure location in the computer and not in shared folder.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top" />
+        <form method="get" action="sky_router_settings.conf" onsubmit="return if_allow_submit;">
+          <div class="section-heading">
+            <h3>Save a Copy of Current Settings</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <a href="javascript: if_allow_submit=true;document.forms[0].submit();" class="btn32 btn-clr-primary png" id="save-current-settings-button"><span class="png">Backup</span></a>
+          <input name="todo" value="backup" type="hidden"/>
+          <input name="sessionKey" value="" type="hidden"/>
+          <input name="this_file" value="sky_backup_settings.html" type="hidden"/>
+          <input name="next_file" value="sky_backup_settings.html" type="hidden"/>
+        </form>
+        <hr />
+        <div class="section-heading">
+          <h3>Restore Saved Settings from a File</h3>
+          <a class="help-btn" href="#" name="help2">help</a></div>
+          <div class="row-holder">
+        <form name="restorefile" method="post" enctype="multipart/form-data" action="sky_uploadsettings.cgi" id="restore-from-file-form">
+          <input name="filename" size="18" type="file"/>
+        </form>
+        </div>
+        <a href="javascript: if_allow_submit=true; isInProgress();" class="btn32 btn-clr-primary png" id="restore-from-file-name-button"><span class="png">Restore</span></a>
+        <hr />
+        <form name="factorydef" method="post" action="" onsubmit="return false">
+          <div class="section-heading">
+            <h3>Revert to Factory Default Settings</h3>
+            <a class="help-btn" href="#" name="help3">help</a></div>
+          <a href="javascript: if_allow_submit=false; window.location.href='sky_backup_settings-erase.html'" class="btn32 btn-clr-primary png" id="revert-to-factory-default-button"><span class="png">Erase</span></a>
+          <input name="todo" value="factory" type="hidden"/>
+          <input name="sessionKey" value="" type="hidden"/>
+          <input name="this_file" value="sky_backup_settings.html" type="hidden"/>
+          <input name="next_file" value="sky_backup_settings-erase.html" type="hidden"/>
+        </form>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Save a Copy of Current Settings</h3>
+            <p>To create a back up file of the current settings:</p>
+            <ul>
+              <li>Select <b>Backup</b>.</li>
+              <li>If you don't have your browser set up to save downloaded files automatically, locate where you wish to save the file, rename it if required, and click <b>Save</b>.</li>
+              <li>If you have your browser set up to save downloaded files automatically, the file is saved to your browser's download location on the hard disk and is called sky_router_settings.conf.</li>
+              <li>The config file contains your Wi-Fi and router password in plain text. Please store the configuration file in secure location in the computer and not in shared folder.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 2 -->
+        <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Restore Saved Settings from a File</h3>
+            <p>To restore settings from a backup file:</p>
+            <ul>
+              <li>Select <b>Browse</b>.</li>
+              <li>Locate and select the previously saved backup file (sky_router_settings.conf).</li>
+              <li>Select <b>Restore</b>.</li>
+              <li>A window will appear advising you know that your Sky Hub has been successfully restored to previous settings. Your  Sky Hub will restart. This will take about one minute.</li>
+              <li>Close the notification window.</li>
+            </ul>
+            <p><b>Important:</b> Whilst restoring or erasing your Sky Hub settings don't go online, shutdown the computer or turn off your Sky Hub until it fully reboots.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 3 -->
+        <div class="pod pod-help" id="help3"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Revert to Factory Default Settings</h3>
+            <p>To erase the current settings and reset your Sky Hub to the original default settings:</p>
+            <ul>
+              <li>Select <b>Erase</b></li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

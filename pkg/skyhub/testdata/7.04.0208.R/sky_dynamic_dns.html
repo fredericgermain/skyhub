@@ -1,0 +1,302 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Dynamic DNS</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+     <!--//
+var cgnNetwork = '0';
+var stringdns='disable<br>all.ddnskey.com<br>fx81qht<br>2<br>disable';
+var dyndnds_pageinfo=stringdns.split('<lf>');
+var displayserv=dyndnds_pageinfo[dyndnds_pageinfo.length-1].split('<br>');
+var if_allow_submit=false;
+var asterisk_chars="***************";
+function ShowResult() {
+	openDataSubWin('sky_dynamic_dns-status.html','alwaysRaised,dependent,resizable,scrollbars,width=700,height=150,left=200,top=200');
+}
+
+function check_if_allow_submit()
+{
+	var msg = "";
+        var wanDslConfigstr = '1_ipoe_0_1_0.101_203.0.113.1_02:00:00:00:00:01_255.255.252.0_203.0.113.2_ptm0.1_203.0.113.3, 203.0.113.4_67:03:08_2001:db8:1::1/64_fe80::22_&nbsp;_&nbsp;_2001:db8:2::/56_fe80::2aa:bbff:fecc:dde2';  
+         var wanDslLinkConfig=wanDslConfigstr.split('_');
+	var cf=document.forms[0];
+	if (if_allow_submit==false)
+		return false;
+	if(cgnNetwork == "1")
+		return false;
+//	if(cf.sysDNSActive.checked)
+
+	msg+= checkBlank(cf.ddnsHostname, "Host Name");
+	msg+= checkBlank(cf.dyndnsUsername, "User Name");	
+	msg+= checkBlank(cf.dyndnsPassword, "Password");
+    if(msg.length > 1 )
+    {
+		alert(msg);
+		return false;
+    }
+    if(cf.dyndnsPassword.value == asterisk_chars)
+    {
+        alert("Please re-enter a valid password");
+        return false;
+    }
+
+//bug 693 Fix: string length in input box on web page is not checked
+	msg+= checkLength(cf.ddnsHostname, "Host Name", 1, 256, true); // Changed as per SNS requirement hostname (256) username/password (64) characters.
+	msg+= checkLength(cf.dyndnsUsername, "User Name", 1, 64, true);
+	msg+= checkLength(cf.dyndnsPassword, "Password", 1, 64, true);
+    if(msg.length > 1 )
+    {
+		alert(msg);
+		return false;
+    }
+	
+	var good_words = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_@.";
+	if ( check_goodwords( cf.ddnsHostname.value , good_words)==false  )
+		msg+="Invalid character found in your Hostname, please re-enter\n";
+
+	if ( check_goodwords( cf.dyndnsUsername.value , good_words)==false  )
+		msg+= "Invalid character found in your Username, please re-enter\n";
+	if ( check_goodwords( cf.dyndnsPassword.value , good_words)==false  )
+		msg+= "Invalid character found in your Password, please re-enter\n";
+	cf.h_sysDNSProviderlist.value=cf.sysDNSProviderlist.options[cf.sysDNSProviderlist.selectedIndex].value;
+       if(cf.dyndnsEnable.checked)
+         cf.h_dyndnsEnable.value="enable";
+       else
+         cf.h_dyndnsEnable.value="disable"; 
+      /* if(cf.dyndnsWildcard.checked)
+         cf.h_dyndnsWildcard.value="enable";
+       else
+         cf.h_dyndnsWildcard.value="disable"; 
+		 */
+	if (msg.length > 1)
+	{
+		alert(msg);
+		return false;
+	}
+        cf.iface.value=wanDslLinkConfig[9];
+        cf.submit();
+	return true;
+}
+
+function checkData()
+{
+	var cf = document.forms[0];
+	var msg = "";
+	
+//		if(cf.sysDNSActive.checked)
+	/*
+	if (cf.ddnsMode.selectedIndex == 0)
+	{
+		msg+= checkBlank(cf.ddns_account_hostname, "Host Name");
+		msg+= checkBlank(cf.ddns_account_username, "User Name");	
+		msg+= checkBlank(cf.ddns_account_password, "Password");
+	}
+	dataToHidden(cf);
+	*/
+	if (msg.length > 1)
+	{
+		alert(msg);
+		return ;
+	}
+	cf.submit();
+	return true;	
+}
+	
+
+
+function frmLoad() {
+    var cf=document.forms[0];
+
+    if(displayserv[0]=="enable") 
+        cf.dyndnsEnable.checked=true;
+    else
+        cf.dyndnsEnable.checked=false;  
+        cf.ddnsHostname.value=displayserv[1];
+        cf.dyndnsUsername.value=displayserv[2];
+        if(displayserv[2]!="")
+            cf.dyndnsPassword.value=asterisk_chars;
+        else
+            cf.dyndnsPassword.value="";
+
+    for( var i = 0; i < cf.sysDNSProviderlist.options.length; i++ )
+    {
+       if( cf.sysDNSProviderlist.options[ i ].value == displayserv[3] )
+           cf.sysDNSProviderlist.selectedIndex = i;
+    }
+    
+    if(cgnNetwork == "1")
+    {
+        cf.dyndnsEnable.disabled=true;
+        cf.ddnsHostname.disabled=true;
+        cf.dyndnsUsername.disabled=true;
+        cf.dyndnsPassword.disabled=true;
+        cf.sysDNSProviderlist.disabled=true;
+        document.getElementById("content-header-copy").style.display = 'none';
+        document.getElementById("div_dyn_dns").style.display = 'none';
+        document.getElementById("dynamicdnscheck").innerText = 'Use a Dynamic DNS Service(Disabled)'; 
+        document.getElementById("dynamicdnscheck").style.color = '#D0D0D0';         
+        document.getElementById("div_cgn_content").style.display = 'block';
+    }
+	return 0;
+}
+
+
+     //-->
+   </script>
+</head>
+<body onload="dataToVisible(document.forms[0]); loadhelp('ddns');frmLoad();document.forms[0].elements[0].focus();">
+<!-- head -->
+<div id="head">
+  <div id="header">
+	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li class="selected"><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-advanced" class="selected">
+          <li ><a href="sky_wan_setup.html">WAN Setup</a></li>
+          <li class="selected"><a href="sky_dynamic_dns.html">Dynamic DNS</a></li>
+          <li ><a href="sky_lan_ip_setup.html">LAN IP Setup</a></li>
+          <!-- %ejGetOther(skyRemoteManagementMenu,0)% -->
+          <li ><a href="sky_upnp.html">UPnP</a></li>
+          <li ><a href="sky_alg.html">ALG</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Dynamic DNS Setup</h1>
+        <p class="black">If you wish to use a DDNS service, you must register for it. The Dynamic DNS client service provider will give you a password or key.</p>
+        <p class="bottom20">To see the current status of DDNS, click on <b>Show Status</b>.</p>
+        </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top"/>
+        <form method="post" action="sky_dynamic_dns.sky" onsubmit="javascript: return check_if_allow_submit();">
+          <div class="row-holder">
+            <input checked="" name="dyndnsEnable" type="checkbox"/>
+            <label class="w250" id="dynamicdnscheck">Use a Dynamic DNS Service</label>
+            <a class="help-btn" href="#" name="help1">help</a> </div>
+          <hr />
+          <div class="row-holder" id="div_dyn_dns">
+          <div class="row-holder">
+            <label class="w250">Service Provider:</label>
+            <select name="sysDNSProviderlist" size="1">
+              <option selected="selected" value="1">www.DynDNS.org</option>
+              <option value="2">www.noip.com</option>
+              <!-- option value="3">www.dyns.cx</option-->
+            </select>
+          </div>
+          <div class="row-holder">
+            <label class="w250" id="dynamicdnshostname"> Host Name:</label>
+            <input name="ddnsHostname" size="32" maxlength="257" value="" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w250" id="dynamicdnsusername">User Name:</label>
+            <input name="dyndnsUsername" size="32" maxlength="65" value="" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w250" id="dynamicdnspassword">Password:</label>
+            <input name="dyndnsPassword" size="32" maxlength="65" value="REDACTED" type="password"/>
+          </div>
+          <input name="ddnsInterface" size="32" maxlength="32" value="atm0" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+          <input name="action" value="add" type="hidden"/>
+          <input name="iface" value="atm0" type="hidden"/>
+          <input name="this_file" value="sky_dynamic_dns.html" type="hidden"/>
+          <input name="next_file" value="sky_dynamic_dns.html" type="hidden"/>
+          <input name="h_dyndnsEnable" value="" type="hidden"/>
+          <input name="h_sysDNSProviderlist" value="" type="hidden"/>
+          <input name="h_dyndnsWildcard" value="" type="hidden"/>
+        </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_dynamic_dns.html'" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: if_allow_submit=true; return check_if_allow_submit();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a> <a href="javascript:if_allow_submit=false; ShowResult();" class="btn42 btn-clr-primary png"><span class="png">Show Status</span></a> </div>
+        </div> <!-- div_dyn_dns -->
+        <div class="content" id="div_cgn_content" style="display: none;">            
+            <p class="black">It is not possible to configure Dynamic DNS due to a feature enabled on your Sky Broadband connection.</p>
+            <br class="clear-break" />
+            <p class="black">If you wish to set up the Dynamic DNS feature please contact Sky Technical Support.</p>
+        </div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1" style="margin-top:0px"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <script>
+            if(cgnNetwork == "1")
+            {
+                document.write("<p>It is not possible to configure Dynamic DNS due to a feature enabled on your Sky Broadband connection.</p>");
+                document.write("<p>If you wish to set up the Dynamic DNS feature please contact Sky Technical Support.</p>");
+            }
+            </script>
+            <h3>To set up  DDNS</h3>
+            <ul>
+            <li>Select the <b>Use a Dynamic DNS Service</b> check box.</li>
+            <li>Select the name of your dynamic DNS <b>Service Provider</b>.</li>
+            <li>Type the <b>Host Name</b> that your dynamic DNS Service Provider gave you. The DDNS Service Provider may call this the Domain Name.</li>
+            <li>Type the <b>User Name</b> for your DDNS account.</li>
+            <li>Type the <b>Password</b> (or Key) for your DDNS account.</li>
+            <li>Select <b>Apply</b> to use the DDNS service. For security reasons, the <b>Password</b> is to be re-entered when modifying any DDNS account values.</li>
+            </ul>
+            <p><b>Note:</b> Your Sky Hub supports only basic DDNS and the login and password may not be secure. If you have a private WAN IP address, don't use a DDNS service as it may lead to problems.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

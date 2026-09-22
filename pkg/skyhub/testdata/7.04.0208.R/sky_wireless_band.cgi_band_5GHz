@@ -1,0 +1,1697 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; WiFi Settings</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript" src="assets/js/md5.js"></script>
+<script type="text/javascript" src="assets/js/util.js"></script>
+<script   type="text/javascript">
+   <!-- //
+var WarningMsgER110_SR200 = "If you have any Sky Q TV products connected wirelessly in the home, you must leave WiFi Access Point, WPS and Broadcast of Name (SSID) enabled. Changing any of these settings could interrupt your Sky Q TV service. If you see any disruption to your TV services, please ensure these settings are enabled. To cancel these changes, choose cancel below.";
+var WarningMsgEE120 = "If you have any Sky Q TV products connected wirelessly in the home, you must leave WiFi Access Point and WPS settings enabled. Changing any of these settings could interrupt your Sky Q TV service. If you see any disruption to your TV services, please ensure that the these settings are enabled. To cancel these changes, choose cancel below.";
+var if_allow_submit=false;
+var productModel = 'SR200';
+var wpsSelected = 0;
+var sky_wlEnabled = '1';
+var sky_wlHide = '0';
+var sky_wlIsolation = '0';
+var sky_wlChannel ='36';
+var sky_ssid = decodeHtml('TestSSID');
+var sky_wlBand = '1';
+var sky_wlBandwidth = '3';
+var sky_wlSyncSettings = '1';
+var bandWidth = 0; // {0 = 20MHz, 1 = 40MHz, 2 = 80MHz, 3 = 160MHz }.
+var sky_wpsTrusteMACState = '0';
+var sky_actualUserWPSState = '1';
+
+
+var syncNvram = '';
+var radiusServerIP = '';
+var sky_wlAuthMode = 'psk2';
+var bit = '1';
+var keyText = 'REDACTED';
+var wpaPskKey = decodeHtml('REDACTED');
+var wpaGTKRekey = 'REDACTED';
+var radiusPort = '';
+var radiusKey = 'REDACTED';
+var wep = '';
+var wpa = 'aes';
+var auth = '';
+var wlCorerev = '';
+
+var wlRefresh = '';
+var varPreauth = '';
+var varNetReauth = '';
+
+var WscDevPin    = 'REDACTED';
+var WscStaPin     = '';
+var WscMode       = 'enabled';
+var WscIRMode   = '';
+var WscAPMode  = '1';
+var sessionKey='1234567890';
+var WscCfgMethod = 'pbc';
+
+var phy = ''; 
+var nmode = ''; 
+var wlWapiAvail = '';
+var wpsClicked = false;
+var prevSecMode=0;
+
+var channelSet = [];
+var channelSpanLower = []; // Span bounds in terms of channelSet indices.
+var channelSpanUpper = [];
+var channelSpanInterval = [];
+var bondedChannels;
+var numberOfSpans; // Channel spans.
+var firstChannelList = 1; // Flag cleared after updateChannelList() called for first time.
+var sky_OtherWlSsid = decodeHtml('TestSSID');
+var sky_OtherWlPsk = decodeHtml('REDACTED');
+var skyWlCanUserChangeChannel = 1;
+
+// -->
+</script>
+<script   type="text/javascript">
+<!-- //
+var TwentymhzChannelList=["Auto","1","2","3","4","5","6","7","8","9","10","11","12","13"];
+function changechannellist(index)
+{
+	var cf = document.forms[0];
+	if( index == 0)
+	{
+		for ( var idx = 0; idx < TwentymhzChannelList.length; idx++ )
+		{
+			cf.wlChannel.options[idx]=new Option(TwentymhzChannelList[idx],idx);
+		}
+		cf.wlChannel.length = TwentymhzChannelList.length;
+	}
+}
+function getSelect(item){	
+	var idx;	
+	if (item.options.length > 0) {		
+		idx = item.selectedIndex;
+		return item.options[idx].value; }	
+	else {		return '';	  }
+}
+
+function WifiIsolationHandler()
+{
+	if ( document.forms[0].wifi_hide.checked == false ) 
+	{
+        var warningMsg = "";
+		if( document.forms[0].enbl_wps.checked == true )
+		{
+            if( productModel=='ER110' || productModel=='SR200' || productModel=='BR200' )
+                warningMsg = "If you have any Sky Q TV products connected wirelessly in the home, you must leave WiFi Access Point, WPS and Broadcast of Name (SSID) enabled. Changing any of these settings could interrupt your Sky Q TV service. If you see any disruption to your TV services, please ensure these settings are enabled. \nThis change will also disable WPS operation. \nTo cancel these changes, choose cancel below.";
+            else
+                warningMsg = "This change will disable WPS operation. Are you sure you wish to continue?";
+
+            answer = confirm(warningMsg);
+			if(answer)
+				document.forms[0].enbl_wps.checked=false;
+			else
+				document.forms[0].wifi_hide.checked = true;
+		}
+        else
+        {
+            if( productModel=='ER110' || productModel=='SR200' || productModel=='BR200' )
+            {
+                answer = confirm(WarningMsgER110_SR200);
+                if(answer == false)
+                    document.forms[0].wifi_hide.checked = true;
+            }
+        }
+	}
+	return;
+}
+function checkData()
+{
+    var cf = document.forms[0];
+    var msg = "";  
+	var errorMsg = "";
+
+
+    //if(!checkRegion()) return false;
+    msg = checkBlank(cf.wlSsid,"Name (SSID)");
+    if (msg.length > 1)
+    {
+    	alert('SSID must be between 1 and 32 characters');
+        return;
+
+    }
+//    msg+= checkLength(cf.wlSsid, "Name (SSID)", 1, 40, true);//bug 693 Fix: string length in input box on web page is not checked
+	
+
+//	if(cf.wpakey.value.length < 8 || cf.wpakey.value.length > 63)
+//		return alertR("WPA-PSK Network Key must be from 8 to 63 ASCII characters");
+
+	document.forms[0].sessionKey.value=sessionKey;
+	document.forms[0].wlSyncNvram.value=1;	
+
+
+	with (document.forms[0]) {
+
+	   if( sky_wlBand == "1" ) {
+		   switch(wlChannel.options.selectedIndex) {
+		   case 0:
+		   	wlNBwCap.value = '7';
+		   	sky_wlBandwidth = '3';
+		   	break;
+		   case 1:
+		   case 2:
+		   	wlNBwCap.value = '3';
+		   	sky_wlBandwidth = '1';
+		   	wlNCtrlsb.value = '-1';
+		   	break;
+		   }
+	   }
+	   else
+	   {
+		   wlNBwCap.value = wlBandWidth.options[wlBandWidth.options.selectedIndex].value; // 2.4 GHz bandwidth index is stored in the value
+		   wlBntWth.value = "0";
+	   }
+
+	   if ( wifi_enabled.checked == false ) {
+		   wlEnbl.value='0';
+	   } else {
+		   wlEnbl.value='1';
+	   }
+
+	   if ( wifi_hide.checked == false ) {
+		   wlHide.value='1';
+	   } else {
+		   wlHide.value='0';
+	   }
+	   if ( wifi_isolation.checked == false ) {
+		   wlAPIsolation.value='0';
+	   } else {
+		   wlAPIsolation.value='1';
+	   }
+        var wlSyncSet = document.getElementById("wlSync");
+        if (wlSyncSet != undefined) {
+            if ( wifi_sync_setting.checked == false ) {
+                wifi_sync_setting.value='0';
+                wlSyncSettings.value = '0';
+            } else {
+                if( sky_wlBand == "2" && secType[1].checked == true ) {
+                    var answer = confirm("You have checked 'Synchronise 2.4 GHz and 5 GHz Settings' with WEP security option. The WiFi settings of 5 GHz will be applied over 2.4 GHz.");
+                    if(!answer) {
+                        wifi_sync_setting.checked = false;
+                        secType[1].disabled = false;
+                        return;
+                    }
+                }
+                wifi_sync_setting.value='1';
+                wlSyncSettings.value = '1';
+            }
+        }
+
+	   if ( enbl_wps.checked == true )
+        wlWscMode.value = 'enabled';
+	   else	   	
+        wlWscMode.value = 'disabled';
+	   
+   
+	   var authMode;
+	   var secMode;
+	   
+
+	   if(secType[0].checked == true)
+		   secMode = 0;
+	   else if(secType[1].checked == true)
+		   secMode = 1;
+	   else if(secType[2].checked == true)
+		   secMode = 2;
+	   else if(secType[3].checked == true)
+		   secMode = 3;
+	   else if(secType[4].checked == true)
+		   secMode = 4;
+   
+	   if (secMode == 0){  //Disabled
+		   wlAuthMode.value='open';
+		   wlAuth.value='0';
+		   wlWep.value='disabled';
+		   wlWpa.value='tkip+aes';
+		   //wlKeyBit.value='0';
+		   wlPreauth.value='0';
+		   wlSecMode.value = '0';
+		   
+	   } else if (secMode == 1){   //WEP
+		   authMode = auth[auth.selectedIndex].value
+		   if (authMode == '2') {
+			   wlAuthMode.value='shared';
+			   wlAuth.value='1';
+		   } else {
+			   wlAuthMode.value='open';
+			   wlAuth.value='0';
+		   }
+   
+		   wlWep.value='enabled';
+		   wlWpa.value='tkip+aes';
+		   wlKeyBit.value=getSelect(wlKeyBit);
+		   wlPreauth.value='0';
+   		   wlSecMode.value = '1';
+   
+/* WEP_4KEYS_SUPPORT
+                   var i, val;
+*/
+		   var i;
+		   var cbit = getSelect(wlKeyBit);
+/* WEP_4KEYS_SUPPORT
+                  var num;
+                  if (use_key1.checked == true){
+                          num = 0;
+                  } else if (use_key2.checked == true){
+                          num = 1;
+                  } else if (use_key3.checked == true){
+                          num = 2;
+                  } else if (use_key4.checked == true){
+                          num = 3;
+                  }
+*/
+		   var val = new String();
+		   val = wlKeyText.value;
+/* WEP_4KEYS_SUPPORT
+                  val = wlKeys[num].value;
+*/
+   
+			   if ( val == '') {
+					   alert('You cannot use a WEP key with no value.');
+					   return;
+			   }
+			   if ( val != '' ) {
+			   	         //1- 128 bit(26 hex digits)
+					   if ( cbit == '1' ){
+                                                if (val.length != 26)
+                                                {
+    	                                             alert("WEP key must be 26 hex digits");
+                                                     return;
+                                                }
+					        if ( isValidKey(val, 13, "Key") == false ) 
+					             return;
+					   } else{
+                                                if (val.length != 10)
+                                                {
+    	                                             alert("WEP key must be 10 hex digits");
+                                                     return;
+                                                }
+					        if ( isValidKey(val, 5, "Key") == false ) 
+					             return;
+					   }
+			   }
+
+/* WEP_4KEYS_SUPPORT
+                   //Besides validating the key selected, make sure that other keys being saved that is not empty complies to the key requirement 
+                  var i_ctr = 0;
+                  var tempKey;
+                       //var totalKeys = 4;
+                       var totalKeys = 1;
+                  for (i_ctr = 0; i_ctr < totalKeys; i_ctr++){
+                          tempKey = wlKeys[i_ctr].value;
+                          if (tempKey != '') //validate only if its not empty 1-128bit
+                                  if ( cbit == '1' ) {
+                                          if ( isValidKey(tempKey, 13, 'Key ' +  (i_ctr + 1)) == false ) 
+                                                  return;
+                                  } else{
+                                          if ( isValidKey(tempKey, 5, 'Key ' +  (i_ctr + 1)) == false ) 
+                                                  return;
+                                  }
+                  }
+*/
+   
+		           //Besides validating the key selected, make sure the key being saved  complies to the key requirement 
+                           var i_ctr = 0;
+                           var tempKey;
+                           tempKey = wlKeyText.value; 
+                           if (tempKey != '') //validate only if its not empty 1-128bit 
+			        if ( cbit == '1' ) {
+				      if ( isValidKey(tempKey, 13, 'Key ' +  (i_ctr + 1)) == false ) 
+					   return;
+			        } else{
+				      if ( isValidKey(tempKey, 5, 'Key ' +  (i_ctr + 1)) == false ) 
+					   return;
+			        }
+   
+			   wlKey1.value='' + encodeUrl(wlKeyText.value);
+
+
+	   }else if(secMode == 2)   //WPA2 PSK	   
+        {
+	 	   /*This will not be defined in SR101 and SR102 */
+	       var wlSyncSet = document.getElementById("wlSync");
+		   if (wlSyncSet!= undefined)
+		   {
+       	    if(wlSyncSettings.value == 0)
+	       	   errorMsg = checkWpaPskOrSsidChangeAllowed(wlWpaPsk.value,cf.wlSsid.value,sky_OtherWlSsid,sky_OtherWlPsk,sky_ssid,wpaPskKey);
+	        if( errorMsg.length > 0 ) {
+	            alert( errorMsg );
+	            return
+	        }
+
+	       }
+          	errorMsg = checkWpaPskKey(wlWpaPsk.value);
+	        if( errorMsg.length > 0 ) {
+	            alert( errorMsg );
+	            return;
+	        }
+           //loc += '&wlWpa=';
+           //loc += 'tkip';
+           //loc += '&wlAuthMode=psk&wlAuth=0';
+           wlAuthMode.value='psk2';
+           wlAuth.value='0';
+           //wlWpaPsk.value='' + encodeUrl(wlWpaPsk.value);
+           wlWep.value='disabled';
+           //wlWpa.value='tkip+aes';
+		   //QC bug 22273 has been resolved here
+		  // if(wlEncrtype.selectedIndex==0)            
+          //     wlWpa.value='tkip+aes';
+          // else
+          //     wlWpa.value='aes';
+		  wlWpa.value='aes';
+           wlPreauth.value='1';
+   		   wlSecMode.value = '5';
+       }else if (secMode == 3)   //WPA/WPA2 mixed mode      
+        {
+            /*This will not be defined in SR101 and SR102 */
+	       var wlSyncSet = document.getElementById("wlSync");
+		   if (wlSyncSet!= undefined)
+		   {
+	            if(wlSyncSettings.value == 0)
+	           		errorMsg = checkWpaPskOrSsidChangeAllowed(wlWpaPsk.value,cf.wlSsid.value,sky_OtherWlSsid,sky_OtherWlPsk,sky_ssid,wpaPskKey);
+		        if( errorMsg.length > 0 ) {
+		            alert( errorMsg );
+		            return
+				}
+			}
+            errorMsg = checkWpaPskKey(wlWpaPsk.value);
+	        if( errorMsg.length > 0 ) {
+	            alert( errorMsg );
+	            return;
+	        }
+           //loc += '&wlWpa=';
+           //loc += 'tkip';
+           //loc += '&wlAuthMode=psk&wlAuth=0';
+           wlAuthMode.value='psk psk2';
+           wlAuth.value='0';
+           //wlWpaPsk.value='' + encodeUrl(wlWpaPsk.value);
+           wlWep.value='disabled';
+           if((wlEncrtype.type == "text")&& (wlEncrtype.value == "TKIP+AES"))
+           {
+     	   		   wlWpa.value='tkip+aes';
+	       		   wlSecMode.value = '4';
+           }
+           else 
+           {
+	           if(wlEncrtype.selectedIndex==0)            
+	           {
+	               wlWpa.value='tkip+aes';
+	       		   wlSecMode.value = '4';
+	           }
+	           else
+	           {
+	               wlWpa.value='aes';
+	       		   wlSecMode.value = '4'; // Murthy : TBD we do not have any parameter for this option yet
+	           }
+           } 
+           wlPreauth.value='1';
+       }else if(secMode == 4)    //802.1X
+		   {   
+			   wlAuthMode.value='radius';
+			   wlAuth.value='0';
+			   
+						  if (isValidIpAddressforCommon(wlRadiusIPAddr.value) == false) 
+				  {
+			   alert('\"RADIUS Server IP Address\""' + wlRadiusIPAddr.value + '" is invalid IP address.');
+			   return;
+				 }
+			   
+			   if ( isInteger(wlRadiusPort.value) == false ) {
+						   alert('RADIUS Server Port must be an integer between 1 and 65535');
+						   return;
+				   }
+			   var port1 = wlRadiusPort.value * 1;
+			   if ( (port1 <1)||(port1 > 65535) ) {
+						   alert('RADIUS Server Port must be an integer between 1 and 65535');
+						   return;
+				   }
+   
+			   wlRadiusServerIP.value= wlRadiusIPAddr.value;
+			   wlRadiusPort.value=  wlRadiusPort.value;
+			   wlRadiusKey.value= encodeUrl(wlRadiusKey.value);				   
+			   wlWep.value='enabled';
+			   wlWpa.value='tkip+aes';
+			   wlPreauth.value='0'; 
+			   
+		   }
+		   // the last one to submit - if changing ssid above variables belong to previous ssid
+		   //loc += '&wlWep=disabled&wlPreauth=0&wlSsidIdx=0';  
+
+	}		   
+
+
+	if(check_if_allow_submit() == true)
+	{   
+    		if_allow_submit=true;
+			if((document.forms[0].secType[0].checked == true) && (sky_wlAuthMode != 'open')) /* If the security is disabled ask to the user whether you need an open security feature*/
+			{
+				var answer = confirm("Are you sure you want to disable WiFi security? Doing so will make your WiFi network available to unauthorised users");
+				if(!answer)
+				{
+					return; /* if the answer is no, return do not submit form*/
+				}
+			}
+    		cf.submit();
+    }
+    return ;
+}
+
+function check_if_allow_submit()
+{
+	var good_words_SSID = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ !#$%&'()*+,-./:;=?@[\\]^_`{|}~";
+	if (if_allow_submit==false)
+		return ;
+    var ssid = document.forms[0].wlSsid.value;
+    var space=" ";
+    if( (ssid.indexOf(space)==0) || (ssid.lastIndexOf(space)==ssid.length-1) ) {
+        alertR("SSID cannot have space character at beginning or end");
+        return false;
+    }
+
+        if (xSSpatternExists(decodeHtml(ssid)))
+        {
+           alertR("Invalid SSID name");
+           return;
+        }
+
+	if (check_goodwords(ssid, good_words_SSID))
+	{
+        return true;
+	}
+	else
+	{
+		//return false;
+		alertR("SSID contains characters which are not allowed. Valid special characters are SPACE!#$%&'()*+,-./:;=?@[\\]^_`{|}~");
+		return;
+	}
+	
+		
+		
+}
+
+function showhide(element, sh)
+{
+  var status;
+    if (sh == 1) {
+        status = "inline";
+    }
+    else {
+        status = "none"
+    }
+
+    if (document.getElementById)
+    {
+	// standard
+	document.getElementById(element).style.display = status;
+    }
+    else if (document.all)
+    {
+	// old IE
+	document.all[element].style.display = status;
+    }
+    else if (document.layers)
+    {
+	// Netscape 4
+	document.layers[element].display = status;
+    }
+}
+/*
+function  setWpsSelection()
+{
+	wpsClicked  = true;
+}
+*/
+function AccessPointHandler()
+{
+    if (document.forms[0].wifi_enabled.checked == false)
+    {
+        if( productModel=='ER110' || productModel=='SR200' || productModel=='BR200' )
+        {
+            var answer = confirm(WarningMsgER110_SR200);
+            if(answer == false)
+                document.forms[0].wifi_enabled.checked = true;
+        }
+        else if( productModel=='EE120' )
+        {
+            var answer = confirm(WarningMsgEE120);
+            if(answer == false)
+                document.forms[0].wifi_enabled.checked = true;
+        }
+    }
+}
+function wpsCheckBoxHandler()
+{
+	/* If wps disabled and user tries to enable it ,if broadcast SSID unchecked we need to show a confirmation message to the user that SSID
+	broadcasting will be enabled */
+	if (document.forms[0].enbl_wps.checked == true) 
+	{
+	
+		if(document.forms[0].wifi_hide.checked == false ) 
+		{
+			var answer = confirm("Enabling WPS will force your WiFi network SSID to be broadcast openly. Would you like to continue?");
+			if(answer)
+			{
+				document.forms[0].wifi_hide.checked=true;
+			}
+			else
+			{
+				document.forms[0].enbl_wps.checked = false;
+			}
+		}
+	}
+    else
+    {
+        if( productModel=='ER110' || productModel=='SR200' || productModel=='BR200' )
+        {
+            var answer = confirm(WarningMsgER110_SR200);
+            if(answer == false)
+                document.forms[0].enbl_wps.checked = true;
+        }
+        else if( productModel=='EE120' )
+        {
+            var answer = confirm(WarningMsgEE120);
+            if(answer == false)
+                document.forms[0].enbl_wps.checked = true;
+        }
+    }
+}
+/* SAJJAN: Now we need to enable WPS by default if the user is switching to a mode in which WPS supports.*/
+function displayMode()
+{
+ var value;
+ 
+ 
+	
+ with (document.forms[0]) {
+
+	if(sky_wpsTrusteMACState == 0)
+		enbl_wps.disabled =false;
+	else
+		enbl_wps.disabled = true;
+ /*	
+   if(wpsClicked == true)
+   {
+   	// dont change checked status leave as it is 
+	
+	wpsClicked = false
+   }
+   else
+   {
+   
+	
+  //	   if (WscMode == 'enabled' ) {
+//		   enbl_wps.checked = true;
+		  // enbl_wps.disabled =false;
+//	   }
+//	   else
+//	   {
+//		   enbl_wps.checked = false;
+		   
+//   	   }    	   //enbl_wps.disabled =true;
+   }
+
+  */
+	if(secType[0].checked == true)
+   {
+		value = 0;
+	   
+	}
+   else if(secType[1].checked == true)
+   {
+            value = 1;
+	   if(enbl_wps.checked == true)
+	   {
+                var user_msg = "This change will disable WPS mode. Would you like to continue?";
+                var ret = confirm(user_msg);
+                if(ret) {
+                    enbl_wps.checked = false;
+                    if(sky_wpsTrusteMACState == 0)
+                        enbl_wps.disabled =true;
+                } else {
+                    secType[value].checked = false;
+                    value = prevSecMode;
+                    secType[value].checked = true;
+                }
+            } else {
+                enbl_wps.checked = false;
+                if(sky_wpsTrusteMACState == 0) 
+                    enbl_wps.disabled =true;
+            }
+	}
+   else if(secType[2].checked == true)
+   {
+		value = 2;
+	}
+   else if(secType[3].checked == true)
+   {
+		value = 3;
+	}
+   else if(secType[4].checked == true)
+   {
+		value = 4;
+	}
+ 
+   showhide('wepSecInfo',0);
+   showhide('wpaSecInfo',0);
+   showhide('wpa2pskInfo',0);
+   showhide('wpawpa2mixedInfo',0);
+   showhide('eapSecInfo',0);
+   showhide('WpsPinInfo',0);
+   showhide('networkkeyInfo',0); 
+   showhide('hrefhelp8',0);
+   showhide('hrefhelp9',0);   
+   showhide('wpaencryptionInfo',0);   
+
+   switch (value){
+	   case 1: //WEP   
+	   		enbl_wps.checked =false;
+			if(sky_wpsTrusteMACState == 0)
+			{
+
+				enbl_wps.disabled =true;
+			}
+		   showhide('wepSecInfo',1);
+		   break;
+       case 2: //wpa2-PSK
+	      showhide('wpaSecInfo',1);
+          showhide('wpa2pskInfo',1);
+          showhide('networkkeyInfo',1);   
+          showhide('hrefhelp8',1);
+          showhide('hrefhelp9',0);
+		  showhide('wpaencryptionInfo',0);
+          break;
+	   case 3: //WPA/WPA2 mixed mode
+	       showhide('wpaSecInfo',1);
+		   showhide('wpawpa2mixedInfo',1);
+           showhide('networkkeyInfo',1);           
+           showhide('hrefhelp8',0);
+           showhide('hrefhelp9',1);
+           showhide('wpaencryptionInfo',1); 
+			wlEncrtype.selectedIndex = 0;
+//		   wlWpaPsk.disabled = false;
+		   break;
+	   case 4: //WPA-802.1x
+			enbl_wps.checked =false;
+			if(sky_wpsTrusteMACState == 0)
+			{
+
+				enbl_wps.disabled =true;
+			}
+
+		   showhide('eapSecInfo',1);
+		   break;
+	   case 0:  //disable
+		   //showhide('sharedSecInfo',1);
+		   //wlWpaPsk.disabled = true;
+		   break;
+	 }
+   if(enbl_wps.checked ==true)
+   {
+     showhide('WpsPinInfo',1);
+	// secType[1].disabled=true;
+	 //secType[2].disabled=true;
+	 }
+	 else
+	 {
+		// secType[1].disabled=false;
+		//secType[2].disabled=false;
+	 }
+
+ }
+	
+	return;
+}
+
+
+
+
+function loadWlSecurity(){
+   with (document.forms[0]) {
+	wlWpaPsk.value = wpaPskKey;
+    
+	wlRadiusIPAddr.value = radiusServerIP;
+	wlRadiusPort.value = radiusPort;
+	wlRadiusKey.value = radiusKey;
+	wpspin.value=WscDevPin;
+	wlKeyBit.selectedIndex = parseInt(bit, 10);
+
+    if(wpa=='aes')
+    {
+        wlEncrtype.selectedIndex=1;
+    }else{
+        wlEncrtype.selectedIndex=0;
+    }
+   showhide('wepSecInfo',0);
+   showhide('wpaSecInfo',0);
+   showhide('wpa2pskInfo',0);
+   showhide('wpawpa2mixedInfo',0);
+   showhide('eapSecInfo',0);
+   showhide('WpsPinInfo',0);
+   showhide('networkkeyInfo',0);
+   showhide('hrefhelp8',0);
+   showhide('hrefhelp9',0);   
+   showhide('wpaencryptionInfo',0);
+   
+
+/* WEP_4KEYS_SUPPORT
+       switch(parseInt(keyIdx - 1, 10)){
+               case 0:
+                       use_key1.checked = true;
+                       break;
+               case 1:
+                       use_key2.checked = true;
+                       break;
+               case 2:
+                       use_key3.checked = true;
+                       break;
+               case 3:
+                       use_key4.checked = true;
+                       break;
+       }
+       //var totalKeys =4;
+       var totalKeys =1;
+       for ( i = 0; i < totalKeys; i++ ) {
+               if( keys[i] == '(null)' )
+                       wlKeys[i].value = '';
+               else    
+                       wlKeys[i].value = keys[i];
+       }
+
+*/
+   wlKeyText.value = keyText;
+	if (sky_wlAuthMode == 'open'){
+      		// authmode=Open and wep=enabled
+      		if (wep == 'enabled'){
+      			auth.selectedIndex = 0;
+      			secType[1].checked = true;
+      			prevSecMode = 1;
+		/* we need to disable in this mode */		
+			enbl_wps.disabled =true;		
+			showhide('wepSecInfo',1);
+      		} else {
+      			secType[0].checked = true;
+      			prevSecMode = 0;
+      			//showhide('sharedSecInfo',1);	
+			//wlWpaPsk.disabled = true;	
+      		}
+	} else if (sky_wlAuthMode == 'shared'){
+      		// authmode=shared
+      		auth.selectedIndex = 1;
+      		secType[1].checked = true;
+      		prevSecMode = 1;
+	/* we need to disable in this mode */		
+		enbl_wps.disabled =true;	
+		showhide('wepSecInfo',1);
+        
+	} else if (sky_wlAuthMode == 'psk2'){ //WPA2 PSK
+        secType[2].checked = true;
+        prevSecMode = 2;
+ /* irrespective of all make wps active checked is already done in starting of form load */
+	enbl_wps.disabled =false;
+	    showhide('wpaSecInfo',1);
+        showhide('wpa2pskInfo',1);
+        showhide('networkkeyInfo',1);   
+        showhide('hrefhelp8',1);
+        showhide('hrefhelp9',0);
+		showhide('wpaencryptionInfo',0);//sajjan, QC bug 22273 has been fixed
+        wlWpaPsk.disabled = false;
+	} else if (sky_wlAuthMode == 'psk psk2'){ //WPA WPA2 PSK (Mixed Mode)
+        secType[3].checked = true;
+        prevSecMode = 3;
+	enbl_wps.disabled =false;	
+	    showhide('wpaSecInfo',1);
+        showhide('wpawpa2mixedInfo',1);   
+        showhide('networkkeyInfo',1);   
+        showhide('hrefhelp8',0);
+        showhide('hrefhelp9',1);
+        showhide('wpaencryptionInfo',1);           
+        wlWpaPsk.disabled = false;
+	} else if (sky_wlAuthMode == 'radius'){	//WPA-802.1x
+      		// authmode=radius
+    	secType[4].checked = true;
+    	prevSecMode = 4;
+		showhide('eapSecInfo',1);
+	}	
+    
+    if(enbl_wps.checked ==true){
+      showhide('WpsPinInfo',1);
+    }
+
+	var skyExtender = '';
+	if (skyExtender != '')
+	{
+	  wlWpaPsk.disabled = true;
+	  wlWpaPsk.readonly = true;
+	}
+   }
+}
+
+
+
+function loadChannelList(OnPageLoad)
+{
+	var sel_ch;
+	var sel_bandwidth;
+
+	/* save selected */   
+	if(OnPageLoad)
+	{      
+		sel_ch = sky_wlChannel;
+		sel_bandwidth = sky_wlBandwidth;
+
+		if (sky_wlBand == "1") // 5 GHz
+		{
+
+/* Pretty sure this is a problem here, the sky_wlBandwidth is the ACI retutrned value
+   for the bandwidth, where:
+      0=20MHz, 1=40MHz, 2=20/40MHz & 3=80Mhz
+
+   But in the 'else' clause below, the bandwidth is taken from the selection, where:
+      0=36/80, 1=36/40 & 2=44/40
+ */
+			if (sky_wlChannel == "36")
+			{
+				if (sky_wlBandwidth == "3")
+				{
+					sel_bandwidth = "7";
+				}
+				else
+				{
+					sel_bandwidth = "3";
+				}
+			}
+			else
+			{
+				sel_bandwidth = "3";
+			}
+		}
+		else // 2.4 GHz
+		{
+			document.forms[0].wlNBwCap.value = sel_bandwidth; // this setting will be applied when button is pressed
+		}
+   	}
+   	else
+   	{
+		sel_ch = document.forms[0].wlChannel.value;
+		if(sky_wlBand == "1")
+		{
+			sel_bandwidth = document.forms[0].wlBandWidth.value;
+			document.forms[0].wlNBwCap.value = sel_bandwidth;
+		}
+		else
+			sel_bandwidth = "0";
+	}
+
+	document.forms[0].wlChannel.length=0;
+
+
+	if(sky_wlBand == "2")
+	{
+		
+	}
+	else if(sky_wlBand == "1")
+	{
+		document.forms[0].wlChannel[0] = new Option("80 MHz ch. 36", "36");
+document.forms[0].wlChannel[1] = new Option("40 MHz ch. 36", "36");
+document.forms[0].wlChannel[2] = new Option("40 MHz ch. 44", "44");
+
+	}
+	else
+	{
+		document.forms[0].wlChannel[0] = new Option("Auto", "0")
+   	}
+
+	if( sky_wlBand == "1" )
+	{
+		if(document.forms[0].wlChannel.options.length==3)
+		{
+			switch(sel_ch)
+			{
+				case "36":
+					if ( sel_bandwidth == "7" )
+					{
+						document.forms[0].wlChannel.options[0].selected = true;
+					}
+					else
+						document.forms[0].wlChannel.options[1].selected = true;
+					break;
+				case "44":
+					document.forms[0].wlChannel.options[2].selected = true;
+					break;
+			}
+		}
+	}
+	else
+	{
+		/* mark selected channel */
+		for (idx=0; idx<document.forms[0].wlChannel.options.length; idx++)
+		{
+			if (document.forms[0].wlChannel.options[idx].value == sel_ch)
+			{
+			 document.forms[0].wlChannel.options[idx].selected = true;
+			 break;
+			}
+		}
+		/* set to first channel none-auto if not found */
+		if (idx == document.forms[0].wlChannel.options.length)
+		{
+			document.forms[0].wlChannel.options[1].selected = true;
+		}
+
+		/* mark selected bandwidth */
+		for (idx=0; idx<document.forms[0].wlBandWidth.options.length; idx++)
+		{
+			if (document.forms[0].wlBandWidth.options[idx].value == sel_bandwidth)
+			{
+			 document.forms[0].wlBandWidth.options[idx].selected = true;
+			 break;
+			}
+		}
+		/* set to first bandwidth none-auto if not found */
+		if (idx == document.forms[0].wlBandWidth.options.length)
+		{
+			document.forms[0].wlBandWidth.options[1].selected = true;
+		}
+	}
+   
+   if( sky_wlBand == "1" && skyWlCanUserChangeChannel == 0 )
+   {
+       document.forms[0].wlChannel.disabled=true;
+   }
+}
+
+function syncSettingHandler()
+{
+    with (document.forms[0]) {
+        var wlSyncSet = document.getElementById("wlSync");
+        if ( wlSyncSet != undefined && sky_wlBand == "2" ) {
+            if ( wifi_sync_setting.checked == true )
+                secType[1].disabled = true;
+            else
+                secType[1].disabled = false;
+        }
+    }
+}
+
+function formLoad() {
+    var i;
+    var bandWidthInput;
+
+   if (isIE())
+   {
+	   document.documentElement.style.overflowX = "hidden";
+	   document.documentElement.style.overflowY = "auto";
+   }
+	
+   
+   with (document.forms[0]) {
+	   wlSsid.value=sky_ssid;
+	/* select wep security according to httpd selection SAJJAN*/
+	wlKeyBit.selectedIndex=bit;
+
+	loadChannelList(true);
+	/*
+       for( i = 0; i < wlChannel.length; i++ )
+       {
+           if( wlChannel.options[ i ].value == sky_wlChannel )
+               break;
+
+       }
+       if( i < wlChannel.length )
+            wlChannel.selectedIndex = i;
+       
+       else
+            wlChannel.selectedIndex = 0;
+*/
+		/*document.forms[0].wlChannel.options[sky_wlChannel].selected="selected";*/
+       
+       // Hook channel list update to changes in bandwidth.
+/*       bandWidthInput = document.getElementsByName( "wlBandWidth" )[ 0 ];
+       if( bandWidthInput !== undefined )
+       {
+           bandWidthInput.onchange = function(){updateChannelList()};
+           updateChannelList();
+           
+       }
+*/
+	   if (sky_wlEnabled == '1' ){
+		   wifi_enabled.checked = true;
+	   } else{
+		   wifi_enabled.checked = false;
+	   }
+	   
+	   if(sky_wlHide== '0')
+	   {
+			wifi_hide.checked = true;
+	   }
+	   else
+	   {
+			wifi_hide.checked = false;
+	   }
+	   
+	   if (sky_wlIsolation == '1' ){
+		   wifi_isolation.checked = true;
+	   } else{
+		   wifi_isolation.checked = false;
+	   }	   
+
+/*This will not be defined in SR101 and SR102 */
+       var wlSyncSet = document.getElementById("wlSync");
+	   if (wlSyncSet!= undefined)
+	   {
+		   if (sky_wlSyncSettings == '1'){
+	           wifi_sync_setting.checked = true;
+	           
+	       }
+	       else
+	       {
+	           wifi_sync_setting.checked = false;
+	       }
+       }
+	   if (WscMode == 'enabled' ){
+		   enbl_wps.checked = true;
+	   } else{
+		   enbl_wps.checked = false;
+	   }	
+	//if(enbl_wps.checked ==true)
+	//{
+	// 	secType[1].disabled=true;
+	//	secType[2].disabled=true;
+	// }
+	// else
+	// {
+	//	secType[1].disabled=false;
+	//	secType[2].disabled=false;
+	// }
+	   
+	   loadWlSecurity();
+	   if (wlSyncSet != undefined){
+        if(wifi_sync_setting.checked == true)
+            secType[1].disabled = true;
+   }
+   }
+   if(sky_wpsTrusteMACState == 1)
+	{
+		if(sky_actualUserWPSState == 1)
+		{
+			document.forms[0].enbl_wps.checked = true;
+		}
+		document.forms[0].enbl_wps.disabled = true;
+	}
+}
+function btnApply(place) {
+   var loc = place + '?';
+   
+   loc += '&wlSyncNvram=1';
+   loc += '&sessionKey=' + sessionKey;
+   var code = 'location="' + loc + '"';
+   eval(code);
+}
+   
+   function padTo64(val)
+   {
+	   var ret="";
+	   var x;
+	   var rep;
+	   rep = 1 + (64 / (val.length));
+	   for (x = 0; x < rep; x++)
+	   {
+		   ret = ret + val;
+	   };
+	   return ret.substring(0,64);
+   };
+   
+   function wepkey128(val)
+   {
+	   var ret = hex_md5(padTo64(val));
+	   ret = ret.substring(0,26);
+	   return ret.toUpperCase();; 
+   };
+   
+   // converts one byte to a 2 chars hex string
+   function bin2hex(val)
+   {
+	   var hex = "0123456789ABCDEF";
+	   var result = "";
+	   var index;
+	   index = (val >> 4) & 0x0f;
+	   result = result + hex.substring(index, index+1);
+	   index = val & 0x0f;
+	   result = result + hex.substring(index, index+1);
+	   return result;
+   }
+   
+   function wepkey64(val)
+   {
+	   var pseed  = new Array(4);
+		   pseed[0] = 0; pseed[1] = 0; pseed[2] = 0; pseed[3] = 0;
+	   var randNumber;
+	   var k64 = new Array(4);
+		   k64[0] = ""; k64[1] = ""; k64[2] = ""; k64[3] = "";
+	   var i, j, tmp;
+	   for (i = 0; i < val.length; i++)
+	   {
+		   pseed[i%4] ^= val.charCodeAt(i);
+	   };
+	   randNumber = pseed[0] | (pseed[1] << 8) | (pseed[2] << 16) | (pseed[3] << 24);
+	   for (i = 0; i < 4; i++)
+	   {
+		   for (j = 0; j < 5; j++)
+		   {
+			   randNumber = (randNumber * 0x343fd + 0x269ec3) & 0xffffffff;
+			   tmp = (randNumber >> 16) & 0xff;
+			   k64[i] += bin2hex(tmp);
+		   };
+	   };
+	   return k64;
+   };
+   
+   function chKeyGen()		   // add by joanly for WEP Key generation button and function 2010/5/4
+   {
+	//var totalKeys = 4;
+	var totalKeys = 1;
+	   with ( document.forms[0] ) 
+	   {
+		   var i;
+		   if(secType[1].checked == true)  //WEP
+		   {
+				   var str = new String();
+				   str = passphrase.value;
+				   if ( str.length < 1) {
+				   alert("Passphrase must be at least 1 character");	   
+						   return;
+				   }   
+			   var cbit = getSelect(wlKeyBit);
+				   if ( cbit == '1' ){ //128 bit(26 hex digits)
+				   for (i = 0; i < totalKeys; i++)
+				   {
+/* WEP_4KEYS_SUPPORT
+                                          wlKeys[i].value = wepkey128(str);
+                                          str = wlKeys[i].value.substring(20,26);
+*/
+					   wlKeyText.value = wepkey128(str);
+					   str = wlKeyText.value.substring(20,26);
+				   }
+				   
+				   } else{		   //64 bit(10 hex digits)
+				   var key = wepkey64(str);
+				   for (i = 0; i < totalKeys; i++)
+				   {
+/* WEP_4KEYS_SUPPORT
+                                           wlKeys[i].value = key[i];
+*/
+					   wlKeyText.value = key[i];
+				   }		   
+				   }	   
+		   }
+		   else if(secType[3].checked == true) //802.1X
+		   {
+				   var str = new String();
+				   str = passphrase.value;
+				   if ( str.length < 1) {
+				   alert("Passphrase must be at least 1 character");	   
+						   return;
+				   }	   
+
+		   }
+	   }
+   }
+
+
+   // -->
+   </script>
+<script   type="text/javascript">
+<!-- hide
+var wlRefreshParameters = '0'; // bug 4071
+// done hiding -->
+</script>
+</head>
+<body onload="formLoad();document.forms[0].elements[0].focus();">
+<div id="head">
+  <div id="header">
+	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li class="selected"><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-wireless" class="selected">
+      <li><a href="sky_wireless_band.cgi?band=2.4GHz">2.4 GHz WiFi Settings</a></li>
+<li class="selected"><a href="sky_wireless_band.cgi?band=5GHz">5 GHz WiFi Settings</a></li>
+
+      <li ><a href="sky_wireless_wps.html">Add WPS Client</a></li>
+      
+      
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="content">
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>5 GHz WiFi Settings</h1>
+        <p class="black">Placement of your Sky Hub to Optimise WiFi Connectivity</p>
+        <p>The range of your WiFi signal can vary significantly based on where you locate your Sky Hub in your home. For best results, place your Sky Hub:</p>
+        <ul>
+          <li>In a central location if you will have several devices connecting to it wirelessly.</li>
+          
+          <li>Away from potential sources of interference, e.g. microwaves, baby monitors, and cordless phones.</li>
+          <li>Away from electrical equipment, e.g. fluorescent lighting, fans with a motor.</li>
+          <li>Away from large metal surfaces.</li>
+		</ul>
+        <p>Try your Sky Hub in different locations to find the best position and always stand the Sky Hub upright. If you install your Sky Hub in a non-optimal location or lay it horizontally it may result in reduced performance.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <div class="main-panel">
+        <hr class="top"/>
+        <form method="post" action="sky_wireless_settings.cgi" onsubmit="return check_if_allow_submit();">
+        <div >
+          <div class="section-heading">
+            <h3>WiFi Network</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <div class="row-holder">
+            <label class="w250">Name (SSID):</label>
+            <input name="wlSsid" value="TestSSID" size="20" maxlength="32" type="text" />
+          </div>
+          <div class="row-holder">
+            <label class="w250" for="Region" >Region:</label>
+            <input id="Region" name="Region" size="20" maxlength="8" value="Europe" onfocus="this.select()" disabled="disabled" type="text" />
+          </div>
+          <div class="row-holder">
+            <label class="w250">Desired Channel:</label>
+            <select name="wlChannel" size="1">
+            <option selected="selected" value="Auto">Auto</option>
+            </select>
+          </div>
+          <div class="row-holder">
+			
+          </div>
+          <div class="row-holder">
+          	<label class="w250">Mode:</label>
+			        <select name="wlTxMode" size="1" disabled="disabled" >
+          <option value="0" selected="selected">Auto</option>
+        </select>
+
+          </div>
+          <hr />
+		  </div>
+          <div class="section-heading">
+            <h3>WiFi Access Point</h3>
+            <a class="help-btn" href="#" name="help2">help</a></div>
+          <div class="row-holder">
+            <input id="accesspoint" name="wifi_enabled" value="0" type="checkbox" onclick="AccessPointHandler()" />
+            <label for="accesspoint" class="right"> Enable WiFi Access Point</label>
+          </div>
+          <div class="row-holder">
+            <input id="EnblWps" name="enbl_wps" value="0" type="checkbox" onclick="wpsCheckBoxHandler();"/>
+            <label for="EnblWps" class="right"> Enable WPS</label>
+          </div>
+          <div class="row-holder"  >
+            <input id="broadcast" name="wifi_hide" value="0" type="checkbox" onclick="WifiIsolationHandler()" />
+            <label for="broadcast" class="right"> Allow Broadcast of Name (SSID)</label>
+          </div>
+		  <div class="row-holder" style="display: none;">
+<input id="wireless" name="wifi_isolation" value="0" type="checkbox"/>
+<label for="wireless" class="right"> Wireless Isolation</label>
+</div>
+ 
+		  <div class="row-holder">
+<input id="wlSync" name="wifi_sync_setting" value="0" type="checkbox" onclick="syncSettingHandler()" />
+ <label for="wlSync" class="right">Synchronise 2.4 GHz and 5 GHz Settings</label>
+</div>
+         
+		             
+		  <div id="wlSecInfo" >
+		  <hr />
+            <div class="section-heading">
+              <h3>Security Options</h3>
+              <a class="help-btn" href="#" name="help5">help</a></div>
+            <div class="row-holder">
+              <input value="0" id="secType0" name="secType" onclick="displayMode()" type="radio" />
+              <label for="secType0" class="right">Disable</label>
+            </div>
+            <div class="row-holder"  style="display: none;" >
+              <input value="1" id="secType1" name="secType" onclick="displayMode()" type="radio" />
+              <label for="secType1" class="right">WEP (Wired Equivalent Privacy)</label>
+            </div>
+        <!-- This is newly added -NK  -->
+            <div class="row-holder">
+              <input value="2" id="secType2" name="secType" onclick="displayMode()" type="radio" />
+              <label for="secType2" class="right">WPA2-PSK (AES)</label>
+            </div>
+        <!-- End of Security option addition- NK -->
+        
+            <div class="row-holder" id="wpscontrol3">
+              <input checked="checked" value="3" id="secType3" name="secType" onclick="displayMode()" type="radio" />
+              <label for="secType3" class="right">WPA/WPA2-PSK (Mixed Mode)</label>
+            </div>
+        
+        <!--  
+				   <tr>
+					<td><input value="4" id="secType4" name="secType" onclick="displayMode()" type="radio"> &nbsp;WPA-802.1x</td>
+				   </tr>	
+				   -->
+  </div>
+          <div id="wepSecInfo" style="display:block;" >
+            <hr />
+            <div class="section-heading">
+              <h3>WEP Security Encryption</h3>
+              <a class="help-btn" href="#" name="help6">help</a></div>
+            <div class="row-holder">
+              <label for="auth" class="w250">Authentication Type:</label>
+              <select id="auth" name="auth" >
+              <option value="1" selected="selected">Open System</option>
+                <option value="2">Shared Key</option>
+              </select>
+            </div>
+            <div class="row-holder">
+              <label for="wlKeyBit" class="w250">Encryption Strength:</label>
+              <select id="wlKeyBit" name="wlKeyBit" >
+              <option value="0">64 bit (10 hex digits)</option>
+              <option selected="selected" value="1">128 bit (26 hex digits)</option>
+            </select>
+            </div>
+            <hr />
+            <div class="section-heading">
+              <h3>WEP Key</h3>
+              <a class="help-btn" href="#" name="help7">help</a></div>
+            <div class="row-holder">
+                <label for="passphrase" class="w250" >Pass Phrase:</label>
+                <input id="passphrase" size="14" maxlength="32" type="text" />
+                <input name="keygen" value="Generate" onclick="chKeyGen()" type="button" />
+            </div>
+            <div class="row-holder">
+<!--  WEP_4KEYS_SUPPORT
+          <td><label for="wep_key0">Key1&nbsp;:</label></td>
+          <td><input name="use_key" id="use_key1" checked="checked" type="radio">
+            <input id="wlKeys" maxlength="26" size="40" name="wlKeys"></td>
+-->
+              <label for="wep_key0" class="w250">Key :</label>
+              <input id="wlKeyText" maxlength="26" size="40" name="wlKeyText" type="text"  />
+		<!-- this has been added to keep the code as such and reduce the changes as much as possible -->
+              <input id="wlKeys" maxlength="26" size="40" name="wlKeys" type="hidden" />
+            </div>
+<!--  WEP_4KEYS_SUPPORT
+        <tr>
+          <td><label for="wep_key1">Key 2&nbsp;:</label></td>
+          <td><input name="use_key" id="use_key2" type="radio">
+            <input id="wlKeys" maxlength="26" size="40" name="wlKeys"></td>
+        </tr>
+        <tr>
+          <td><label for="wep_key2">Key
+              3&nbsp;:</label></td>
+          <td><input name="use_key" id="use_key3" type="radio">
+            <input id="wlKeys" maxlength="26" size="40" name="wlKeys"></td>
+        </tr>
+        <tr>
+          <td><label for="wep_key3">Key
+              4&nbsp;:</label></td>
+          <td><input name="use_key" id="use_key4" type="radio">
+            <input id="wlKeys" maxlength="26" size="40" name="wlKeys"></td>
+        </tr>
+-->
+  </div>
+          <div id="wpaSecInfo" >
+          <hr />
+            <div class="section-heading">            
+              <h3 id="wpa2pskInfo">WPA2-PSK Security Encryption</h3>
+              <a class="help-btn" href="#" id="hrefhelp8" name="help8">help</a>
+              <h3 id="wpawpa2mixedInfo">WPA/WPA2-PSK (Mixed Mode) Security Encryption</h3>              
+              <a class="help-btn" href="#" id="hrefhelp9" name="help9">help</a>            
+  </div>
+            <div id="networkkeyInfo">
+              <div class="row-holder">
+                <label class="w250" for="wpa_psk">Network Key (8 ~ 63 characters):</label>
+                <input name="wlWpaPsk" maxlength="63" value="REDACTED" id="wlWpaPsk" />				                
+  </div>
+  </div>
+            <div id="wpaencryptionInfo">
+              <div class="row-holder">
+                <label class="w250" for="wlEncrtype">WPA Encryption:</label>
+                <input id="wlEncrtype" name="wlEncrtype" size="20" maxlength="8" value="TKIP+AES" onfocus="this.select()" disabled="disabled" type="text" />
+                </div>
+  </div>
+		<div id="WpsPinInfo" >
+              <script>
+              var skyExtender = '';
+              if (skyExtender == '')
+              {
+                  document.write("<hr />");
+              }
+              </script>
+            <div class="section-heading" >
+              <h3>WPS PIN</h3>
+              <a class="help-btn" href="#" name="help4">help</a></div>
+            <div class="row-holder" >
+              <label class="w250" for="wpspin">WPS PIN (8 numbers)</label>
+              <input id="wpspin" name="wpspin" size="24" maxlength="64" value="11223344" onfocus="this.select()" disabled="disabled" type="text" />
+            </div>
+          </div>
+  </div>
+          <div id="eapSecInfo" style="display:none;">
+            <hr />
+            <div class="section-heading">
+              <h3>WPA-802.1x Encryption</h3>
+              <a class="help-btn" href="#help9">help</a></div>
+            <div class="row-holder">
+              <label class="w250"for="radius_server_address">Radius Server IP Address:</label>
+              <input name="wlRadiusIPAddr" value="0.0.0.0" id="wlRadiusIPAddr" maxlength="15" />
+            </div>
+            <div class="row-holder">
+              <label class="w250" for="radius_server_port">Radius Port:</label>
+              <input name="wlRadiusPort" value="1812" id="wlRadiusPort" size="10" maxlength="5" />
+            </div>
+            <div class="row-holder">
+              <label class="w250" for="radius_shared_secret">Radius Key:</label>
+              <input name="wlRadiusKey" id="wlRadiusKey" maxlength="80" />
+            </div>
+  </div>
+  <div class="hr"></div>
+  <input name="wlSyncSettings" value="0" type="hidden"/>
+  <input name="wlBand" value="1" type="hidden"/>
+  <input name="sessionKey" value="uninitialised" type="hidden"/>
+  <input name="wlAuthMode" value="uninitialised" type="hidden"/>
+  <input name="wlAuth" value="uninitialised" type="hidden"/>
+  <input name="wlEnbl" value="0" type="hidden"/>
+  <input name="wlWscMode" value="disabled" type="hidden"/>
+  <input name="wlAPIsolation" value="0" type="hidden"/>
+  <input name="wlWep" value="" type="hidden"/>
+  <input name="wlWpa" value="" type="hidden"/>
+  <input name="wlPreauth" value="" type="hidden"/>
+  <input name="wlNBwCap" value="3" type="hidden"/>
+  <input name="wlNCtrlsb" value="" type="hidden"/>
+  <input name="wlHide" value="0" type="hidden"/>
+  <input name="wlSecMode" value="5" type="hidden"/> 
+  <input name="wlKey1" value="" type="hidden"/> 
+  <input name="wlRadiusServerIP" value="" type="hidden"/>
+  <input name="wlSyncNvram" value="1" type="hidden"/>
+  <input name="wlBntWth" value="" type="hidden"/>
+<!-- WlSecMode Only  used for mesh support -->
+  </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.reload();" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript: if_allow_submit=true; checkData();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+		 <br class="clear-break" />
+</div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>WiFi Network </h3>
+            <b>Name (SSID):</b>
+            <p>We have set the Name of your Sky Hub to <b>SKYXXXXX</b>. Each Sky Hub has a different Name. When you connect other devices wirelessly to your Sky Hub this is the Name you will need to select from the list of networks available in your area. You can change the Name of your Sky Hub to something you may more easily remember containing up to 32 alphanumeric characters. Note the name is case sensitive, 'A' is not the same as 'a'.</p>
+            <b>Region:</b>
+			<p>We have set the region by default to <b>Europe</b>. You cannot change this. It may not be legal to operate the Sky Hub in a region other than Europe.</p>
+            <b>Desired Channel:</b>
+            <p>Select the channel width for your 5 GHz WiFi network. If you change this setting, it will be updated on all Sky Q products on your network. We recommend that this is set to <b>80 MHz ch. 36</b> unless you are instructed to change it by Sky.</p>
+            
+            <b>Mode: </b>
+            <p>We have set the mode as <b>Auto</b> to provide the most flexibility.This enables 802.11ac+n+a devices to connect to your Sky Hub.</p>
+
+      <!--
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+
+        <ul>
+        <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+         <li>802.11b - 11Mps.</li>
+
+         <li>802.11g - 54Mps.</li>
+
+         <li>The default is "g &amp; b", which allows both "g" and "b" WiFi stations to access this device.</li>
+
+        </ul>
+
+		--> 
+		</div>
+		<span class="arrow arrow-l png"></span> </div>
+		<div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+          <div class="content">
+	    <h3>WiFi Access Point</h3>
+            <b>Enable WiFi Access Point:</b>
+			<p>The WiFi Access Point of your Sky Hub can be enabled or disabled to allow WiFi connection for your WiFi devices. The WiFi icon on the front of your Sky Hub will be illuminated if it’s enabled.</p>
+            <p>If Enabled, connecting devices (e.g. computers, tablets, games consoles etc.) will be able to access the Internet wirelessly.</p>
+            <p>If Disabled, connecting devices (e.g. computers, tablets, games consoles etc.) won't be able to access the Internet wirelessly.</p>
+			<b>Enable WPS:</b>
+            <p>WPS (Wi-Fi Protected Setup) allows you to easily connect devices to the Sky Hub using either the WPS Push Button or PIN configuration. The WPS button is located on the side of your Sky Hub. Your Sky Hub is automatically <b>enabled</b> for WPS. You won't be able to use WPS if you are using WEP (Wired Equivalent privacy) or WPA-PSK (Wi-Fi Protected Access Pre-Shared Key).</p>
+            <script>
+                var sky_ext = '';
+                if (sky_ext == '')
+                {
+                    document.write("<b>Allow Broadcast of Name (SSID):</b>");
+                    document.write("<p>If Enabled, the Sky Hub will broadcast its Name to every device.</p>");
+                }
+            </script>
+            
+            		<b>Synchronise 2.4 GHz and 5 GHz Settings:</b>
+		<p>This option will synchronise 2.4 GHz and 5 GHz WiFi with Network Name (SSID), Enable WPS, and Security Options.
+Settings from the currently selected WiFi Settings page will be applied to another WiFi Settings page.</p>
+         </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 3 -->
+        <div class="pod pod-help" id="help4"><a href="#close" class="help-close"></a>
+          <div class="content" >
+            <h3>WPS PIN</h3>
+            <p>Your eight digit WPS (Wi-Fi Protected Setup) PIN is static and assigned to your Sky Hub by default. You should enter this PIN if requested by a device you are connecting to your Sky Hub. This <b>PIN</b> appears on the rear panel label on your Sky Hub and also on the Connect card supplied with your Sky Hub packaging. </p>
+            </p>
+          </div>
+       <span class="arrow arrow-l png"></span> </div>
+        
+        <!-- HELP 5 -->
+        <div class="pod pod-help" id="help5"><a href="#close" class="help-close"></a>
+          <div class="content">
+      <h3>Security Options</h3>
+            <p>We have set a default security setting to prevent unauthorised access to your Sky Hub. This is specific to your Sky Hub and is not a generic password.</p>
+            <p>If you wish to change your security settings select the desired option, and ensure all your connecting devices (e.g. computers) have the same setting.</p>
+      <ul>
+              <li><b>Disable</b> - This will disable the security function on your WiFi network. Data will not be encrypted before transmission. We don’t recommend selecting this setting.</li>
+              <script type="text/javascript">
+                with (document.forms[0]) {
+                    var wlSyncSet = document.getElementById("wlSync");
+                    if ( wlSyncSet != undefined && sky_wlBand == "2" ) {
+                          document.write("<li><b>WEP (Wired Equivalent Privacy)</b> - encrypts data before transmission. All connecting devices (e.g. computers) need to use the same settings (WEP Key Size and WEP Key).We don\'t recommend selecting this setting, as it provides only a minimal level of security.<br>This option is not available when \"Synchronise 2.4 GHz and 5 GHz Settings\" is enabled.</li>");
+                    }
+                    else if(sky_wlBand == "2") {
+                          document.write("<li><b>WEP (Wired Equivalent Privacy)</b> - encrypts data before transmission. All connecting devices (e.g. computers) need to use the same settings (WEP Key Size and WEP Key).We don\'t recommend selecting this setting, as it provides only a minimal level of security.</li>");
+                    }
+                }
+              </script>
+              <li><b>WPA2-PSK (AES)</b> - (Wi-Fi Protected Access II Pre-Shared Key) with Advanced Encryption Standard (AES). WPA2 is an improvement on the WPA-PSK standard. With this only users with passwords can access your network. WPA2-PSK improves on the WPA standard by encrypting the signal at a higher bitrate. It is more secure than WEP, and should be used if possible.</li>
+              <li><b>WPA/WPA2-PSK (Mixed Mode)</b> - (Wi-Fi Protected Access/WPA II Pre-Shared Key) WPA2 with backward compatibility with WPA-PSK only devices.</li>
+        <!--          <li>WPA-802.1x - This version of WPA requires the use of a 
+Radius server for authentication. Each user (WiFi Client) must have a
+ "user" login on the Radius Server. Data transmissions are encrypted 
+using a key which is automatically generated. Do not use this unless you
+ are an advanced user.</li> -->
+      </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <div class="pod pod-help" id="help6"><a href="#close" class="help-close"></a>
+          <div class="content">
+      <h3>WEP Security Encryption</h3>
+            <h3>Authentication Type</h3>
+                <p>Normally this can be left at the default value of <b>Open System</b>. If that fails, select the appropriate value: Shared. Check your WiFi card's documentation to see what method to use</p>
+            <h3>Encryption Strength</h3>
+            <p>Select the WEP Encryption level:</p>
+      <ul>
+        <li><b>64-bit</b> (sometimes called 40-bit) encryption.</li>
+        <li><b>128-bit</b> encryption.</li>
+      </ul>
+          <script>
+            var skyExtender = '';
+            if (skyExtender != '')
+            {
+                document.write("<p>This is automatically synchronised with the Access Point's WEP Settings.</p>");
+            }
+          </script>
+        </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <div class="pod pod-help" id="help7"><a href="#close" class="help-close"></a>
+          <div class="content">
+          <h3>WEP Key</h3>
+          <script>
+            var sky_extender = '';
+            if (sky_extender != '')
+            {
+                document.write("<p>This is automatically synchronised with the Access Point's WEP Key.</p>");
+            }
+            else
+            {
+                document.write("<p>You can manually or automatically program the data encryption key. The value must be identical on all devices and Access Points in your network. You should make a note and keep the Key safe to make it easier to connect all your devices.</p>");
+                document.write("<h3>Automatic Key Generation (Pass Phrase)</h3>");
+                document.write("<p>Enter a word or group of printable characters in the Pass Phrase box and click the Generate button to automatically configure the WEP Key. If the Encryption Strength is set to 128 bit, then the Key box will automatically be populated with a 26 hexadecimal digit key value. If the Encryption Strength is set to 64 bit, then the key box will automatically be populated with a 10 hexadecimal digit key value.</p>");
+                document.write("<h3>Manual Key Entry</h3>");
+                document.write("<p>Enter the WEP Key information for your network in the selected Key box.</p>")
+                document.write("<ul>");
+                document.write("<li>For <b>64 bit</b> WEP - Enter ten hexadecimal digits (any combination of 0-9, A-F).</li>");
+                document.write("<li>For <b>128 bit</b> WEP - Enter twenty-six hexadecimal digits (any combination of 0-9, A-F).</li>");
+                document.write("</ul>");
+            }
+          </script>
+          </div>
+
+          <span class="arrow arrow-l png"></span> </div>
+        <div class="pod pod-help" id="help8"><a href="#close" class="help-close"></a>
+          <div class="content">
+      <h3>WPA2-PSK Security Encryption</h3>
+            <p>For WPA2-PSK, you need to enter the Network Key here. The Key must be from 8 to 63 ASCII characters. Your connecting devices (e.g. computers) must use the same Key or password.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <div class="pod pod-help" id="help9"><a href="#close" class="help-close"></a>
+            <div class="content">
+                <h3>WPA/WPA2-PSK (Mixed Mode) Security Encryption</h3>
+                <h3>Network Key</h3>
+                <p>The Network Key must be from 8 to 63 ASCII characters. Your connecting devices (e.g. computers) must use the same Key or password.</p>
+                <h3>WPA Encryption</h3>
+                <p>Select the WPA Encryption</p>
+                <ul>
+                <li>TKIP+AES</li>
+                </ul>
+            </div>
+            <span class="arrow arrow-l png"></span> 
+        </div>
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>

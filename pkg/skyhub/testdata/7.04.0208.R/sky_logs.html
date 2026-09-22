@@ -1,0 +1,1565 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Logs</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript" src="assets/js/util.js"></script>
+<script type="text/javascript">
+   <!--//
+/*
+var addr = '203.0.113.8';
+var port = '1500';
+var logingMode = '3';
+*/
+var addr = '(null)';
+var mode = '1';
+var LogBlockSites = '1';
+var LogConnToRouter = '1';
+var LogRouteOperation = '1';
+var sessionID ='1234567890';
+var good_words_ip6 = "0123456789abcdefABCDEF:/";
+
+
+function syslogdisplay() {
+	if (isIE())
+	{
+		document.documentElement.style.overflowX = "hidden";
+		document.documentElement.style.overflowY = "auto";
+	}
+   with ( document.forms[2] ) {	
+   	
+	if ( syslog_type[0].checked == true ) {		
+		sysLogIPAddr1.disabled=true;
+		sysLogIPAddr2.disabled=true;
+		sysLogIPAddr3.disabled=true;
+		sysLogIPAddr4.disabled=true;
+		sysLogIPAddrV6.disabled=true;
+	}
+	else if ( syslog_type[1].checked == true )
+	{
+		sysLogIPAddr1.disabled=false;
+		sysLogIPAddr2.disabled=false;
+		sysLogIPAddr3.disabled=false;
+		sysLogIPAddr4.disabled=false;
+		sysLogIPAddrV6.disabled=true;
+	}else if ( syslog_type[2].checked == true )
+	{
+		sysLogIPAddr1.disabled=true;
+		sysLogIPAddr2.disabled=true;
+		sysLogIPAddr3.disabled=true;
+		sysLogIPAddr4.disabled=true;
+		sysLogIPAddrV6.disabled=false;
+	}
+	
+   }
+ }
+
+function routerdisplay() {
+	if (isIE())
+	{
+		document.documentElement.style.overflowX = "hidden";
+		document.documentElement.style.overflowY = "auto";
+	}
+   with ( document.forms[2] ) {	
+	if (log_router.checked == true ){		
+        syslog_type[1].disabled = false;
+		syslog_type[0].disabled = false;
+		syslog_type[2].disabled = false;
+        log_bsites.disabled=false;
+        log_conn.disabled=false;
+        if ( syslog_type[0].checked == true ) {	
+            sysLogIPAddr1.disabled=true;
+            sysLogIPAddr2.disabled=true;
+            sysLogIPAddr3.disabled=true;
+            sysLogIPAddr4.disabled=true;
+            sysLogIPAddrV6.disabled=true;
+        }
+        else if ( syslog_type[1].checked == true )
+        {
+            sysLogIPAddr1.disabled=false;
+            sysLogIPAddr2.disabled=false;
+            sysLogIPAddr3.disabled=false;
+            sysLogIPAddr4.disabled=false;
+            sysLogIPAddrV6.disabled=true;
+        }else if ( syslog_type[2].checked == true )
+        {
+            sysLogIPAddr1.disabled=true;
+            sysLogIPAddr2.disabled=true;
+            sysLogIPAddr3.disabled=true;
+            sysLogIPAddr4.disabled=true;
+            sysLogIPAddrV6.disabled=false;
+        }
+	} else{		
+        syslog_type[1].disabled = true;
+		syslog_type[0].disabled = true;
+		syslog_type[2].disabled = true;
+		sysLogIPAddr1.value = '';
+		sysLogIPAddr2.value = '';
+		sysLogIPAddr3.value = '';
+		sysLogIPAddr4.value = '';
+        sysLogIPAddrV6.value ='';
+		sysLogIPAddr1.disabled=true;
+		sysLogIPAddr2.disabled=true;
+		sysLogIPAddr3.disabled=true;
+		sysLogIPAddr4.disabled=true;
+		sysLogIPAddrV6.disabled=true;
+		syslog_type[0].checked = true;
+		syslog_type[1].checked =false ;
+		syslog_type[2].checked =false ;
+		log_bsites.disabled=true;
+		log_conn.disabled=true;
+		log_bsites.checked=false;
+		log_conn.checked=false;
+	}	
+   }
+ }
+
+function formLoad() {
+	if (isIE())
+	{
+		document.documentElement.style.overflowX = "hidden";
+		document.documentElement.style.overflowY = "auto";
+	}
+   with ( document.forms[2] ) {
+   	
+	if (LogBlockSites == '1' ){
+		log_bsites.checked = true;
+	} else{
+		log_bsites.checked = false;
+	}
+	
+  	if(LogConnToRouter == '1')
+  	{
+	     log_conn.checked = true;
+  	}
+  	else
+  	{
+	     log_conn.checked = false;
+  	}
+	
+	if (LogRouteOperation == '1' ){
+		log_router.checked = true;
+		
+	} else{
+		log_router.checked = false;
+        addr="";
+        mode='1';
+	}	
+	
+	if (mode == '1') {
+		syslog_type[0].checked = true;
+        syslog_type[1].checked = false;
+        syslog_type[2].checked = false;
+	}
+	
+	if( (typeof(addr) == undefined) || (addr == null) || (addr == "") || (addr == "0.0.0.0")){
+		sysLogIPAddr1.value = '';
+		sysLogIPAddr2.value = '';
+		sysLogIPAddr3.value = '';
+		sysLogIPAddr4.value = '';
+        sysLogIPAddrV6.value ='';
+	}else if (isValidIpAddress6(addr) == true){
+		sysLogIPAddrV6.value = addr;
+		sysLogIPAddr1.value = '';
+		sysLogIPAddr2.value = '';
+		sysLogIPAddr3.value = '';
+		sysLogIPAddr4.value = '';		
+
+		syslog_type[0].checked = false;
+		syslog_type[1].checked = false;
+		syslog_type[2].checked = true;
+	}
+	else{
+		addr_split = addr.split(".");
+        if( addr_split.length == 4 ) {
+            sysLogIPAddr1.value = addr_split[0];
+            sysLogIPAddr2.value = addr_split[1];
+            sysLogIPAddr3.value = addr_split[2];
+            sysLogIPAddr4.value = addr_split[3];
+            sysLogIPAddrV6.value ='';
+            syslog_type[0].checked = false;
+            syslog_type[1].checked = true;
+            syslog_type[2].checked = false;
+        }
+        else {
+            sysLogIPAddr1.value = '';
+            sysLogIPAddr2.value = '';
+            sysLogIPAddr3.value = '';
+            sysLogIPAddr4.value = '';
+            sysLogIPAddrV6.value ='';
+        }
+	}
+    
+    routerdisplay();
+	//logDisplay.value = logDisplay.value.replace(/(^\s*)/g, "");
+	//logDisplay.value = logDisplay.value.replace(/(\s*$)/g, "");	
+   }
+   with (document.forms[3]) {
+	  logIpAddress.value = addr;
+	  logMode.value = mode; 	
+	  sessionKey.value=sessionID;
+   }   
+   document.forms[0].sessionKey.value=sessionID;
+}
+
+function Apply()
+{
+ 	var cf = document.forms[2];
+	var msg = "";
+    if(cf.syslog_type[2].checked == true)
+    {    
+        if(skyCheckIPV6Address(cf.sysLogIPAddrV6.value) == false)
+        {
+            alert("Please enter valid IPv6 Address for syslog server");
+            return false;
+        }
+    }
+	var syslogType = getRadioCheckedValue(cf.syslog_type);
+	if(syslogType == "sendToIPv4")
+	{
+	    if(badIP(cf.sysLogIPAddr1,cf.sysLogIPAddr2,cf.sysLogIPAddr3,cf.sysLogIPAddr4,255))
+		{
+			msg+= "Please enter a valid IPv4 Address\n";	
+		}
+	}
+
+	if (msg.length > 1)
+	{
+		alert(msg);
+		return false ;
+	}
+
+	if( cf.log_bsites.checked == true)
+     document.forms[3].blockedsites.value=1;
+	else
+     document.forms[3].blockedsites.value=0;
+
+	if( cf.log_conn.checked == true)
+		document.forms[3].webconnections.value=1;
+	else
+		document.forms[3].webconnections.value=0;
+
+	if( cf.log_router.checked == true)
+		document.forms[3].routeroperation.value=1;
+	else
+		document.forms[3].routeroperation.value=0;
+		
+    addr="";
+	if( cf.log_router.checked == true)
+	{
+		document.forms[3].logStatus.value=1;
+		if ( cf.syslog_type[0].checked == true ) {		
+			//Syslog disabled
+		    mode = '1';
+		}else{
+		    mode = '3';
+			if(syslogType == "sendToIPv4")
+			{
+				addr = cf.sysLogIPAddr1.value + '.' +cf.sysLogIPAddr2.value + '.' +cf.sysLogIPAddr3.value + '.' +cf.sysLogIPAddr4.value;
+			}
+			else if(syslogType == "sendToIPv6")
+			{
+				addr = cf.sysLogIPAddrV6.value;
+			}
+		}
+			
+	}else{
+        mode='1';
+		document.forms[3].logStatus.value=0;
+	}
+
+	with (document.forms[3]) {
+	   logIpAddress.value = addr;
+	   logMode.value = mode;	   
+	   sessionKey.value=sessionID;
+	}	
+	document.forms[3].submit();
+	return true;	
+}
+   //-->
+   </script>
+</head>
+<body onload="formLoad()">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li class="selected"><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+    </div>
+    </div>
+    <div id="sub-nav" >
+      <div class="layout">
+        <ul id="submenu-security" class="selected">
+          <li class="selected"><a href="sky_logs.html">Logs</a></li>
+          <li ><a href="sky_block_sites.html">Block Sites</a></li>
+          <li ><a href="sky_firewall_rules.html">Firewall Rules</a></li>
+          <li ><a href="sky_services.html">Services</a></li>
+          <li ><a href="sky_schedule.html">Schedule</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Logs</h1>
+        <script>
+            var sky_ext = '';
+            if (sky_ext == '')
+            {
+                document.write("<p class=\"black\">");
+                document.write("Your Sky Hub will log events such as administrator logins, NTP synchronisation, LAN status, etc. ");
+                document.write("If you have set up content and website filtering on the Block Sites page your Sky Hub will also log when someone on your network tries to access a blocked site.");
+                document.write("</p>");
+            }
+            else
+            {
+                document.write("<p class=\"black\">");
+                document.write("Your Sky Hub will log events such as administrator logins, NTP synchronisation, LAN status etc.");
+                document.write("</p>");
+            }
+        </script>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top" />
+        <div class="section-heading">
+          <h3>Logs</h3>
+          <a class="help-btn" href="#" name="help1">help</a></div>
+        <div class="row-holder"><span class="label">Current time:</span><span>
+          Wed Sep 23 14:59:26 2026
+          </span></div>
+        <div class="row-holder" id="logtext">
+          <textarea name="outlog_Display" id="popup" class="smallfix" rows="8" cols="70">2026-09-22 18:56:32 syslog: WAN IPV6 UP
+2026-09-22 18:59:31 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 19:14:26 syslog: [169468.736000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169470.014000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [169476.656000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169477.934000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [169507.940000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169513.958000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [169515.626000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169540.777000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [169585.921000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169597.633000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [169600.124000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169606.207000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [169620.583000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169629.997000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [169771.807000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169779.091000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [169902.426000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169903.308000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [169985.736000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [169989.042000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170004.582000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170018.796000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170064.888000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170073.786000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170092.254000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170093.124000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170094.402000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170099.304000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170232.419000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170233.301000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170234.201000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170250.767000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170252.039000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170269.499000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170292.395000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170300.897000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170382.215000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170411.969000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170415.672000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170464.223000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170556.604000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170560.708000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170681.121000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170683.569000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170802.602000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170805.903000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170813.252000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170852.996000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170873.168000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170899.856000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [170944.088000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [170948.192000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171068.018000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171091.310000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171140.605000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171142.693000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171170.851000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171172.123000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171397.129000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171420.757000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171487.650000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171489.324000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171589.764000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171597.498000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171627.600000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171656.484000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171657.750000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171661.026000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171676.506000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171706.242000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171759.809000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171765.947000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171793.967000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171800.891000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171807.041000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171819.323000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171864.526000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171869.908000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [171873.983000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [171917.824000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172009.725000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172011.423000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172055.523000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172062.855000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172079.265000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172083.795000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172089.170000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172090.460000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172117.784000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172120.262000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172132.778000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172135.676000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172139.528000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172156.274000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172252.766000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172320.536000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172328.282000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172330.766000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172454.311000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172464.241000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172483.297000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172484.569000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172605.985000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172612.915000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172648.681000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172652.779000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172883.040000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172887.084000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172888.764000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172890.037000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [172983.438000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [172987.524000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [173204.477000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [173208.653000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [173214.844000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [173220.916000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [173221.780000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [173223.844000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [173232.484000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [173234.932000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [173398.971000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [173402.638000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [173676.651000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [173695.371000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [173844.505000] Line 0: Rate Change, us=28616, ds=159749
+2026-09-22 19:14:26 syslog: [173860.381000] Line 0: Rate Change, us=28607, ds=159749
+2026-09-22 19:14:26 syslog: [173941.537000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 19:14:26 syslog: [173963.227000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 19:14:26 syslog: [173978.185000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 19:14:26 syslog: [173988.438000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 19:16:20 syslog: [174007.188000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 19:18:14 syslog: [174136.907000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 19:18:14 syslog: [174153.875000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 19:20:08 syslog: [174281.861000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 19:20:08 syslog: [174290.807000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 19:20:08 syslog: [174294.935000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 19:20:08 syslog: [174304.757000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 19:23:56 syslog: [174481.318000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 19:23:56 syslog: [174486.988000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 19:23:56 syslog: [174519.712000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 19:23:56 syslog: [174520.582000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 19:23:56 syslog: [174537.802000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 19:23:56 syslog: [174544.216000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 19:23:56 syslog: [174563.344000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 19:26:13 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 19:26:32 syslog: WAN IPV6 UP
+2026-09-22 19:50:49 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 19:56:32 syslog: WAN IPV6 UP
+2026-09-22 20:05:45 syslog: [174564.610000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 20:05:45 syslog: [174631.714000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 20:05:45 syslog: [174633.388000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 20:05:45 syslog: [174658.120000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 20:05:45 syslog: [174663.808000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 20:05:45 syslog: [174710.260000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 20:05:45 syslog: [174712.444000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 20:05:45 syslog: [174886.287000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 20:05:45 syslog: [174899.283000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 20:05:45 syslog: [174934.593000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 20:05:45 syslog: [174937.515000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 20:05:45 syslog: [174938.829000] Line 0: Rate Change, us=28616, ds=159769
+2026-09-22 20:05:45 syslog: [174940.551000] Line 0: Rate Change, us=28607, ds=159769
+2026-09-22 20:05:45 syslog: [174945.831000] Line 0: Rate Change, us=28495, ds=159769
+2026-09-22 20:05:45 syslog: [174946.311000] Line 0: Rate Change, us=29776, ds=159769
+2026-09-22 20:05:45 syslog: [174947.301000] Line 0: Rate Change, us=29776, ds=159749
+2026-09-22 20:05:45 syslog: [175021.647000] Line 0: Rate Change, us=29776, ds=159759
+2026-09-22 20:05:45 syslog: [175089.614000] Line 0: Rate Change, us=29776, ds=159769
+2026-09-22 20:05:45 syslog: [175096.675000] Line 0: Rate Change, us=29776, ds=159759
+2026-09-22 20:05:45 syslog: [175096.897000] Line 0: Rate Change, us=29617, ds=159759
+2026-09-22 20:05:45 syslog: [175099.951000] Line 0: Rate Change, us=29617, ds=159779
+2026-09-22 20:05:45 syslog: [175101.157000] Line 0: Rate Change, us=29608, ds=159779
+2026-09-22 20:05:45 syslog: [175101.637000] Line 0: Rate Change, us=29776, ds=159779
+2026-09-22 20:05:45 syslog: [175112.737000] Line 0: Rate Change, us=29617, ds=159779
+2026-09-22 20:05:45 syslog: [175128.217000] Line 0: Rate Change, us=29617, ds=159769
+2026-09-22 20:05:45 syslog: [175129.255000] Line 0: Rate Change, us=29617, ds=159779
+2026-09-22 20:05:45 syslog: [175133.077000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 20:05:45 syslog: [175137.679000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 20:05:45 syslog: [175145.227000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 20:05:45 syslog: [175158.313000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 20:05:45 syslog: [175424.358000] Line 0: Rate Change, us=29720, ds=159749
+2026-09-22 20:05:45 syslog: [175470.564000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 20:05:45 syslog: [175480.020000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 20:05:45 syslog: [175483.722000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 20:05:45 syslog: [175491.786000] Line 0: Rate Change, us=29711, ds=159749
+2026-09-22 20:05:45 syslog: [175492.824000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 20:05:45 syslog: [175493.412000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 20:05:45 syslog: [175504.908000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 20:05:45 syslog: [175559.142000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 20:05:45 syslog: [176106.303000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 20:05:45 syslog: [176163.543000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 20:05:45 syslog: [176297.103000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 20:05:45 syslog: [176446.682000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 20:05:45 syslog: [176507.012000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 20:05:45 syslog: [176567.834000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 20:05:45 syslog: [176569.496000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 20:05:45 syslog: [176825.250000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 20:09:32 syslog: [177199.757000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 20:09:32 syslog: [177269.081000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 20:11:27 syslog: [177341.415000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 20:11:27 syslog: [177347.475000] Line 0: Rate Change, us=29720, ds=159749
+2026-09-22 20:13:21 syslog: [177478.989000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 20:19:55 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 20:26:32 syslog: WAN IPV6 UP
+2026-09-22 20:44:50 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 20:56:33 syslog: WAN IPV6 UP
+2026-09-22 21:01:14 syslog: Send out NTP request to ntp1.isp.sky.com 
+2026-09-22 21:01:14 syslog: Received NTP Sync Reply from ntp1.isp.sky.com 
+2026-09-22 21:01:14 syslog: System time is up to date
+2026-09-22 21:02:45 syslog: [177607.556000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:02:45 syslog: [177628.706000] Line 0: Rate Change, us=29720, ds=159749
+2026-09-22 21:02:45 syslog: [177767.318000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 21:02:45 syslog: [177774.410000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 21:02:45 syslog: [177798.530000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 21:02:45 syslog: [177843.727000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:02:45 syslog: [177983.275000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 21:02:45 syslog: [178739.273000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:02:45 syslog: [178942.048000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 21:02:45 syslog: [179062.869000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 21:02:45 syslog: [179067.303000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 21:02:45 syslog: [179812.501000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:02:45 syslog: [179821.573000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 21:02:45 syslog: [179955.091000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 21:02:45 syslog: [179966.167000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 21:02:45 syslog: [180038.502000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:02:45 syslog: [180176.033000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 21:08:27 syslog: [180829.639000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:10:20 syslog: [180842.725000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 21:10:20 syslog: [180865.843000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 21:11:13 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 21:19:50 syslog: [180975.277000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:19:50 syslog: [181306.997000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 21:19:50 syslog: [181307.849000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:23:38 syslog: [181679.181000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 21:23:38 syslog: [181682.835000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:23:38 syslog: [181686.525000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 21:23:38 syslog: [181688.205000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 21:26:32 syslog: WAN IPV6 UP
+2026-09-22 21:35:13 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 21:56:32 syslog: WAN IPV6 UP
+2026-09-22 22:10:37 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 22:26:32 syslog: WAN IPV6 UP
+2026-09-22 22:35:50 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 22:56:33 syslog: WAN IPV6 UP
+2026-09-22 23:00:44 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 23:19:47 syslog: Send out NTP request to ntp1.isp.sky.com 
+2026-09-22 23:19:47 syslog: Received NTP Sync Reply from ntp1.isp.sky.com 
+2026-09-22 23:19:47 syslog: System time is up to date
+2026-09-22 23:26:33 syslog: WAN IPV6 UP
+2026-09-22 23:27:08 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 23:51:45 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-22 23:56:33 syslog: WAN IPV6 UP
+2026-09-22 23:57:33 syslog: [182215.453000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [182216.719000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [182231.653000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [182236.135000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [182557.926000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [182585.844000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [182769.861000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [182775.915000] Line 0: Rate Change, us=29720, ds=159749
+2026-09-22 23:57:33 syslog: [182776.953000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [182795.085000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [182848.311000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [182875.905000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [182876.769000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [183320.251000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [183321.925000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [183342.979000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [183345.907000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [183507.720000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [183509.790000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [183594.144000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [183651.390000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [183663.468000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [183698.934000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [183729.744000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [183731.058000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [183906.507000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [183914.289000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [183935.637000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [183944.961000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [183949.611000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184088.151000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [184098.225000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184223.001000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [184225.065000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184229.733000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [184238.805000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [184246.868000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184284.038000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [184313.180000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184350.392000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [184398.602000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184425.572000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [184427.270000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184447.814000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [184450.862000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [184469.966000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184501.118000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [184509.188000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184544.384000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [184796.341000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184825.621000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [184826.887000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184830.949000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [184840.291000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184844.365000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [184854.439000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184859.635000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [184899.403000] Line 0: Rate Change, us=29711, ds=159779
+2026-09-22 23:57:33 syslog: [184910.803000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [184918.885000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184933.189000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [184937.653000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [184942.039000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [184951.105000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [184968.205000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [184969.783000] Line 0: Rate Change, us=29711, ds=159788
+2026-09-22 23:57:33 syslog: [184971.475000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [184975.267000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [184997.419000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [185004.481000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [185007.691000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [185013.079000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [185215.482000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [185217.948000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [185220.336000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [185314.974000] Line 0: Rate Change, us=29711, ds=159779
+2026-09-22 23:57:33 syslog: [185321.940000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [185421.660000] Line 0: Rate Change, us=29711, ds=159779
+2026-09-22 23:57:33 syslog: [185430.942000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [185590.295000] Line 0: Rate Change, us=29711, ds=159779
+2026-09-22 23:57:33 syslog: [185593.949000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [185671.301000] Line 0: Rate Change, us=29711, ds=159779
+2026-09-22 23:57:33 syslog: [185676.563000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [185683.091000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186000.214000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [186008.308000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186016.102000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [186017.368000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186262.958000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [186282.752000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186284.414000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [186288.140000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186385.130000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [186388.808000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186424.160000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [186426.212000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186515.264000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [186515.726000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186517.814000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [186527.168000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186859.434000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [186862.482000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [186969.954000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [186983.040000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [186985.578000] Line 0: Rate Change, us=29711, ds=159779
+2026-09-22 23:57:33 syslog: [186986.442000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [187036.337000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [187116.695000] Line 0: Rate Change, us=29720, ds=159788
+2026-09-22 23:57:33 syslog: [187127.771000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [187129.247000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [187133.807000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [187160.393000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [187165.295000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [187166.951000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [187231.223000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [187240.289000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [187314.629000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [187334.459000] Line 0: Rate Change, us=29711, ds=159779
+2026-09-22 23:57:33 syslog: [187336.127000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [187343.561000] Line 0: Rate Change, us=29711, ds=159779
+2026-09-22 23:57:33 syslog: [187344.827000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [187377.893000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [187796.060000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [187796.930000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [187832.210000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [187838.270000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [187962.902000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [187964.630000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188161.124000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [188172.025000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188278.069000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [188288.629000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188304.612000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [188310.732000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188474.748000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [188478.366000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188525.382000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [188528.244000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188632.667000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [188641.733000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188738.321000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [188739.191000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188819.123000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [188821.199000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188892.293000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [188895.569000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [188997.742000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [189005.236000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [189006.706000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [189092.812000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [189096.112000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [189166.528000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [189257.518000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [189262.810000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [189593.541000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [189594.813000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [189744.578000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [189775.970000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-22 23:57:33 syslog: [189818.162000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [189857.636000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [189858.914000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [189879.020000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:57:33 syslog: [189883.970000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [189886.448000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [189966.776000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:57:33 syslog: [190032.044000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190033.760000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [190041.122000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190142.160000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [190143.450000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190226.130000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [190228.218000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190238.238000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [190239.516000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190368.096000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [190393.134000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190657.589000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [190665.641000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190690.313000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [190714.121000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190726.811000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [190731.299000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190918.642000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-22 23:57:33 syslog: [190929.982000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-22 23:57:33 syslog: [190947.526000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:59:27 syslog: [190992.868000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:59:27 syslog: [190996.930000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:59:27 syslog: [191029.522000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:59:27 syslog: [191031.610000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:59:27 syslog: [191051.925000] Line 0: Rate Change, us=29711, ds=159769
+2026-09-22 23:59:27 syslog: [191059.256000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-22 23:59:27 syslog: [191082.056000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-23 00:01:21 syslog: [191194.790000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-23 00:01:21 syslog: [191196.056000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-23 00:05:09 syslog: [191333.029000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-23 00:05:09 syslog: [191347.195000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-23 00:05:09 syslog: [191393.887000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-23 00:05:09 syslog: [191419.033000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-23 00:21:45 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 00:26:34 syslog: WAN IPV6 UP
+2026-09-23 00:45:45 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 00:56:34 syslog: WAN IPV6 UP
+2026-09-23 01:18:09 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 01:26:34 syslog: WAN IPV6 UP
+2026-09-23 01:29:19 syslog: Send out NTP request to ntp1.isp.sky.com 
+2026-09-23 01:29:19 syslog: Received NTP Sync Reply from ntp1.isp.sky.com 
+2026-09-23 01:29:19 syslog: System time is up to date
+2026-09-23 01:46:02 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 01:56:33 syslog: WAN IPV6 UP
+2026-09-23 02:11:14 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 02:26:33 syslog: WAN IPV6 UP
+2026-09-23 02:46:21 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 02:56:33 syslog: WAN IPV6 UP
+2026-09-23 03:16:57 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 03:18:56 syslog: [191529.757000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-23 03:18:56 syslog: [191604.103000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-23 03:18:56 syslog: [191676.630000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-23 03:18:56 syslog: [191685.630000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-23 03:18:56 syslog: [191769.786000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-23 03:18:56 syslog: [191775.924000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-23 03:18:56 syslog: [191981.628000] Line 0: Rate Change, us=29711, ds=159759
+2026-09-23 03:18:56 syslog: [191988.126000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-23 03:18:56 syslog: [192045.036000] Line 0: Rate Change, us=29608, ds=159759
+2026-09-23 03:18:56 syslog: [192045.504000] Line 0: Rate Change, us=29720, ds=159759
+2026-09-23 03:18:56 syslog: [192046.500000] Line 0: Rate Change, us=29720, ds=159769
+2026-09-23 03:18:56 syslog: [192062.202000] Line 0: Rate Change, us=29720, ds=159779
+2026-09-23 03:18:56 syslog: [192067.679000] Line 0: Rate Change, us=29608, ds=159779
+2026-09-23 03:18:56 syslog: [192071.904000] Line 0: Rate Change, us=29552, ds=159779
+2026-09-23 03:18:56 syslog: [192072.413000] Line 0: Rate Change, us=29664, ds=159779
+2026-09-23 03:18:56 syslog: [192077.412000] Line 0: Rate Change, us=29664, ds=159769
+2026-09-23 03:18:56 syslog: [192081.473000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 03:18:56 syslog: [192096.749000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 03:18:56 syslog: [192097.787000] Line 0: Rate Change, us=29561, ds=159779
+2026-09-23 03:18:56 syslog: [192101.669000] Line 0: Rate Change, us=29608, ds=159779
+2026-09-23 03:18:56 syslog: [192106.307000] Line 0: Rate Change, us=29608, ds=159769
+2026-09-23 03:18:56 syslog: [192107.345000] Line 0: Rate Change, us=29608, ds=159759
+2026-09-23 03:18:56 syslog: [192113.729000] Line 0: Rate Change, us=29608, ds=159769
+2026-09-23 03:18:56 syslog: [192135.827000] Line 0: Rate Change, us=29608, ds=159759
+2026-09-23 03:18:56 syslog: [192150.887000] Line 0: Rate Change, us=29608, ds=159769
+2026-09-23 03:18:56 syslog: [192209.135000] Line 0: Rate Change, us=29608, ds=159759
+2026-09-23 03:18:56 syslog: [192214.511000] Line 0: Rate Change, us=29597, ds=159759
+2026-09-23 03:18:56 syslog: [192216.149000] Line 0: Rate Change, us=29608, ds=159759
+2026-09-23 03:18:56 syslog: [192506.876000] Line 0: Rate Change, us=29495, ds=159759
+2026-09-23 03:18:56 syslog: [192507.398000] Line 0: Rate Change, us=29608, ds=159759
+2026-09-23 03:18:56 syslog: [192526.028000] Line 0: Rate Change, us=29608, ds=159769
+2026-09-23 03:18:56 syslog: [192533.246000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 03:18:56 syslog: [192537.188000] Line 0: Rate Change, us=29439, ds=159769
+2026-09-23 03:18:56 syslog: [192537.692000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [192538.724000] Line 0: Rate Change, us=29552, ds=159779
+2026-09-23 03:18:56 syslog: [192541.616000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [192548.222000] Line 0: Rate Change, us=29495, ds=159769
+2026-09-23 03:18:56 syslog: [192553.340000] Line 0: Rate Change, us=29505, ds=159769
+2026-09-23 03:18:56 syslog: [192564.242000] Line 0: Rate Change, us=29505, ds=159759
+2026-09-23 03:18:56 syslog: [192568.058000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [192574.664000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [192637.298000] Line 0: Rate Change, us=29552, ds=159779
+2026-09-23 03:18:56 syslog: [192654.392000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [193269.775000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [193281.853000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [193372.212000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [194757.378000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [194981.219000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [195034.451000] Line 0: Rate Change, us=29552, ds=159779
+2026-09-23 03:18:56 syslog: [195056.567000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [197111.105000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 03:18:56 syslog: [197775.673000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [197910.235000] Line 0: Rate Change, us=29552, ds=159779
+2026-09-23 03:18:56 syslog: [197939.377000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [198092.976000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [198258.654000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [198326.940000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [198336.011000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [198729.477000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 03:18:56 syslog: [198813.817000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [199112.947000] Line 0: Rate Change, us=29552, ds=159779
+2026-09-23 03:18:56 syslog: [199122.019000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [199306.674000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 03:18:56 syslog: [199310.388000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [199444.260000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [199453.326000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [199482.468000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [199936.259000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [200168.140000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [200365.333000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 03:18:56 syslog: [200375.983000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [200568.679000] Line 0: Rate Change, us=29552, ds=159779
+2026-09-23 03:18:56 syslog: [200575.741000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [201199.120000] Line 0: Rate Change, us=29552, ds=159779
+2026-09-23 03:18:56 syslog: [201210.196000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [201216.250000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [201818.659000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 03:18:56 syslog: [201821.179000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [201995.124000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [202189.025000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 03:18:56 syslog: [202206.761000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [202348.607000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 03:18:56 syslog: [202357.199000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [202509.154000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 03:18:56 syslog: [202514.962000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [202580.572000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 03:18:56 syslog: [202633.149000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [202768.737000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 03:18:56 syslog: [202772.853000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:18:56 syslog: [202839.296000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [202872.692000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 03:18:56 syslog: [202892.078000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:18:56 syslog: [203038.076000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 03:18:56 syslog: [203038.964000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:20:50 syslog: [203118.596000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 03:20:50 syslog: [203120.252000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:22:45 syslog: [203199.716000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 03:22:45 syslog: [203207.780000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 03:22:45 syslog: [203214.842000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 03:22:45 syslog: [203216.888000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 03:22:45 syslog: [203271.157000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:22:45 syslog: [203275.214000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 03:22:45 syslog: [203277.259000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 03:22:45 syslog: [203290.339000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:26:34 syslog: WAN IPV6 UP
+2026-09-23 03:28:27 syslog: [203617.626000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 03:28:27 syslog: [203628.558000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 03:32:42 syslog: Send out NTP request to ntp1.isp.sky.com 
+2026-09-23 03:32:42 syslog: Received NTP Sync Reply from ntp1.isp.sky.com 
+2026-09-23 03:32:42 syslog: System time is up to date
+2026-09-23 03:46:39 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 03:56:34 syslog: WAN IPV6 UP
+2026-09-23 04:19:39 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 04:26:34 syslog: WAN IPV6 UP
+2026-09-23 04:53:15 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 04:56:34 syslog: WAN IPV6 UP
+2026-09-23 05:03:26 syslog: [204068.218000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 05:03:26 syslog: [205069.446000] Line 0: Rate Change, us=29541, ds=159769
+2026-09-23 05:03:26 syslog: [205073.526000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 05:03:26 syslog: [206188.765000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 05:03:26 syslog: [206196.493000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 05:03:26 syslog: [206198.185000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 05:03:26 syslog: [206202.271000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 05:03:26 syslog: [206295.685000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 05:03:26 syslog: [206938.125000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 05:03:26 syslog: [206943.177000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 05:03:26 syslog: [206961.315000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 05:03:26 syslog: [207070.749000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 05:03:26 syslog: [207147.099000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 05:03:26 syslog: [207201.267000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 05:03:26 syslog: [207202.131000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 05:03:26 syslog: [207209.396000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 05:03:26 syslog: [207565.766000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 05:03:26 syslog: [207567.812000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 05:03:26 syslog: [207670.957000] Line 0: Rate Change, us=29541, ds=159749
+2026-09-23 05:03:26 syslog: [207672.661000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 05:03:26 syslog: [207729.475000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 05:03:26 syslog: [208459.134000] Line 0: Rate Change, us=29561, ds=159740
+2026-09-23 05:03:26 syslog: [208488.587000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 05:03:26 syslog: [208563.341000] Line 0: Rate Change, us=29561, ds=159740
+2026-09-23 05:03:26 syslog: [208565.447000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 05:03:26 syslog: [208977.093000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 05:05:20 syslog: [209433.799000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 05:05:20 syslog: [209437.849000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 05:07:15 syslog: [209493.187000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 05:22:57 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 05:26:34 syslog: WAN IPV6 UP
+2026-09-23 05:44:33 syslog: Send out NTP request to ntp1.isp.sky.com 
+2026-09-23 05:44:34 syslog: Received NTP Sync Reply from ntp1.isp.sky.com 
+2026-09-23 05:44:34 syslog: System time is up to date
+2026-09-23 05:48:45 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 05:56:34 syslog: WAN IPV6 UP
+2026-09-23 06:15:10 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 06:26:34 syslog: WAN IPV6 UP
+2026-09-23 06:27:03 syslog: [210009.162000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [210957.679000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [211093.656000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 06:27:03 syslog: [211098.540000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [211191.564000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:27:03 syslog: [211195.614000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [211206.756000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:27:03 syslog: [211233.888000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [211274.106000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:27:03 syslog: [211417.186000] Line 0: Rate Change, us=29561, ds=159740
+2026-09-23 06:27:03 syslog: [211427.644000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:27:03 syslog: [211744.862000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [212021.941000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:27:03 syslog: [212073.163000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [212355.869000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 06:27:03 syslog: [212356.331000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [212549.548000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 06:27:03 syslog: [212550.016000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [212632.240000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [212643.316000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 06:27:03 syslog: [212670.490000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [212914.227000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 06:27:03 syslog: [212922.375000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [212924.445000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:27:03 syslog: [212926.053000] Line 0: Rate Change, us=29561, ds=159740
+2026-09-23 06:27:03 syslog: [212934.987000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:27:03 syslog: [212988.753000] Line 0: Rate Change, us=29552, ds=159729
+2026-09-23 06:27:03 syslog: [213001.875000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:27:03 syslog: [213025.995000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [213052.125000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [213056.175000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:27:03 syslog: [213063.237000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [213133.533000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [213137.583000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:27:03 syslog: [213287.192000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [213575.792000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 06:27:03 syslog: [213591.973000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [213787.524000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 06:27:03 syslog: [213791.646000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [213798.096000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 06:27:03 syslog: [213800.574000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:27:03 syslog: [213816.156000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:28:57 syslog: [214422.760000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 06:28:57 syslog: [214423.660000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:32:45 syslog: [214581.778000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 06:32:45 syslog: [214583.086000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:34:39 syslog: [214742.703000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 06:34:39 syslog: [214744.743000] Line 0: Rate Change, us=29552, ds=159729
+2026-09-23 06:34:39 syslog: [214770.873000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:34:39 syslog: [214803.021000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:34:39 syslog: [214806.069000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:36:34 syslog: [214820.157000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:36:34 syslog: [214853.319000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:40:21 syslog: [215093.384000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 06:40:21 syslog: [215103.506000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:42:16 syslog: [215163.602000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:42:16 syslog: [215188.586000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 06:42:16 syslog: [215195.900000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 06:42:16 syslog: [215232.890000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 06:45:46 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 06:56:35 syslog: WAN IPV6 UP
+2026-09-23 07:09:46 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 07:26:35 syslog: WAN IPV6 UP
+2026-09-23 07:41:16 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 07:56:35 syslog: WAN IPV6 UP
+2026-09-23 08:08:52 syslog: Send out NTP request to ntp1.isp.sky.com 
+2026-09-23 08:08:52 syslog: Received NTP Sync Reply from ntp1.isp.sky.com 
+2026-09-23 08:08:52 syslog: System time is up to date
+2026-09-23 08:10:58 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 08:26:35 syslog: WAN IPV6 UP
+2026-09-23 08:46:04 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 08:56:35 syslog: WAN IPV6 UP
+2026-09-23 09:13:04 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 09:25:41 syslog: [215395.820000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:25:41 syslog: [215399.102000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [215777.977000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [215850.319000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [216029.004000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 09:25:41 syslog: [216043.092000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [216378.418000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 09:25:41 syslog: [216387.490000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [216393.772000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:25:41 syslog: [216397.030000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [216694.210000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:25:41 syslog: [216699.112000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [216741.808000] Line 0: Rate Change, us=29552, ds=159788
+2026-09-23 09:25:41 syslog: [216759.909000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [216807.117000] Line 0: Rate Change, us=29552, ds=159788
+2026-09-23 09:25:41 syslog: [216817.533000] Line 0: Rate Change, us=29561, ds=159788
+2026-09-23 09:25:41 syslog: [216848.342000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:25:41 syslog: [216848.576000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [216867.446000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [216910.430000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [216912.104000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [216919.670000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [216924.722000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [216958.556000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [216959.024000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [217023.116000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 09:25:41 syslog: [217079.354000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [217091.828000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:25:41 syslog: [217095.914000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [217133.504000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:25:41 syslog: [217137.644000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [217762.020000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [217772.094000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [217923.792000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [217991.106000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218047.378000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218064.479000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218158.892000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218222.198000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218265.427000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218292.565000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218296.615000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218302.669000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 09:25:41 syslog: [218303.677000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:25:41 syslog: [218316.499000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218355.901000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218370.991000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218416.231000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218446.411000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218462.544000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [218492.688000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218646.389000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218653.451000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218681.585000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218697.713000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218712.803000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218721.869000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218747.999000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [218782.193000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [218980.096000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [219324.469000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [219350.599000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [219629.682000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [219659.825000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [220121.096000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 09:25:41 syslog: [220127.168000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [220255.028000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [220430.738000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [220440.812000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [220861.373000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [220863.419000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [220865.459000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [220915.714000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [221171.547000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [221182.797000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [221735.245000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [221753.406000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [221821.968000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [221826.162000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [221881.590000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [221887.776000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [221977.992000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [221978.862000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [222116.268000] Line 0: Rate Change, us=29552, ds=159779
+2026-09-23 09:25:41 syslog: [222119.316000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [222159.773000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 09:25:41 syslog: [222167.459000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [222193.037000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 09:25:41 syslog: [222201.611000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [222212.999000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 09:25:41 syslog: [222228.659000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [222538.444000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 09:25:41 syslog: [222565.810000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [222784.815000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [222997.519000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [223007.713000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [223195.669000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [223207.087000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [223318.158000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [223325.124000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [223342.494000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [223345.428000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [223426.914000] Line 0: Rate Change, us=29561, ds=159769
+2026-09-23 09:25:41 syslog: [223429.050000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [223457.406000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [223492.571000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [223578.923000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:25:41 syslog: [223588.661000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [223738.497000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [223746.562000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [223763.697000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [223785.885000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [223807.029000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [223814.091000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [223837.251000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [223840.299000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:25:41 syslog: [223976.828000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [223989.908000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [224022.134000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [224205.806000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 09:25:41 syslog: [224207.900000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [224247.818000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 09:25:41 syslog: [224271.187000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:25:41 syslog: [224433.696000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 09:25:41 syslog: [224709.743000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:26:35 syslog: WAN IPV6 UP
+2026-09-23 09:27:35 syslog: [225106.798000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:27:35 syslog: [225107.674000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:27:35 syslog: [225129.778000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:27:35 syslog: [225133.078000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:33:17 syslog: [225439.881000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 09:33:17 syslog: [225452.463000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 09:33:17 syslog: [225460.533000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 09:40:58 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 09:56:35 syslog: WAN IPV6 UP
+2026-09-23 10:07:22 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 10:20:13 syslog: Send out NTP request to ntp1.isp.sky.com 
+2026-09-23 10:20:14 syslog: Received NTP Sync Reply from ntp1.isp.sky.com 
+2026-09-23 10:20:14 syslog: System time is up to date
+2026-09-23 10:26:36 syslog: WAN IPV6 UP
+2026-09-23 10:33:11 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 10:56:36 syslog: WAN IPV6 UP
+2026-09-23 10:56:54 syslog: [225611.601000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 10:56:54 syslog: [225621.398000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [225639.230000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 10:56:54 syslog: [225660.452000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [225666.542000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 10:56:54 syslog: [225667.808000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [225674.444000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 10:56:54 syslog: [225698.528000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [225716.018000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 10:56:54 syslog: [225724.628000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [225778.838000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 10:56:54 syslog: [225782.114000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [225803.858000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 10:56:54 syslog: [225805.142000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [226018.722000] Line 0: Rate Change, us=29561, ds=159759
+2026-09-23 10:56:54 syslog: [226031.250000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [226051.758000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 10:56:54 syslog: [226097.964000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [226119.077000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 10:56:54 syslog: [227855.469000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [227960.919000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 10:56:54 syslog: [229508.600000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [229521.686000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 10:56:54 syslog: [229540.790000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 10:56:54 syslog: [229552.868000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [229603.088000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 10:56:54 syslog: [229607.138000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [229974.547000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 10:56:54 syslog: [229982.611000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 10:56:54 syslog: [230051.898000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 10:56:54 syslog: [230497.685000] Line 0: Rate Change, us=29552, ds=159729
+2026-09-23 10:56:54 syslog: [230533.853000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 10:57:11 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 10:58:48 syslog: [230573.033000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 11:00:41 syslog: [230704.552000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 11:00:41 syslog: [230706.592000] Line 0: Rate Change, us=29552, ds=159729
+2026-09-23 11:00:41 syslog: [230713.654000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 11:06:23 syslog: [230952.627000] Line 0: Rate Change, us=29552, ds=159729
+2026-09-23 11:06:23 syslog: [231054.027000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 11:06:23 syslog: [231058.077000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 11:06:23 syslog: [231070.155000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 11:07:29 syslog: Administrator login successful from IP: 192.168.50.3 .
+2026-09-23 11:08:18 syslog: [231147.477000] Line 0: Rate Change, us=29552, ds=159729
+2026-09-23 11:10:12 syslog: [231247.874000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 11:10:12 syslog: [231249.914000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 11:13:20 syslog: Administrator logged out from useragent:User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/203.0.113.5 Safari/537.36^M  with IP a
+2026-09-23 11:15:54 syslog: [231519.805000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 11:17:47 syslog: [231732.877000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 11:17:47 syslog: [231744.661000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 11:23:35 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 11:26:36 syslog: WAN IPV6 UP
+2026-09-23 11:51:11 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 11:56:36 syslog: WAN IPV6 UP
+2026-09-23 12:09:05 syslog: [232263.939000] Line 0: Rate Change, us=29552, ds=159769
+2026-09-23 12:09:05 syslog: [232274.018000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 12:09:05 syslog: [232304.162000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [232397.539000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 12:09:05 syslog: [232406.605000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [232526.143000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [232528.615000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [232610.292000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [232614.774000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [232878.640000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [232880.308000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [232971.352000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [233011.624000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [233022.208000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [233070.663000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [233084.253000] Line 0: Rate Change, us=29552, ds=159740
+2026-09-23 12:09:05 syslog: [233104.365000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [233146.551000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 12:09:05 syslog: [233152.611000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [233361.656000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [233365.772000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [233487.062000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [233498.054000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [233779.699000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [233784.235000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [233811.180000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [233847.065000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [233891.549000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [233896.067000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [234073.738000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [234099.286000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:09:05 syslog: [234330.705000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 12:09:05 syslog: [234332.775000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 12:16:23 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 12:20:03 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:04 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:06 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:06 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:06 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:06 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:06 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:06 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:06 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:07 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:07 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:07 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:07 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:07 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:07 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:07 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:08 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:08 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:20:26 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:15 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:15 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:15 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:16 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:17 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:18 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:18 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:18 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:18 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:18 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:18 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:18 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:19 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:19 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:19 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:21:19 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:07 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:08 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:08 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:08 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:08 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:08 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:08 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:38 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:38 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:38 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:38 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:38 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:42 syslog: Send out NTP request to ntp1.isp.sky.com 
+2026-09-23 12:22:43 syslog: Received NTP Sync Reply from ntp1.isp.sky.com 
+2026-09-23 12:22:43 syslog: System time is up to date
+2026-09-23 12:22:58 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:22:58 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:23:16 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 12:26:36 syslog: WAN IPV6 UP
+2026-09-23 12:28:17 syslog: Administrator logged out from useragent:User-Agent: curl/8.18.0^M  with IP address 192.168.50.9 .
+2026-09-23 12:46:59 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 12:56:36 syslog: WAN IPV6 UP
+2026-09-23 13:12:48 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 13:17:29 syslog: [235466.481000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [235534.760000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [235684.532000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 13:17:29 syslog: [235688.654000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [235719.512000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [235763.750000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [236152.926000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 13:17:29 syslog: [236158.218000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [236214.168000] Line 0: Rate Change, us=29561, ds=159749
+2026-09-23 13:17:29 syslog: [236223.564000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [236362.037000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [236383.181000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [236489.741000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [236507.843000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [236512.931000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [236551.175000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [236601.425000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [236619.527000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [236744.014000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [236794.306000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [237000.242000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [237027.410000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [237103.718000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [237107.768000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [237203.186000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [237265.519000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [237324.847000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [237431.383000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [237519.840000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [237610.494000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [238004.033000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [238018.121000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [238109.560000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [238133.716000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:17:29 syslog: [238243.192000] Line 0: Rate Change, us=29552, ds=159759
+2026-09-23 13:17:29 syslog: [238252.258000] Line 0: Rate Change, us=29552, ds=159749
+2026-09-23 13:23:59 syslog: TR69: Connect to Production ACS
+2026-09-23 13:23:59 syslog: TR69: Connection to ACS Complete
+2026-09-23 13:24:08 syslog: TR69: Close ACS Connection
+2026-09-23 13:26:36 syslog: WAN IPV6 UP
+2026-09-23 13:38:18 syslog: Lease renewed 3600 ip 203.0.113.1 
+2026-09-23 13:44:37 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:24 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:25 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:26 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:26 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:26 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:26 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:27 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:27 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:27 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:27 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:27 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:28 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:28 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:28 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:28 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:28 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:28 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:28 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:28 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:29 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:29 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:45:29 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:50:29 syslog: Administrator logged out from useragent:User-Agent: curl/8.18.0^M  with IP address 192.168.50.9 .
+2026-09-23 13:50:42 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:50:43 syslog: The user with IP address 192.168.50.9 has failed to log in.
+2026-09-23 13:54:20 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:21 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:21 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:23 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:23 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:23 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:23 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:23 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:23 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:23 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:24 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:24 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:24 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:54:24 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:55:41 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:55:46 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:55:47 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:55:47 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:55:47 syslog: Administrator login successful from IP: 192.168.50.9 .
+2026-09-23 13:56:36 syslog: WAN IPV6 UP
+2026-09-23 13:59:21 syslog: Administrator login successful from IP: 192.168.50.9 .
+
+</textarea>
+        </div>
+        <div class="buttons-holder"><a href="javascript: window.location.href='sky_logs.html';" class="btn32 btn-clr-secondary png"><span class="png">Refresh</span></a> <a href="javascript: document.forms[0].submit();" class="btn32 btn-clr-secondary png"><span class="png">Clear log</span></a> <a href="javascript: document.forms[1].submit();" class="btn32 btn-clr-primary png"><span class="png">Save log</span></a></div>
+        <form name="sky_logs" method="post" action="sky_logs.cgi" onsubmit="javascript: return true;">
+          <input name="clearLog" value="1" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+        </form>
+        <form name="sky_logs" method="get" action="sky_sys.log" onsubmit="javascript: return true;">
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+        </form>
+        <hr />
+        <form name="buttons" onsubmit="javascript: return true;">
+          <div class="section-heading">
+            <h3>Include in Log</h3>
+            <a class="help-btn" href="#" name="help2">help</a></div>
+          <div class="row-holder" >
+            <input id="blockedsites" name="log_bsites" value="log_bsites" disabled="disabled" type="checkbox"/>
+            <label for="blockedsites" class="right">Attempted access to blocked sites</label>
+          </div>
+          <div class="row-holder">
+            <input id="connections" name="log_conn" value="log_mg" disabled="disabled" type="checkbox"/>
+            <label for="connections" class="right">Connections to the Web-based interface of this Router</label>
+          </div>
+          <div class="row-holder">
+            <input  id="router" name="log_router" value="log_op" type="checkbox" onclick="routerdisplay()"/>
+            <label for="router" class="right">Router operation (start up, link up, voice status, etc.)</label>
+          </div>
+          <hr />
+          <div class="section-heading">
+            <h3>Syslog</h3>
+            <a class="help-btn" href="#" name="help3">help</a></div>
+          <div class="row-holder">
+            <input checked="checked" id="disable" name="syslog_type" value="disable" type="radio" onclick="syslogdisplay()"/>
+            <label for="disable" class="right">Disable</label>
+          </div>
+          <div class="row-holder">
+            <input id="send" name="syslog_type" value="sendToIPv4" type="radio" onclick="syslogdisplay()"/>
+            <label for="send" class="right">Send to this Syslog server IPv4 address:</label>
+            <input name="sysLogIPAddr1" class="num" size="4" maxlength="3" value="0" type="text"/>
+            .
+            <input name="sysLogIPAddr2" class="num" size="4" maxlength="3" value="0" type="text"/>
+            .
+            <input name="sysLogIPAddr3" class="num" size="4" maxlength="3" value="0" type="text"/>
+            .
+            <input name="sysLogIPAddr4" class="num" size="4" maxlength="3" value="0" type="text"/>
+          </div>
+          <div class="row-holder" >
+            <input id="send" name="syslog_type" value="sendToIPv6" type="radio" onclick="syslogdisplay()"/>
+            <label for="send" class="right">Send to this Syslog server IPv6 address:</label>
+            <input disabled="disabled" name="sysLogIPAddrV6" class="text" size="28" maxlength="43" type="text"/>
+          </div>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+        </form>
+        <form name="sky_logs" method="post" action="sky_logs.cgi" onsubmit="javascript: return true;">
+          <input name="blockedsites" value="0" type="hidden"/>
+          <input name="webconnections" value="0" type="hidden"/>
+          <input name="routeroperation" value="0" type="hidden"/>
+          <input name="logIpAddress" value="0.0.0.0" type="hidden"/>
+          <input name="logMode" value="0" type="hidden"/>
+          <input name="logStatus" value="1" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+        </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: window.location.href='sky_logs.html';" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: return Apply();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Logs</h3>
+            <p>To delete all log entries:</p>
+            <ul>
+              <li>Click <b>Clear Log</b>.</li>
+            </ul>
+            <p>To save log entries:</p>
+            <ul>
+              <li>Click <b>Save Log</b>.</li>
+            </ul>
+            <p>To see the most recent entries:</p>
+            <ul>
+              <li>Click <b>Refresh</b>.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 2 -->
+        <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Include in Log</h3>
+            <p>Use these checkboxes to determine which events are included in the log. Checking all options will increase the size of the log so it is a good practice to disable any event logs which aren't really required.</p>
+            <ul>
+              <li ><b>Attempted access to blocked sites</b> - If checked, all attempted Internet access to blocked sites will be logged.</li>
+              <li><b>Connections to the Web-based interface of this Router</b> - If checked, all attempted access to the Graphical User Interface of your Sky Hub will be logged.</li>
+              <li><b>Router operation (start up, link up, voice status, etc.)</b> - Must be checked to enable any logging to take place.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 3 -->
+        <div class="pod pod-help" id="help3"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Syslog</h3>
+            <p>The Logs can be sent to a Syslog server. You can select one of these two options, as required:</p>
+            <ul>
+              <li><b>Disable</b> - Select this if you don't have a Syslog server to send logs to.</li>
+              <li><b>Send to this Syslog server IPv4 address</b> - If your Syslog server has a fixed IP address, select this option, and enter the IP address of your Syslog server.</li>
+              <li ><b>Send to this Syslog server IPv6 address</b> - If your Syslog server has a fixed IP address, select this option, and enter the IP address of your Syslog server.</li>
+            </ul>
+						<p>When finished editing your logs, select <b>Apply</b> to save your changes.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

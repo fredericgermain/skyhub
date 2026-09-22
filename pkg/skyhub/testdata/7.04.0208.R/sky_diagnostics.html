@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Diagnostics</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript" src="assets/js/util.js"></script>
+<script type="text/javascript">
+     <!--//
+	 var good_words_ip6 = "0123456789abcdefABCDEF:";
+	 if_allow_submit=false;
+function ping_ck()
+{
+    var cf = document.forms['ping'];
+	if(!if_allow_submit)
+		return false;	
+		
+	if(badIP(cf.IPAddr1,cf.IPAddr2,cf.IPAddr3,cf.IPAddr4,255))
+	{
+		alert("Invalid IPv4 address, please re-enter!\n");
+		return  false;
+	}
+
+	cf.sessionKey.value = document.forms['reboot'].sessionKey.value;
+	dataToHidden(cf);
+	cf.submit();
+    return true;
+}
+
+function ping6_ck()
+{
+    var cf = document.forms['ping'];
+	if(!if_allow_submit)
+		return false;	
+
+    if(skyCheckIPV6Address(cf.IPAddrV6.value) == false)
+    {
+        alert("Invalid IPv6 address, please re-enter!\n");
+        return false;
+    }		
+	cf.sessionKey.value = document.forms['reboot'].sessionKey.value;
+	dataToHidden(cf);
+	cf.submit();
+    return true;
+}
+
+function clearLookup()
+{
+	var cf = document.forms['dnslookup'];
+	cf.lookup_name.value="";	
+}
+
+function check_and_send()
+{
+	var cf = document.forms[3];
+	if(confirm(msg_restart))
+	{
+		cf.submit();
+		return true
+	}
+	else
+	{
+		return ;
+	}
+}
+
+function lookup_ck()
+{
+    var cf = document.forms['dnslookup'];
+
+	if(!if_allow_submit)
+		return false;
+
+    if(if_lookupv6)
+	    cf.LookupType.value="ipv6";	
+    else
+	    cf.LookupType.value="ipv4";	
+    if(isBlank(cf.lookup_name))
+    {
+        alert("Internet name can not be blank!\n");
+        return false;
+    }
+	var msg="";
+	msg+= checkLength(cf.lookup_name, "lookup name", 1, 60, true);//bug 693 Fix: string length in input box on web page is not checked
+      if(msg.length>1)
+      {
+	  	alert(msg);
+	  	return false;	  
+      }
+	  
+	if(cf.lookup_name.value.indexOf(".") == -1)
+    {
+        alert("Invalid Internet name, please re-enter.\n");
+        return false;
+    }
+	
+    cf.sessionKey.value= document.forms['reboot'].sessionKey.value;
+    cf.submit();
+    return true;
+}
+
+var msg_restart = "Restarting the Sky Hub will terminate any active connections to the Internet";
+     //-->
+   </script>
+</head>
+<body onload="loadhelp('_diag');document.forms[0].elements[0].focus();">
+<!-- head -->
+<div id="head">
+  <div id="header">
+	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li class="selected"><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-maintenance" class="selected">
+          <li ><a href="sky_router_status.html">Router Status</a></li>
+          <li ><a href="sky_attached_devices.html">Attached Devices</a></li>
+          <li ><a href="sky_backup_settings.html">Backup Settings</a></li>
+          <li ><a href="sky_set_password.html">Set Password</a></li>
+          <li class="selected"><a href="sky_diagnostics.html">Diagnostics</a></li>
+          <li ><a href="sky_router_upgrade.html">Router Upgrade</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Diagnostics</h1>
+        <p class="black">You can use this page to perform various diagnostics from your Sky Hub.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top" />
+        <form name="ping" method="post" action="sky_diagnostics_ping.cgi" onsubmit="return ping_ck();">
+          <div class="section-heading">
+            <h3>Ping an IP Address</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <div class="row-holder">
+            <label class="w250">IPv4 Address:</label>
+            <input name="IPAddr1" size="4" maxlength="3" onfocus="this.select()" type="text" id="ipv4-ping-input-1"/>
+            .
+            <input name="IPAddr2" size="4" maxlength="3" onfocus="this.select()" type="text" id="ipv4-ping-input-2"/>
+            .
+            <input name="IPAddr3" size="4" maxlength="3" onfocus="this.select()" type="text" id="ipv4-ping-input-3"/>
+            .
+            <input name="IPAddr4" size="4" maxlength="3" onfocus="this.select()" type="text" id="ipv4-ping-input-4"/> 
+          </div>		
+		  <a href="javascript:;" onclick="javascript: if_allow_submit=true; return ping_ck();" name="ping" class="btn32 btn-clr-primary png"><span class="png" id="ipv4-ping-button">Ping</span></a><br><br>
+		  <div class="row-holder">
+            <label for="send" class="w250">IPv6 Address:</label>
+            <input value="" name="IPAddrV6" class="text" size="39" maxlength="43" type="text" id="ipv6-ping-input"/>
+          </div>
+		  <a href="javascript:;" onclick="javascript: if_allow_submit=true;return ping6_ck();" name="ping6" class="btn32 btn-clr-primary png"><span class="png" id="ipv6-ping-button">Ping</span></a>
+          <input name="sessionKey" value="" type="hidden"/>
+          <input name="todo" value="ping_test" type="hidden"/>
+          <input name="this_file" value="sky_diagnostics.html" type="hidden"/>
+          <input name="next_file" value="sky_diagnostics-ping.html" type="hidden"/>
+          <input name="c4_IPAddr" value="" type="hidden"/>		   
+        </form>
+        <hr />
+		
+        <form name="dnslookup" method="post" action="sky_diagnostics_dns.cgi" onsubmit="return lookup_ck();">
+		<div >
+          <div class="section-heading">
+            <h3>Perform a DNS Lookup</h3>
+            <a class="help-btn" href="#" name="help2">help</a></div>
+          <div class="row-holder">
+            <label class="w250">Internet Name:</label>
+            <input name="lookup_name" value="" size="24" maxlength="128" onfocus="clearLookup()" type="text" id="dns-lookup-input-name"/>
+            <input name="LookupType" value="" type="hidden"/>
+          </div>
+          <div class="buttons-holder"> <a href="javascript:;" onclick="javascript:if_allow_submit=true; if_lookupv6=false; return lookup_ck();" class="btn32 btn-clr-primary png"><span class="png" id="dns-lookup-ipv4-button">IPv4 Look Up</span></a><a href="javascript:;" onclick="javascript:if_allow_submit=true; if_lookupv6=true; return lookup_ck();" class="btn32 btn-clr-primary png"><span class="png" id="dns-lookup-ipv6-button">IPv6 Look Up </span></a></div>
+          <br/>
+          <div class="row-holder"> <span class="label w250">IP Address:</span><span>
+		  <table cellpadding="0" cellspacing="0" border="0" id="dns-lookup-output-value-table">
+            <tbody>
+            
+			</tbody>
+			</table>
+            </span></div>
+          <hr />
+		  </div>
+		  
+		  <div >
+          <div class="section-heading">
+            <h3>DNS Server</h3>
+          </div>
+          <div class="row-holder"> <span class="label w250" id="dns-server-primary-text">Primary</span><span>
+            203.0.113.3
+            </span></div>
+          <div class="row-holder"> <span class="label w250" id="dns-server-secondary-text">Secondary</span><span>
+            203.0.113.4
+            </span></div>
+		 <table cellpadding="0" cellspacing="0"  border="0" id="dns-server-utilised">
+            <tbody>
+          
+		 </tbody>
+		</table>
+          <input name="sessionKey" value="" type="hidden"/>
+          <input name="todo" value="dnslookup" type="hidden"/>
+          <input name="this_file" value="sky_diagnostics.html" type="hidden"/>
+          <input name="next_file" value="sky_diagnostics.html" type="hidden"/>
+		</form>
+        <hr />
+        </div>
+		
+		<div >
+        <div class="section-heading">
+          <h3>Display the Routing Table</h3>
+          <a class="help-btn" href="#" name="help3">help</a></div>
+        <a href="javascript: if_allow_submit=false; window.location.href='sky_diagnostics-display.html';" class="link">Display</a>
+        <form name="diag" method="post" action="" class="compressed" onsubmit="return if_allow_submit;">
+        </form>
+        <hr />
+		</div>
+		
+        <div class="section-heading">
+          <h3>Reboot the Sky Hub</h3>
+          <a class="help-btn" href="#" name="help4">help</a></div>
+        <a href="javascript: if_allow_submit=true;check_and_send();" class="btn32 btn-clr-primary png"><span class="png" id="reboot-the-hub-button">Reboot</span></a>
+        <form name="reboot" method="post" action="sky_rebootinfo.cgi" class="compressed" onsubmit="return check_and_send();">
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+          <input name="todo" value="refresh" type="hidden"/>
+          <input name="this_file" value="sky_diagnostics.html" type="hidden"/>
+          <input name="next_file" value="sky_diagnostics.html" type="hidden"/>
+        </form>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Ping an IP Address</h3>
+            <p>Use this to send a "ping" packet request to the specified IPv4/IPv6 address. This is often used to test a connection. If the request "times out" (no reply is received), this usually means the destination is unreachable. However, some network devices can be configured not to respond to a ping.</p>
+          </div>
+          <span class="arrow arrow-l png"> </span> </div>
+        <!-- HELP 2 -->
+        <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Perform a DNS Lookup</h3>
+            <p>A DNS (Domain Name Server) converts the <b>Internet Name</b>, e.g. www.sky.com, to an IP Address. If you need the IP Address of a Web, FTP, Mail or other Server on the Internet, you can do a DNS Look Up to find the IP Address.</p>
+          </div>
+          <span class="arrow arrow-l png"> </span> </div>
+        <!-- HELP 3 -->
+        <div class="pod pod-help" id="help3"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Display the Routing Table</h3>
+            <p>This operation will display the internal routing table. This information may be used by Sky Technical Support.</p>
+          </div>
+          <span class="arrow arrow-l png"> </span> </div>
+        <!-- HELP 4 -->
+        <div class="pod pod-help" id="help4"><a href="#close" class="help-close"></a>
+          <div class="content"><h3>Reboot the Sky Hub</h3>
+          <p>Use this button to perform a reboot (restart) of the Sky Hub from the device you are accessing these pages on, rather than physically rebooting the Sky Hub by turning the power off at the mains. You can reboot the Sky Hub if it seems to have become unstable or isn't operating normally.</p></div>
+          <span class="arrow arrow-l png"></span>
+          </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

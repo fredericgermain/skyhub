@@ -1,0 +1,498 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Schedule</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+     <!--//
+
+var if_allow_submit=false;
+var checkboxNameMonDisabled = false;
+var checkboxNameTueDisabled = false;
+var checkboxNameWedDisabled = false;
+var checkboxNameThuDisabled = false;
+var checkboxNameFriDisabled = false;
+var checkboxNameSatDisabled = false;
+var checkboxNameSunDisabled = false;
+var TimePeriodDisabled = false;
+
+function BlockPeriodClick(cf) {
+	if(cf.checkboxNamehours.checked) {
+		cf.cfSchedule_StartHour.disabled = true;
+		cf.cfSchedule_StartMinute.disabled = true;
+		cf.cfSchedule_EndHour.disabled = true;
+		cf.cfSchedule_EndMinute.disabled = true;
+		TimePeriodDisabled = true;
+	} else {
+		cf.cfSchedule_StartHour.disabled = false;
+		cf.cfSchedule_StartMinute.disabled = false;
+		cf.cfSchedule_EndHour.disabled = false;
+		cf.cfSchedule_EndMinute.disabled = false;
+		TimePeriodDisabled = false;
+	}
+	return;
+}
+
+function formatTime()
+{
+	with(document.forms[0])
+	{
+		if(cfSchedule_StartHour.value.length < 2)
+		{
+			cfSchedule_StartHour.value = "0"+cfSchedule_StartHour.value;
+		}
+		if(cfSchedule_StartMinute.value.length < 2)
+		{
+			cfSchedule_StartMinute.value = "0"+cfSchedule_StartMinute.value;
+		}
+		if(cfSchedule_EndHour.value.length < 2)
+		{
+			cfSchedule_EndHour.value = "0"+cfSchedule_EndHour.value;
+		}
+		if(cfSchedule_EndMinute.value.length < 2)
+		{
+			cfSchedule_EndMinute.value = "0"+cfSchedule_EndMinute.value;
+		}
+	}
+}
+function BlockAllClickCheck() {
+	var cf = document.forms[0];
+	
+	if (cf.checkboxNamehours.disabled)
+		return;	
+	if(cf.checkboxNameAll.checked) {
+		cf.checkboxNameMon.checked = true;
+		cf.checkboxNameTue.checked = true;
+		cf.checkboxNameWed.checked = true;
+		cf.checkboxNameThu.checked = true;
+		cf.checkboxNameFri.checked = true;
+		cf.checkboxNameSat.checked = true;
+		cf.checkboxNameSun.checked = true;
+		
+		cf.checkboxNameMon.disabled = true;
+		cf.checkboxNameTue.disabled = true;
+		cf.checkboxNameWed.disabled = true;
+		cf.checkboxNameThu.disabled = true;
+		cf.checkboxNameFri.disabled = true;
+		cf.checkboxNameSat.disabled = true;
+		cf.checkboxNameSun.disabled = true;
+
+		checkboxNameMonDisabled = true;
+		checkboxNameTueDisabled = true;
+		checkboxNameWedDisabled = true;
+		checkboxNameThuDisabled = true;
+		checkboxNameFriDisabled = true;
+		checkboxNameSatDisabled = true;
+		checkboxNameSunDisabled = true;
+	} 
+	else {
+		cf.checkboxNameMon.disabled = false;
+		cf.checkboxNameTue.disabled = false;
+		cf.checkboxNameWed.disabled = false;
+		cf.checkboxNameThu.disabled = false;
+		cf.checkboxNameFri.disabled = false;
+		cf.checkboxNameSat.disabled = false;
+		cf.checkboxNameSun.disabled = false;
+
+		checkboxNameMonDisabled = false;
+		checkboxNameTueDisabled = false;
+		checkboxNameWedDisabled = false;
+		checkboxNameThuDisabled = false;
+		checkboxNameFriDisabled = false;
+		checkboxNameSatDisabled = false;
+		checkboxNameSunDisabled = false;
+	}
+    BlockPeriodClick(cf);
+	return;
+}
+
+function checkData()
+{
+ 	var cf = document.forms[0];
+	var msg = "";
+	if((! cf.checkboxNamehours.checked))
+	{
+		if(isNumeric(cf.cfSchedule_StartHour,23))
+			msg+= "The starting hour is invalid, please re-enter (0 ~ 23)\n";
+		if(isNumeric(cf.cfSchedule_StartMinute,59))
+			msg+= "The starting minute is invalid, please re-enter (0 ~ 59)\n";
+		if(isNumeric(cf.cfSchedule_EndHour,23))
+			msg+= "The ending hour is invalid, please re-enter (0 ~ 23)\n";
+		if (cf.cfSchedule_EndHour.value == "24")
+		{
+			if(isNumeric(cf.cfSchedule_EndMinute,00))
+				msg+= "The time is invalid, please re-enter!\n";
+		}
+		else
+		{
+			if(isNumeric(cf.cfSchedule_EndMinute,59))
+				msg+= "The end minute is invalid, please re-enter (0 ~ 59)\n";
+		}
+		/*Bug 959 Allow the cross-day setting of the schedule in case "Everyday" is choose*/
+		/*if((msg.length<=1)&&(cf.checkboxNameAll.checked != true))
+		{
+			if (((cf.cfSchedule_EndHour.value * 60 + cf.cfSchedule_EndMinute.value)-(cf.cfSchedule_StartHour.value * 60 + cf.cfSchedule_StartMinute.value))<=0)
+				msg+="The end time is early than the start time, please re-enter\n";
+		}*/
+		/*end of bug 959*/
+	}	
+	if (msg.length > 1)
+	{
+		alert(msg);
+		return false;
+	}
+	dataToHidden(cf);
+	//cf.ntpserver_name.value=cf.c4_ts2_ip.value;
+	cf.submit();
+	return true;	
+}
+
+/*
+function check_if_ntpserver_enable()
+{
+	var cf=document.forms[0];
+	if (cf.use_ntpserver.checked)
+	{
+		cf.ntpserver_name.disabled=false;
+		cf.ts2_ip1.disabled=false;
+		cf.ts2_ip2.disabled=false;
+		cf.ts2_ip3.disabled=false;
+		cf.ts2_ip4.disabled=false;
+	}
+	else
+	{
+		cf.ntpserver_name.disabled=true;
+		cf.ts2_ip1.disabled=true;
+		cf.ts2_ip2.disabled=true;
+		cf.ts2_ip3.disabled=true;
+		cf.ts2_ip4.disabled=true;
+	}
+}
+
+
+var timeZones = new Array();
+timeZones[0] =	'(GMT-12:00) International Date Line West';
+timeZones[1] =	'(GMT-11:00) Midway Island, Samoa';
+timeZones[2] =	'(GMT-10:00) Hawaii';
+timeZones[3] =	'(GMT-09:00) Alaska';
+timeZones[4] =	'(GMT-08:00) Pacific Time, Tijuana';
+timeZones[5] =	'(GMT-07:00) Arizona, Mazatlan';
+timeZones[6] =	'(GMT-07:00) Chihuahua, La Paz';
+timeZones[7] =	'(GMT-07:00) Mountain Time';
+timeZones[8] =	'(GMT-06:00) Central America';
+timeZones[9] =	'(GMT-06:00) Central Time';
+timeZones[10] =	'(GMT-06:00) Guadalajara, Mexico City, Monterrey';
+timeZones[11] = '(GMT-06:00) Saskatchewan';
+timeZones[12] = '(GMT-05:00) Bogota, Lima, Quito';
+timeZones[13] = '(GMT-05:00) Eastern Time';
+timeZones[14] = '(GMT-05:00) Indiana';
+timeZones[15] = '(GMT-04:00) Atlantic Time';
+timeZones[16] = '(GMT-04:00) Caracas, La Paz';
+timeZones[17] = '(GMT-04:00) Santiago';
+timeZones[18] = '(GMT-03:30) Newfoundland';
+timeZones[19] = '(GMT-03:00) Brasilia';
+timeZones[20] = '(GMT-03:00) Buenos Aires, Georgetown';
+timeZones[21] = '(GMT-03:00) Greenland';
+timeZones[22] = '(GMT-02:00) Mid-Atlantic';
+timeZones[23] = '(GMT-01:00) Azores';
+timeZones[24] = '(GMT-01:00) Cape Verde Is.';
+timeZones[25] = '(GMT-00:00) Casablanca, Monrovia';
+timeZones[26] = '(GMT-00:00) Greenwich Mean Time: Dublin, Edinburgh, Lisbon, London';
+timeZones[27] = '(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna';
+timeZones[28] = '(GMT+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague';
+timeZones[29] = '(GMT+01:00) Brussels, Copenhagen, Madrid, Paris';
+timeZones[30] = '(GMT+01:00) Sarajevo, Skopje, Warsaw, Zagreb';
+timeZones[31] = '(GMT+01:00) West Central Africa';
+timeZones[32] = '(GMT+02:00) Athens, Istanbul, Minsk';
+timeZones[33] = '(GMT+02:00) Bucharest';
+timeZones[34] = '(GMT+02:00) Cairo';
+timeZones[35] = '(GMT+02:00) Harare, Pretoria';
+timeZones[36] = '(GMT+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius';
+timeZones[37] = '(GMT+02:00) Jerusalem';
+timeZones[38] = '(GMT+03:00) Baghdad';
+timeZones[39] = '(GMT+03:00) Kuwait, Riyadh';
+timeZones[40] = '(GMT+03:00) Moscow, St. Petersburg, Volgograd';
+timeZones[41] = '(GMT+03:00) Nairobi';
+timeZones[42] = '(GMT+03:30) Tehran';
+timeZones[43] = '(GMT+04:00) Abu Dhabi, Muscat';
+timeZones[44] = '(GMT+04:00) Baku, Tbilisi, Yerevan';
+timeZones[45] = '(GMT+04:30) Kabul';
+timeZones[46] = '(GMT+05:00) Ekaterinburg';
+timeZones[47] = '(GMT+05:00) Islamabad, Karachi, Tashkent';
+timeZones[48] = '(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi';
+timeZones[49] = '(GMT+05:45) Kathmandu';
+timeZones[50] = '(GMT+06:00) Almaty, Novosibirsk';
+timeZones[51] = '(GMT+06:00) Astana, Dhaka';
+timeZones[52] = '(GMT+06:00) Sri Jayawardenepura';
+timeZones[53] = '(GMT+06:30) Rangoon';
+timeZones[54] = '(GMT+07:00) Bangkok, Hanoi, Jakarta';
+timeZones[55] = '(GMT+07:00) Krasnoyarsk';
+timeZones[56] = '(GMT+08:00) Beijing, Chongquing, Hong Kong, Urumqi';
+timeZones[57] = '(GMT+08:00) Irkutsk, Ulaan Bataar';
+timeZones[58] = '(GMT+08:00) Kuala Lumpur, Singapore';
+timeZones[59] = '(GMT+08:00) Perth';
+timeZones[60] = '(GMT+08:00) Taipei';
+timeZones[61] = '(GMT+09:00) Osaka, Sapporo, Tokyo';
+timeZones[62] = '(GMT+09:00) Seoul';
+timeZones[63] = '(GMT+09:00) Yakutsk';
+timeZones[64] = '(GMT+09:30) Adelaide';
+timeZones[65] = '(GMT+09:30) Darwin';
+timeZones[66] = '(GMT+10:00) Brisbane';
+timeZones[67] = '(GMT+10:00) Canberra, Melbourne, Sydney';
+timeZones[68] = '(GMT+10:00) Guam, Port Moresby';
+timeZones[69] = '(GMT+10:00) Hobart';
+timeZones[70] = '(GMT+10:00) Vladivostok';
+timeZones[71] = '(GMT+11:00) Magadan';
+timeZones[72] = '(GMT+11:00) Solomon Is., New Caledonia';
+timeZones[73] = '(GMT+12:00) Auckland, Wellington';
+timeZones[74] = '(GMT+12:00) Fiji, Kamchatka, Marshall Is.';
+
+function writeTimeZoneList() {
+  for( var i = 0; i < timeZones.length; i++ )
+    document.writeln("<option value=" + getTimeZoneOffset(i) + ">" + timeZones[i] + "</option>");
+}
+
+function getTimeZoneIndex(timeZoneName) {
+  var i = 0, ret = 4;  // default to Pacific time
+  for ( var i = 0; i < timeZones.length; i++ ) {
+    if ( timeZones[i].search(timeZoneName) != -1 )
+      break;
+  }
+  if ( i < timeZones.length )
+    ret = i;
+  return ret;
+}
+
+function getTimeZoneName(idx) {
+  var str = timeZones[idx];
+  var ret = '';
+  ret = str.substr(12);
+  return ret;
+}
+
+function getTimeZoneOffset(idx) {
+  var str = timeZones[idx];
+  var ret = '';
+  ret = str.substr(4, 6);
+  return ret;
+}
+
+function timezone_update()
+{
+	var cf=document.forms[0];
+	var tz_name=getTimeZoneName(cf.TimeZone.selectedIndex);
+	cf.TimeZoneName.value = tz_name;
+	cf.h_TimeZoneName.value = tz_name;
+	return;
+}
+
+function timezone_change()
+{
+	var cf=document.forms[0];
+	var tz_index=getTimeZoneIndex(cf.h_TimeZoneName.value);
+	cf.TimeZone.selectedIndex = tz_index;
+	return;
+}
+*/
+     //-->
+   </script>
+</head>
+<body onload="formatTime();dataToVisible(document.forms[0]);BlockAllClickCheck();loadhelp('schedul');">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li class="selected"><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-security" class="selected">
+          <li ><a href="sky_logs.html">Logs</a></li>
+          <li ><a href="sky_block_sites.html">Block Sites</a></li>
+          <li ><a href="sky_firewall_rules.html">Firewall Rules</a></li>
+          <li ><a href="sky_services.html">Services</a></li>
+          <li class="selected"><a href="sky_schedule.html">Schedule</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Schedule</h1>
+        <p class="black">If you have set Firewall Rules on the Rules page or Keyword Filtering on the Block Sites page, you can set up a schedule for the time of day the rules are applied.</p>
+        <p>To apply Rules based on a schedule:</p>
+        <ul>
+          <li>On the Rules page create the required Rules using either Block by Schedule or Allow by Schedule for each rule.</li>
+          <li>Select the <b>Enable checkbox</b> on that page.</li>
+          <li>Tick the <b>days and times</b> on this page, as required.</li>
+          <li>Select <b>Apply</b>.</li>
+        </ul>
+        <p><b>Note: </b>If the schedule is modified on this page, this affects ALL Rules which are using a schedule.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top" />
+        <form method="post" action="sky_schedule.cmd" onsubmit="return if_allow_submit;">
+          <div class="section-heading">
+            <h3>Days</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <div class="row-holder">
+            <input name="checkboxNameAll" value="checkboxNameAll" onclick="BlockAllClickCheck();" type="checkbox"/>
+            <label class="right">Every Day</label>
+          </div>
+          <div class="row-holder">
+            <input name="checkboxNameSun" value="checkboxNameSun" onclick="if(checkboxNameSunDisabled) this.checked = true" type="checkbox"/>
+            <label class="right">Sunday</label>
+          </div>
+          <div class="row-holder">
+            <input name="checkboxNameMon" value="checkboxNameMon" onclick="if(checkboxNameMonDisabled) this.checked = true" type="checkbox"/>
+            <label class="right">Monday</label>
+          </div>
+          <div class="row-holder">
+            <input name="checkboxNameTue" value="checkboxNameTue" onclick="if(checkboxNameTueDisabled) this.checked = true" type="checkbox"/>
+            <label class="right">Tuesday</label>
+          </div>
+          <div class="row-holder">
+            <input name="checkboxNameWed" value="checkboxNameWed" onclick="if(checkboxNameWedDisabled) this.checked = true" type="checkbox"/>
+            <label class="right">Wednesday</label>
+          </div>
+          <div class="row-holder">
+            <input name="checkboxNameThu" value="checkboxNameThu" onclick="if(checkboxNameThuDisabled) this.checked = true" type="checkbox"/>
+            <label class="right">Thursday</label>
+          </div>
+          <div class="row-holder">
+            <input name="checkboxNameFri" value="checkboxNameFri" onclick="if(checkboxNameFriDisabled) this.checked = true" type="checkbox"/>
+            <label class="right">Friday</label>
+          </div>
+          <div class="row-holder">
+            <input name="checkboxNameSat" value="checkboxNameSat" onclick="if(checkboxNameSatDisabled) this.checked = true" type="checkbox"/>
+            <label class="right">Saturday</label>
+          </div>
+          <hr />
+          <div class="section-heading">
+            <h3> Time of Day (use 24-hour clock)</h3>
+            <a class="help-btn" href="#" name="help2">help</a></div>
+          <div class="row-holder">
+            <input checked="checked" name="checkboxNamehours" value="checkboxValue" onclick="BlockPeriodClick(this.form);" type="checkbox"/>
+            <label class="right">All Day </label>
+          </div>
+          <div class="row-holder">
+            <label class="w100">Start Time:</label>
+            <input disabled="disabled" name="cfSchedule_StartHour" size="3" maxlength="2" value="0" onfocus="if(TimePeriodDisabled) this.blur()" type="text"/>
+            Hours
+            <input disabled="disabled" name="cfSchedule_StartMinute" size="3" maxlength="2" value="0" onfocus="if(TimePeriodDisabled) this.blur()" type="text"/>
+            Minutes </div>
+          <div class="row-holder">
+            <label class="w100">End Time:</label>
+            <input disabled="disabled" name="cfSchedule_EndHour" size="3" maxlength="2" value="23" onfocus="if(TimePeriodDisabled) this.blur()" type="text"/>
+            Hours
+            <input disabled="disabled" name="cfSchedule_EndMinute" size="3" maxlength="2" value="59" onfocus="if(TimePeriodDisabled) this.blur()" type="text"/>
+            Minutes </div>
+          <hr />
+          <div class="row-holder"><span class="label">Current Time:</span><span>
+            Wed Sep 23 14:59:26 2026
+            </span></div>
+          <!-- ServerStart -->
+          <input name="h_checkboxNameAll" value="enable" type="hidden"/>
+          <input name="h_checkboxNameSun" value="enable" type="hidden"/>
+          <input name="h_checkboxNameMon" value="enable" type="hidden"/>
+          <input name="h_checkboxNameTue" value="enable" type="hidden"/>
+          <input name="h_checkboxNameWed" value="enable" type="hidden"/>
+          <input name="h_checkboxNameThu" value="enable" type="hidden"/>
+          <input name="h_checkboxNameFri" value="enable" type="hidden"/>
+          <input name="h_checkboxNameSat" value="enable" type="hidden"/>
+          <input name="h_checkboxNamehours" value="enable" type="hidden"/>
+          <!--
+        <input type="hidden" name="h_TimeZone" value="{schedule_timezone}" {if_allow_ntp}/> 
+        <input type="hidden" name="h_adjust" value="{schedule_adjust_daylight}" {if_allow_ntp}/> 
+        <input type="hidden" name="h_use_ntpserver" value="{schedule_use_ntpserver}" {if_allow_ntp}/>
+		<input type="hidden" name="h_TimeZoneName" value="{schedule_timezonename}" {if_allow_ntp}/>
+		<input type="hidden" name="c4_ts2_ip" value="{schedule_ntpserver_name}" {if_allow_ntp} />
+-->
+          <!-- ServerEnd -->
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+          <input name="todo" value="save" type="hidden"/>
+          <input name="this_file" value="sky_schedule.html" type="hidden"/>
+          <input name="next_file" value="sky_schedule.html" type="hidden"/>
+          <input name="TimeZoneName" value="" type="hidden"/>
+        </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_schedule.html'" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a> <a href="javascript:;" onclick="javascript: if_allow_submit=true; return checkData();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Days</h3>
+            <p>Select the days on which you want the rules to apply:</p>
+            <ul>
+              <li><b>Every Day</b> - All days will automatically be selected.</li>
+              <li><b>Sunday, Monday, Tuesday, etc.</b> - If Every Day isn't selected, you can choose the required days individually.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 2 -->
+        <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Time of Day</h3>
+            <p>This determines when the schedule is applied for each day selected. Enter the desired Start and Finish times.</p>
+            <p><b>Note:</b> Enter the values in the 24 hour clock format. e.g. 10:30 am would be 10 Hours and 30 Minutes, and 10:30 pm would be 22 Hours and 30 Minutes.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

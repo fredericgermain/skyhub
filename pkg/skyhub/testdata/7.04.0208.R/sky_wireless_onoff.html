@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; WiFi Settings</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+   <!-- //
+var productModel = 'SR200';
+function initScrn()
+{
+  var cf = document.forms[0];
+  var enbl = '1';
+	if (enbl == '1') 
+		cf.h_enable_ap.value = 'enable';
+      else 
+	  	cf.h_enable_ap.value = 'disable';
+
+
+	dataToVisible(cf);
+}
+
+function checkData()
+{
+    var cf = document.forms[0];
+	dataToHidden(cf);
+	if(cf.enable_ap.checked == true)
+	{
+		cf.h_enable_ap.value = 1;
+	}
+	else
+	{
+		cf.h_enable_ap.value = 0;
+	}
+	cf.submit();
+    return true;
+}
+
+function AccessPointHandler()
+{
+  if (document.forms[0].enable_ap.checked == false)
+  {
+    if( productModel=='ER110' || productModel=='SR200' || productModel=='BR200' )
+    {
+      var answer = confirm("If you have any Sky Q TV products connected wirelessly in the home, you must leave WiFi Access Point, WPS and Broadcast of Name (SSID) enabled. Changing any of these settings could interrupt your Sky Q TV service. If you see any disruption to your TV services, please ensure these settings are enabled. To cancel these changes, choose cancel below.");
+      if(answer == false)
+        document.forms[0].enable_ap.checked = true;
+    }
+    else if( productModel=='EE120' )
+    {
+      var answer = confirm("If you have any Sky Q TV products connected wirelessly in the home, you must leave WiFi Access Point and WPS settings enabled. Changing any of these settings could interrupt your Sky Q TV service. If you see any disruption to your TV services, please ensure that the these settings are enabled. To cancel these changes, choose cancel below.");
+      if(answer == false)
+        document.forms[0].enable_ap.checked = true;
+    }
+  }
+}
+
+var if_allow_submit=false;
+   // -->
+   </script>
+<script   type="text/javascript">
+<!-- hide
+var wlRefreshParameters = '0'; // bug 4071
+// done hiding -->
+</script>
+</head>
+<body onload="initScrn();loadhelp('_wire');document.forms[0].elements[0].focus();">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li class="selected"><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-wireless" class="selected">
+          <li><a href="sky_wireless_band.cgi?band=2.4GHz">2.4 GHz WiFi Settings</a></li>
+<li class="selected"><a href="sky_wireless_band.cgi?band=5GHz">5 GHz WiFi Settings</a></li>
+
+          <li ><a href="sky_wireless_wps.html">Add WPS Client</a></li>
+          
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>5 GHz WiFi Settings</h1>
+        <p class="black">The WiFi Access Point of your Sky Hub can be enabled or disabled to allow WiFi access for your devices. The WiFi icon on the front of the Sky Hub will be illuminated if it's enabled.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+      <hr class="top" />
+        <form method="post" action="sky_wireless_update.cmd" onsubmit="return if_allow_submit;">
+          <div class="section-heading">
+            <h3>WiFi Access Point</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <div class="row-holder">
+            <input checked="checked" name="enable_ap" value="enable_ap" type="checkbox" onclick="AccessPointHandler()" />
+            <label for="secType" class="right">Enable WiFi Access Point</label>
+          </div>
+          <!-- ServerStart -->
+          <input name="h_enable_ap" value="" type="hidden"/>
+          <!-- ServerEnd -->
+          <input name="todo" value="save" type="hidden"/>
+          <input name="this_file" value="sky_wireless_onoff.html" type="hidden"/>
+          <input name="next_file" value="sky_wireless_onoff.html" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+        </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_wireless_onoff.html';" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: if_allow_submit=true; return checkData();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+      </div>
+      <!-- side-panel -->
+      <div class="side-panel">
+		<!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>WiFi Access Point</h3>
+            <p>The WiFi Access Point of your Sky Hub can be enabled or disabled to allow WiFi connection of your WiFi devices. The WiFi icon on the front of your Sky Hub will be illuminated if it’s enabled.</p>
+            <p>If Enabled, connecting devices (computers, tablets, games consoles etc.) will be able to access the Internet wirelessly.</p>
+            <p>If Disabled, connecting devices (computers, tablets, games consoles etc.) won't be able to access the Internet wirelessly.</p>
+            </p>
+          </div>
+          <span class="arrow arrow-l png"></span> 
+		</div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

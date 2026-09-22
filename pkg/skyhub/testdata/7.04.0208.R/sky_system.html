@@ -1,0 +1,193 @@
+<!-- SHOULD OPEN IN WINDOW width=650,height=450 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Statistics</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+var syncNvram = '1';
+var wlRefreshStatus = '0';
+var mode = 'AUTO';
+var trafficMode = 'PTM';
+var isWANOE = ( (mode == 'WANOE') || (mode == 'AUTO' && (trafficMode == '' || trafficMode == 'Inactive') ));
+var isROI = false;
+var isSBR = false;
+
+function GetCookieVal(offset) {
+   var endstr = document.cookie.indexOf (";", offset);
+   if (endstr == -1)
+   endstr = document.cookie.length;
+   return unescape(document.cookie.substring(offset, endstr));
+}
+
+function SetCookie(name, value) {
+   var expdate = new Date();
+   var argv = SetCookie.arguments;
+   var argc = SetCookie.arguments.length;
+   var expires = (argc > 2) ? argv[2] : null;
+   var path = (argc > 3) ? argv[3] : null;
+   var domain = (argc > 4) ? argv[4] : null;
+   var secure = (argc > 5) ? argv[5] : false;
+   if(expires!=null) expdate.setTime(expdate.getTime() + ( expires * 1000 ));
+   document.cookie = name + "=" + escape (value) +((expires == null) ? "" : ("; expires="+ expdate.toGMTString()))
+   +((path == null) ? "" : ("; path=" + path)) +((domain == null) ? "" : ("; domain=" + domain))
+   +((secure == true) ? "; secure" : "");
+}
+
+function DelCookie(name) {
+   var exp = new Date();
+   exp.setTime (exp.getTime() - 1);
+   var cval = GetCookie (name);
+   document.cookie = name + "=" + cval + "; expires="+ exp.toGMTString();
+}
+
+function GetCookie(name) {
+   var arg = name + "=";
+   var alen = arg.length;
+   var clen = document.cookie.length;
+   var i = 0;
+   while (i < clen)
+   {
+	   var j = i + alen;
+	   if (document.cookie.substring(i, j) == arg)
+	   return GetCookieVal (j);
+	   i = document.cookie.indexOf(" ", i) + 1;
+	   if (i == 0) break;
+   }
+   return null;
+}
+
+<!--Interval.html Code -->
+var defaultInterval = 10;
+var interval = 10;
+
+function loadInterval() {
+	interval = GetCookie("router_status_interval");
+	if(interval == null) {
+		interval = defaultInterval;
+		SetCookie("router_status_interval", interval);
+	} else {
+		defaultInterval = interval;
+		document.forms[0].interval.value = interval;
+	}
+	intervalId = setInterval("getStatisticPage()", interval * 1000);
+	intervalId2 = setInterval("setDefaultInterval()", 20);
+}
+
+function setDefaultInterval() {
+	//document.SetIntervalForm.interval.value = defaultInterval ;
+	document.forms[0].interval.value = defaultInterval;
+	SetCookie("router_status_interval", defaultInterval);
+	clearInterval(intervalId2);
+}
+
+function resetInterval(newInterval) {
+	interval = parseInt(newInterval);
+	if(isNaN(interval) || interval < 3)
+		interval = defaultInterval;
+	document.forms[0].interval.value = interval;
+	SetCookie("router_status_interval", interval);
+	clearInterval(intervalId);
+	intervalId = setInterval("getStatisticPage()", interval * 1000);
+}
+
+function stopInterval() {
+	clearInterval(intervalId);
+	//document.SetIntervalForm.interval.value = "" ;
+	document.forms[0].interval.value = "";
+}
+
+function getStatisticPage() {
+	myTitle = "PNC Statistic";
+	window.location.href = "sky_system.html";
+}
+
+function check_if_too_short() {
+	if((document.forms[0].interval.value - 3) >= 0)
+		document.forms[0].interval.value = 4;
+}
+
+</script>
+</head>
+<body onload="loadInterval();document.forms[0].elements[1].focus();" >
+<div style="width:650px; height:450px; padding:20px;">
+  <div class="section-heading">
+    <h3>Router Statistics</h3>
+  </div>
+  <div class="row-holder"> <span class="label m20">System Up Time:</span><span id="router-stati-uptime-value">
+    67:04:57
+    </span></div>
+  <table class="nospace" width="100%" border="0" cellpadding="0" cellspacing="0" id="router-statistics-top-table">
+    <tbody>
+      <tr class="header">
+        <td>Port</td>
+        <td>Status</td>
+        <td>TxPkts</td>
+		<td>RxPkts</td>
+        <td>Collision Pkts</td>
+        <td>Tx b/s </td>
+        <td>Rx b/s </td>
+        <td>Up Time</td>
+      </tr>
+      <tr><td>WAN</td><td>MER</td><td>28634080</td><td>51981897</td><td>0</td><td>116068</td><td>105677</td><td>67:03:05</td> </tr><tr><td>LAN</td><td>Up</td><td>9391337</td><td>8261317</td><td>0</td><td>17115</td><td>19551</td><td>67:04:57</td> </tr><tr>  <td>WLAN (2.4 GHz)</td><td>Up</td><td>709770</td><td>242445</td><td>0</td> <td>5489</td> <td>3301</td><td>67:02:59</td></tr><tr>  <td>WLAN (5 GHz)</td><td>Up</td><td>56642946</td><td>32296934</td><td>0</td> <td>0</td> <td>0</td><td>67:02:34</td></tr>
+    </tbody>
+  </table>
+  <hr />
+  
+  <div >
+  <table class="nospace" width="100%" border="0" cellpadding="0" cellspacing="0" id="router-statistics-down-table">
+    <tbody>
+      <tr class="header">
+        <td>Broadband Link
+          </th>
+        <td>Downstream </td>
+        <td>Upstream</td>
+      </tr>
+      <script type="text/javascript">
+      if (isWANOE && (isROI || isSBR))
+      {
+          document.write('<tr><td >Connection Speed </td><td>N/A</td><td>N/A</td></tr>');
+      }
+      else
+      {
+          document.write('<tr><td>Connection Speed</td><td>159749 kbps</td><td>29552 kbps</td></tr><tr><td>Line Attenuation</td><td>D1(38.3 dB) , D2(0.0 dB) , D3(0.0 dB)</td><td>U0(0.0 dB) , U1(0.0 dB) , U2(0.0 dB)</td></tr><td >Noise Margin</td><td>10.9 dB</td><td>3.0 dB</td></tr>');
+      }
+      </script>
+    </tbody>
+  </table>
+  <hr />
+  </div>
+  
+  <div class="section-heading">
+    <h3> Poll Interval:</h3>
+  </div>
+  <form method="get" name="sagem_set.cgi" action="" onsubmit="return false;">
+    <input name="Load" value="H" type="hidden"/>
+    <div class="row-holder">
+      <label class="m20">Seconds (at least 3s):</label>
+      <input name="interval" size="4" maxlength="4" value="10" type="text" id="router-stati-interval-value"/>
+    </div>
+    <div class="buttons-holder"> <a href="javascript: resetInterval(document.forms[0].interval.value);" class="btn42 btn-clr-primary png"><span class="png" id="router-stati-set-interval-button">Set Interval</span></a> <a href="javascript: stopInterval()" class="btn42 btn-clr-secondary png"><span class="png" id="router-stati-interval-stop-button">Stop</span></a> </div>
+    <input name="todo" value="reload" type="hidden"/>
+    <input name="this_file" value="sky_system.html" type="hidden"/>
+    <input name="next_file" value="sky_system.html" type="hidden"/>
+  </form>
+</div>
+</body>
+</html>

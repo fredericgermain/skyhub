@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Services</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+    <!--//
+   var if_allow_submit=false;
+   var sessionKey = '1234567890';
+
+   function get_fltname()
+   {
+       var i;   
+       var cf=document.forms[0];
+
+	 if (radioSelectedIndex(cf.ruleSelect) > -1)
+	 {
+             for(i=0;i<cf.ruleSelect.length;i++)
+   	     {
+                  if(cf.ruleSelect[i].checked==true)
+		break;		
+   	     }
+              cf.h_ruleSelect.value=cf.ruleSelect[i];
+	      stdAction(cf,'delete');
+     	      return true;
+  	 }
+	 else
+         {
+	     alert("No entry selected. \nClick a radio button to select an entry.");  
+             return false;
+         }
+  
+  }
+
+   function get_fltindex()
+   {
+       var i;   
+       var cf=document.forms[0];
+
+       if (radioSelectedIndex(cf.ruleSelect) > -1)
+       {
+           for(i=0;i<cf.ruleSelect.length;i++)
+           {
+               if(cf.ruleSelect[i].checked==true)
+     		      break;		
+           }
+     
+           cf.h_ruleSelect.value=cf.ruleSelect[i];
+     	   document.forms[1].editidx.value= i+1;
+     	   document.forms[1].submit();
+     	   return true;
+       }
+       else
+       {
+           alert("No entry selected. \nClick a radio button to select an entry.");  
+           return false;
+       }
+  }
+
+	function checkServiceAdd()
+	{
+		var cf=document.forms[0];
+
+		if(cf.serviceCnt.value >= 50)
+		{
+			alert("Maximum custom services reached. Delete service(s) to add new");     
+		}
+		else
+		{
+			window.location.href='sky_services_custom-add.html';
+		}
+	}
+
+	function initSessionKey() {
+		document.forms[0].sessionKey.value = sessionKey;
+		document.forms[1].sessionKey.value = sessionKey;
+	}
+
+   //-->
+   </script>
+</head>
+<body onload="dataToVisible(document.forms[0]);loadhelp('_fwsv');initSessionKey()">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li class="selected"><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-security" class="selected">
+          <li ><a href="sky_logs.html">Logs</a></li>
+          <li ><a href="sky_block_sites.html">Block Sites</a></li>
+          <li ><a href="sky_firewall_rules.html">Firewall Rules</a></li>
+          <li class="selected"><a href="sky_services.html">Services</a></li>
+          <li ><a href="sky_schedule.html">Schedule</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Services</h1>
+        <p class="black">The Services menu contains a list of user-defined Services for creating firewall rules.</p>
+        <p>If a service doesn't appear in the predefined Services list in the Firewall Rules menu, you can define the service in this menu. The new service will then appear in the Firewall Rules Services list.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top"/>
+        <form name="frmService" method="post" action="sky_service_custom-add.sky" onsubmit="return if_allow_submit;">
+          <div class="section-heading">
+            <h3>Services Table</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <table id="out_fw_table" style="" class="nospace" width="650" border="0" cellpadding="0" cellspacing="0">
+            <tbody>
+              <tr class="header">
+              <td width="5%"></td>
+                <td width="15%">#</td>
+                <td width="30%">Service Name</td>
+                <td width="25%">Service Type</td>
+                <td width="30%">Ports</td>
+              </tr>
+                 <tr>
+      <td><input value="SvcA" name="ruleSelect" onclick="EditMode()"type="radio">      </td>      <td>1</td>
+      <td>SvcA</td>
+      <td>TCP or UDP</td>
+ <td>7001...7001</td>
+   <tr>
+      <td><input value="SvcB" name="ruleSelect" onclick="EditMode()"type="radio">      </td>      <td>2</td>
+      <td>SvcB</td>
+      <td>UDP</td>
+ <td>7002...7002</td>
+   <tr>
+      <td><input value="SvcC" name="ruleSelect" onclick="EditMode()"type="radio">      </td>      <td>3</td>
+      <td>SvcC</td>
+      <td>TCP</td>
+ <td>7003...7003</td>
+   <tr>
+      <td><input value="SvcD" name="ruleSelect" onclick="EditMode()"type="radio">      </td>      <td>4</td>
+      <td>SvcD</td>
+      <td>UDP</td>
+ <td>7100...7110</td>
+<input value="4" name="serviceCnt" type="hidden"
+            </tbody>
+          </table>
+          <input name="todo" value="delete" type="hidden"/>
+          <input name="h_ruleSelect" value="0" type="hidden"/>
+          <input name="this_file" value="sky_services.html" type="hidden"/>
+          <input name="next_file" value="sky_services.html" type="hidden"/>
+          <input name="error_file" value="sky_services_error.html" type="hidden"/>
+          <input name="sessionKey" value="" type="hidden"/>
+        </form>
+        <form name="frmLan1" method="post" action="sky_services_custom-edit.scgi" onsubmit=" return get_fltindex() /*return check_if_allow_submit()*/;">
+          <input name="editidx" value="" type="hidden"/>
+          <input name="sessionKey" value="" type="hidden"/>
+        </form>
+        <div class="buttons-holder"> <a href="javascript:;" onclick="javascript: if_allow_submit=false; return get_fltname();" class="btn32 btn-clr-secondary png"><span class="png">Delete Service</span></a> <a href="javascript:;" onclick="javascript: if_allow_submit=false; return get_fltindex();" class="btn32 btn-clr-secondary png"><span class="png">Edit Service</span></a> <a href="javascript: if_allow_submit=false; checkServiceAdd();" class="btn32 btn-clr-primary png"><span class="png">Add Service</span></a></div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Services Table</h3>
+            <p>This Table lists all Services you have defined. If you have not defined any Services, the table will be empty.</p>
+            <p>To Create a Service:</p>
+            <ul>
+              <li>Select <b>Add Custom Service</b>.</li>
+              <li>Enter the data for the service as required.</li>
+              <li>Select <b>Apply</b> to save the new service.</li>
+            </ul>
+            <p>To Edit a Service:</p>
+            <ul>
+              <li>Tick the <b>radio button</b> next to a service in the table.</li>
+              <li>Select <b>Edit Service</b> to display the service's data in the Service Definition section.</li>
+              <li>Change the data for the service as required.</li>
+              <li>Select <b>Apply</b> to save your changes.</li>
+            </ul>
+            <p>To Delete a Service:</p>
+            <ul>
+              <li>Tick the <b>radio button</b> next to a service in the table.</li>
+              <li>Select <b>Delete Service</b> to delete the selected service.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

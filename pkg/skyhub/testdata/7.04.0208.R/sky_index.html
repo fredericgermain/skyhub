@@ -1,0 +1,358 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Home</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+    <!--//
+    var skyExtender = '';
+    var msg_restart;
+    if (skyExtender == '')
+    {
+        msg_restart = "Restarting the Sky Hub will terminate any active connections to the internet";
+    }
+    else
+    {
+        msg_restart = "Restarting the Sky Hub will terminate all active connections";
+    }
+    //-->
+   </script>
+   <script   type="text/javascript">
+    var logoutEnabled = false;
+      var attachedDevColumnName = 'MAC Address';
+      var adminLoggedIp = '192.168.50.9';
+      var pcIpAddr = '192.168.50.9';
+      var sky_wlAuthMode = 'psk2';
+      var sky_wlWep = '';
+      var sky_WirelessAllSSIDs = 'TestSSID';
+      sky_WirelessAllSSIDs = sky_WirelessAllSSIDs.replace(/ /g,"&nbsp;");
+      var passwordLinkAttributes = {};
+
+      function elementSupportsAttribute( elementType, attributeName )
+      {
+         // Convert "truthy" value to actual boolean (!!).
+         return !!( attributeName in document.createElement( elementType ) );
+
+      }
+      function doEnablePasswordLink( enableLink )
+      {
+         var passwordLink;
+
+         passwordLink = document.getElementById( 'passwordLink' );
+         if( passwordLink )
+         {
+            // Determine if browser supports "disabled" attribute.
+            if( elementSupportsAttribute( "a", "disabled" ) )
+            {
+               if( enableLink )
+               {
+                  passwordLink.disabled = false; // Automatically restore link colour.
+                  // Restore hyperlink reference to re-enable it.
+                  passwordLink.setAttribute( 'href', passwordLinkAttributes[ 'href' ] );
+
+               }
+               else
+               {
+                  passwordLink.disabled = true; // Automtically "grey out" the link.
+                  // Disable the hyperlink, saving it for later restoration.
+                  passwordLinkAttributes[ 'href' ] = passwordLink.getAttribute( 'href' );
+                  passwordLink.setAttribute( 'href', 'javascript: void(0)' );
+     
+               } // if( enableLink )
+
+            }
+            else
+            {
+               if( enableLink )
+               {
+                  // Install a onclick handler that will allow the link to be followed.
+                  passwordLink.onclick = function(){ return true; };
+                  // Restore the original link colour.
+                  passwordLink.style.color = passwordLinkAttributes[ 'colour' ];
+                        
+               }
+               else
+               {
+                  // Install an onclick handler that will not allow the link to be followed.
+                  passwordLink.onclick = function(){ return false; };
+                  // Save the original link colour and then gray it out.
+                  passwordLinkAttributes[ 'colour' ] = passwordLink.style.color;
+                  passwordLink.style.color = "gray";
+                        
+               } // if( enableLink )
+
+            } // if( elementSupportsAttribute( "a", "disabled" )
+
+         } // if( passwordLink )
+
+      }
+      function init()
+      {
+         var passwordLink;
+
+         // Initialize default properties for the password hypertext shortcut.
+         passwordLink = document.getElementById( 'passwordLink' );
+         if( passwordLink )
+         {
+         	passwordLinkAttributes[ 'href' ] = passwordLink.getAttribute( 'href' );
+         	passwordLinkAttributes[ 'colour' ] = passwordLink.style.color;
+
+         }
+         else
+         {
+            passwordLinkAttributes[ 'href' ] = 'javascript: void(0)';
+            passwordLinkAttributes[ 'colour' ] = 'gray';
+
+         } // if( passwordLink )
+         
+         dataToVisible(document.forms[0]);
+         loadhelp('sstatus_w');
+         loadhelp('_diag');
+		 if( ( ( sky_wlAuthMode == 'open' ) && ( sky_wlWep == 'enabled' ) ) ||
+		     ( sky_wlAuthMode == 'shared' ) ||
+		     ( sky_wlAuthMode == 'psk' ) ||
+		     ( sky_wlAuthMode == 'psk2' ) ||
+		     ( sky_wlAuthMode == 'psk psk2' ) ||
+		     ( sky_wlAuthMode == 'radius' ) )
+		    doEnablePasswordLink( true );
+
+		 else
+		 	doEnablePasswordLink( false );
+
+         document.getElementById('logout').onclick = function()
+         {
+            if((adminLoggedIp != "") && (adminLoggedIp == pcIpAddr)) {
+                 return true;
+            } else {
+                 return false;
+            }
+         }
+      }
+</script>
+</head>
+<body onload="init();">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    <div class="layout"><span id="header-logo"></span><span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+        <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+        
+        
+        <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+        <li ><a href="sky_logs.html">Security</a></li>
+        <li ><a href="sky_router_status.html">Maintenance</a></li>
+        <li ><a href="sky_wan_setup.html">Advanced</a></li>
+        <li ><a href="sky_support.html">Support</a></li>
+        <li ><a href="sky_license.html">Licence Information</a></li> 
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        <script>
+        if((adminLoggedIp == "") || (adminLoggedIp != pcIpAddr))
+        {  
+           document.getElementById('logout').style.display = "none"; // hide logout button
+        }
+        </script>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy-index">
+        <h1>Summary Status</h1>
+        <p class="black">We configure your Sky Hub with all the settings to enable it to work straight away. Advanced users will find links below to common settings you may wish to change.</p>
+        <p>For more settings select the menu options at the top of this page.</p>
+      </div>
+      <div id="content-header-image-index">
+        <div id="content-header-background"></div>        
+        <div id="router-image"></div> 
+      </div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top"/>
+        <form name="formname" method="post" action="sky_rebootinfo.cgi">
+
+          <script>
+            var sky_extender = '';
+            if (sky_extender != '')
+            {
+                document.write("<div>");
+                document.write("<div class=\"section-heading\">");
+                document.write("<h3>Your Sky Hub\'s Connection To An Access Point</h3>");
+                document.write("</div>");
+                document.write("<div class=\"row-holder\">");
+                document.write("<span class=\"label w250\">Connection Status</span>");
+                document.write("<span></span>");
+                document.write("</div>");
+                document.write("<hr />");
+                document.write("</div>");
+            }
+          </script>
+
+          <div class="section-heading">
+            <h3>Status of your broadband and WiFi network</h3>
+          </div>
+          <div class="row-holder" > <span class="label w250">Broadband</span>
+            <script type="text/javascript">
+				  <!-- hide
+				  var wanDslLinkConfig = '1_ipoe_0_1_0.101_203.0.113.1_02:00:00:00:00:01_255.255.252.0_203.0.113.2_ptm0.1_203.0.113.3, 203.0.113.4_67:03:03_2001:db8:1::1/64_fe80::22_&nbsp;_&nbsp;_2001:db8:2::/56_fe80::2aa:bbff:fecc:dde2'; // it's like: "1_PPPoE_8_32"
+				  var elementWanDslLinkConfig = wanDslLinkConfig.split('_');
+				  var WanoeStat='Disconnected_None_0_0_Disconnected';
+				  var wanoeparam=WanoeStat.split('_');
+				  var isWanConnected = 'Disconnected';
+				  if(wanoeparam[0]=='Connected') {
+				     isWanConnected='Connected';
+				  }
+				  else if (elementWanDslLinkConfig[0] == '1') {
+					  isWanConnected = 'Connected';
+				  }
+				  document.writeln("<span>" + isWanConnected + "</span>");
+				  // done hiding -->
+             </script>
+          </div>
+          <div class="row-holder"> <span class="label w250">WiFi</span>
+            <span>Enabled</span>
+          </div>
+          <div class="row-holder"> <span class="label w250">WiFi Network Name (SSID)</span>
+          <script   type="text/javascript">
+                document.writeln("<span>" + sky_WirelessAllSSIDs + "</span>");
+          </script>
+          </div>
+          <div class="row-holder"> <span class="label w250">WiFi Network Visible</span>
+            <span>Yes</span>
+          </div>
+          <div class="row-holder"> <span class="label w250">Current WiFi Channel</span>
+            <span>11 (2.4 GHz), 36 (5 GHz)</span>
+          </div>
+          <div class="row-holder"> <span class="label w250">WiFi Encryption</span>
+             WPA2-PSK
+          </div>
+           
+          <div >
+          <script type="text/javascript">
+              var tmple = ' le0_0 = "1";'
+              if(tmple.search('1') != -1)
+              {
+                  var tmpls = ' ls0_0 = "Up";'
+                  var dispname =  dn0_0 = "";
+                  var status = 'Disconnected';
+                  if(tmpls.search('Unregistering') != -1 || tmpls.search('Up') != -1)
+                  {
+                      status = 'Connected';
+                  }
+                  else if(tmpls.search('Registering') != -1)
+                  {
+                      status = 'Connecting';
+                  }
+                  document.write("<div class=\"row-holder\"> <span class=\"label w250\">Voice</span>");
+                  document.writeln(status);
+                  document.writeln("</div>");
+                  if(dispname!='')
+                  {
+                      document.write("<div class=\"row-holder\"> <span class=\"label w250\">Phone Number</span>");
+                      dispname = dispname.replace(/['" ]/g,'');
+                      document.writeln(dispname);
+                      document.writeln("</div>");
+                  }
+              }
+          </script>
+          <hr />
+          <div class="section-heading">
+            <h3>Devices connected to your home network</h3>
+          </div>
+          <table cellpadding="0" cellspacing="0" style="width:82%">
+            <tbody>
+              <tr class="header">
+                <td width="35%">Device Name</td>
+                <script type="text/javascript">
+                document.write("<td>" + attachedDevColumnName + "</td>");
+                </script>                
+              </tr>
+              <script type="text/javascript">
+				<!--hide
+				// done hiding -->
+				var i, j, k, attach_dev = 'UNKNOWN,02:00:00:00:00:02,Cabled<lf>UNKNOWN,02:00:00:00:00:03,Cabled<lf>UNKNOWN,02:00:00:00:00:04,Cabled<lf>UNKNOWN,02:00:00:00:00:05,Cabled<lf>UNKNOWN,02:00:00:00:00:06,Wireless<lf>laptop,02:00:00:00:00:07,Wireless<lf>macbook,02:00:00:00:00:08,Wireless<lf>phone,02:00:00:00:00:09,Wireless<lf>nanobox,02:00:00:00:00:0a,UnKnown<lf>macbook,02:00:00:00:00:0b,Wireless';
+                if(attach_dev != '&nbsp;') {
+                    var ind_dev = attach_dev.split('<lf>');
+                    var len = ind_dev.length;
+                    var each_line = new Array(len);
+                    if(attach_dev != ' ') {
+                        for( i = 0; i < len; i++) {
+                            each_line[i] = ind_dev[i].split(',');
+                        }
+                        for(var j = 0; j < len; j++) {
+                            document.write("<tr>");
+                            document.write("<td width='35%' style=\"word-wrap: break-word\">" + each_line[j][0] + "</td>");
+                            if( attachedDevColumnName == "MAC Address" ) {
+                                document.write("<td>" + each_line[j][1] + "</td>");
+                            }
+                            else {
+                                document.write("<td>" + each_line[j][2] + "</td>");
+                            }
+                            document.write("</tr>");
+                        }
+                    }
+                }
+             </script>
+            </tbody>
+          </table>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+          <input name="this_file" value="sky_index.html" type="hidden"/>
+          <input name="next_file" value="sky_index.html" type="hidden"/>
+        </form>
+        </div>
+        <hr />
+        <div class="buttons-holder"> <a href="sky_index.html" class="btn42 btn-clr-primary png"><span class="png">Refresh</span></a></div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <div class="pod">
+          <div class="content">
+            <h5>Useful settings</h5>
+            <ul class="clean">
+              <li><a class="link" href="sky_router_status.html">Further Diagnostic Help</a></li><li><a class="link" href="sky_set_password.html">Change Admin Password</a></li><li><a class="link" href="sky_wireless_onoff.html">Disable or Enable WiFi Network</a></li><li><a class="link" href="sky_wireless_network_name.html">Change WiFi Network Name</a></li><li><a class="link" href="sky_wireless_password.html">Change WiFi Password</a></li><li><a class="link" href="sky_wireless_channel.html">Change WiFi Channel</a></li><li><a class="link" href="sky_block_sites.html">Change Parental Controls</a></li><li><a class="link" href="sky_backup_settings-erase.html">Revert to factory default settings</a></li><li><a class="link" href="javascript:if(confirm(msg_restart)) window.location.href='sky_rebootCPE.html'">Reboot Sky Hub</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

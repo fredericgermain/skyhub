@@ -1,0 +1,237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; ALG</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<style>
+sub,
+sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+}
+sup {
+    top: -0.5em;
+}
+sub {
+    bottom: -0.25em;
+}
+</style>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+     <!--//
+	 var if_allow_submit=false;
+
+function finishcheck()
+{
+    if (if_allow_submit==false)
+        return false;
+
+    var cf = document.forms[0];
+
+    dataToHidden(cf);
+    cf.submit();
+    return true;
+}
+
+function setChBoxes()
+{
+    var cf = document.forms[0];
+
+    if(cf.h323algenable.value == "1")
+    {
+        cf.enable_h323_alg.checked = true;
+    }
+    else
+    {
+        cf.enable_h323_alg.checked = false;
+    }
+
+    if(cf.sipalgenable.value == "1")
+    {
+        cf.enable_sip_alg.checked = true;
+    }
+    else
+    {
+        cf.enable_sip_alg.checked = false;
+    }
+}
+
+
+function check_data()
+{
+    var cf = document.forms[0];
+    var msg = "";
+    cf.todo.value = "apply";
+    dataToHidden(cf);
+
+    if(cf.enable_h323_alg.checked == true)
+    {
+        cf.h323algenable.value = "1";
+    }
+    else
+    {
+        cf.h323algenable.value = "0";
+    }
+
+    if(cf.enable_sip_alg.checked == true)
+    {
+        cf.sipalgenable.value = "1";
+    }
+    else
+    {
+        cf.sipalgenable.value = "0";
+    }
+
+    cf.submit();
+    return true;
+}
+
+function post_me()
+{
+    var cf=document.forms[0];
+    if (if_allow_submit==false)
+        return ;
+
+    if ( confirm("Changing ALG settings can have an effect on the reliability of your 3rd party VoIP Service through the Sky Hub. Changing these settings could also prevent you from making and receiving calls, including to the Emergency Services.\nApplying this change will require a restart of the Sky Hub and will terminate any active connections to the internet, including any active VoIP calls."))
+    {
+        check_data();
+    }
+    else
+    {
+        location.reload(true);
+    }
+
+   return ;
+}
+
+   </script>
+</head>
+<body onload="dataToVisible(document.forms[0]);setChBoxes();loadhelp('_alg')">
+<!-- head -->
+<div id="head">
+  <div id="header">
+    	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li class="selected"><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-advanced" class="selected">
+          <li ><a href="sky_wan_setup.html">WAN Setup</a></li>
+          <li ><a href="sky_dynamic_dns.html">Dynamic DNS</a></li>
+          <li ><a href="sky_lan_ip_setup.html">LAN IP Setup</a></li>
+          <!-- %ejGetOther(skyRemoteManagementMenu,0)% -->
+          <li ><a href="sky_upnp.html">UPnP</a></li>
+          <li class="selected"><a href="sky_alg.html">ALG</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+        <form name="formname" method="post" action="sky_alg.cgi" onsubmit="return finishcheck();">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>ALG</h1>
+        <p class="black">Application Layer Gateways</p>
+        <p>Application Layer Gateways are an optional part of firewall functionality.</p>
+        <p>Changing these settings can have an effect on the reliability of your 3<sup>rd</sup> party VoIP Service through the Sky Hub.</p>
+        <br>
+        <p>  Please contact your 3<sup>rd</sup> party VoIP Service Provider for advice on configuring your VoIP device/application.</p>
+        <p>  These settings will not impact your Sky Voice Service.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class= "top" />
+        <div class="row-holder">
+          <input id="enableh323alg" name="enable_h323_alg" type="checkbox" />
+          <label for="broadcast" class="right"> Enable H.323 Application Layer Gateway </label>
+          <a class="help-btn" href="#" name="help1">help</a>
+          <br/><br/>
+          <input id="enablesipalg" name="enable_sip_alg" type="checkbox" />
+          <label for="broadcast" class="right"> Enable SIP Application Layer Gateway </label>
+          <br/>
+        </div>
+        <!-- ServerStart -->
+        <input name="sessionKey" value="1234567890" type="hidden"/>
+        <input name="todo" value="save" type="hidden"/>
+        <input name="this_file" value="sky_alg.html" type="hidden"/>
+        <input name="next_file" value="sky_alg.html" type="hidden"/>
+        <input name="h323algenable" value="1" type="hidden"/>
+        <input name="sipalgenable" value="1" type="hidden"/>
+        <!-- ServerEnd -->
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_alg.html';" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: if_allow_submit=true; post_me();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+        <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1" style="margin-top:0px"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Enable/Disable ALG</h3>
+            <p>Application Layer Gateways are an optional part of firewall functionality.</p>
+            <p>Changing these settings can have an effect on the reliability of your 3<sup>rd</sup> party VoIP Service through the Sky Hub.</p>
+            <br>
+            <p>  Please contact your 3<sup>rd</sup> party VoIP Service Provider for advice on configuring your VoIP device/application.</p>
+            <p>  These settings will not impact your Sky Voice Service.</p>
+            <ul>
+              <li>Select <b>Apply</b> to save the new settings to your Sky Hub.</li>
+              <li>Select <b>Cancel</b> to disregard any unsaved changes.</li>
+            </ul>            
+          </div>
+          <span class="arrow arrow-l png"></span> </div>        
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+    </form>    
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

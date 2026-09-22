@@ -1,0 +1,610 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Block Sites</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript" src="assets/js/util.js"></script>
+<script   type="text/javascript">
+     <!--//
+var if_allow_submit=false;
+var good_words_ip6 = "0123456789abcdefABCDEF:/";
+function formload()
+{
+  var cf=document.forms[0];
+  var urlsetting= cf.url_setting.value;
+  var arrsetting=urlsetting.split('<br>');
+  switch(arrsetting[0])
+   {
+     case '0':
+     cf.skeyword[0].checked=true;
+     break;
+     case '1':
+     cf.skeyword[2].checked=true;
+     break;
+     case '2':
+     cf.skeyword[1].checked=true;  
+     break;
+     default:
+       cf.skeyword[0].checked=false; 
+       cf.skeyword[2].checked=false;
+       cf.skeyword[1].checked=false;	
+   }
+   for(var i=3; i< (arrsetting.length - 1);i++)//length reduced by 1 since <br> at the end
+   {
+        var selectopt=new Option(arrsetting[i],arrsetting[i]);
+        cf.KeyWordList.options[i-3]=selectopt;
+   }
+   if(arrsetting[1]==1)
+     cf.trustipenable.checked=true;
+   else
+     cf.trustipenable.checked=false;
+    
+    if(cf.trustipenable.checked)
+    { 
+		cf.c4_Trusted_IPAddress.value=arrsetting[2];
+		cf.h_trustipenable.value="enable";
+  
+		if(isValidIpAddress6(arrsetting[2]) == true)
+		{
+			cf.Trusted_IPAddressV6.value = arrsetting[2];
+			cf.Trusted_IPAddress1.value=0;
+			cf.Trusted_IPAddress2.value=0;
+			cf.Trusted_IPAddress3.value=0;
+			cf.Trusted_IPAddress4.value=0;
+			cf.ip_type[1].checked = true;
+			cf.Trusted_IPAddressV6.disabled = false ;
+		}
+		else
+		{
+			cf.ip_type[0].checked = true;
+			cf.Trusted_IPAddressV6.value = "";
+			var Ipaddr=arrsetting[2].split('.');
+			cf.Trusted_IPAddress1.disabled = cf.Trusted_IPAddress2.disabled = cf.Trusted_IPAddress3.disabled = cf.Trusted_IPAddress4.disabled = false ;
+			cf.Trusted_IPAddress1.value=Ipaddr[0];
+			cf.Trusted_IPAddress2.value=Ipaddr[1];
+			cf.Trusted_IPAddress3.value=Ipaddr[2];
+			cf.Trusted_IPAddress4.value=Ipaddr[3];
+		}
+    }
+    else
+    {
+        cf.h_trustipenable.value="disable";
+        cf.Trusted_IPAddress1.disabled = cf.Trusted_IPAddress2.disabled = cf.Trusted_IPAddress3.disabled = cf.Trusted_IPAddress4.disabled = true ;
+
+    }
+}
+function checkData()
+{
+ 	var cf = document.forms[0];
+	var msg = "";
+	
+	if(cf.trustipenable.checked)
+	{
+		if ( cf.ip_type[0].checked == true ) 
+		{
+			if(badIP(cf.Trusted_IPAddress1,cf.Trusted_IPAddress2,cf.Trusted_IPAddress3,cf.Trusted_IPAddress4,255))
+			{
+				msg+= "Invalid IP Address, please re-enter!\n";
+			}
+            else
+            {
+                cf.h_trustipenable.value="enable";
+                cf.c4_Trusted_IPAddress.value=cf.Trusted_IPAddress1.value+'.'+cf.Trusted_IPAddress2.value+'.'+cf.Trusted_IPAddress3.value+'.'+cf.Trusted_IPAddress4.value;
+				cf.Trusted_IPAddressV6.value ="";
+            }
+		}
+		if ( cf.ip_type[1].checked == true ) 
+		{
+			if ( skyCheckIPV6Address(cf.Trusted_IPAddressV6.value) == false )
+			{
+				msg+= "Please enter a valid IPv6 address";
+			}
+			else
+			{
+                cf.h_trustipenable.value="enable";
+				cf.c4_Trusted_IPAddress.value = "";
+				cf.Trusted_IPAddress1.value=0;
+				cf.Trusted_IPAddress2.value=0;
+				cf.Trusted_IPAddress3.value=0;
+				cf.Trusted_IPAddress4.value=0;
+			}	
+		}
+	}
+	else
+	{
+		cf.Trusted_IPAddress1.value = "0";
+		cf.Trusted_IPAddress2.value = "0";
+		cf.Trusted_IPAddress3.value = "0";
+		cf.Trusted_IPAddress4.value = "0";
+		cf.Trusted_IPAddressV6.value = "";
+	}
+	
+	if (msg.length > 1)
+	{
+		alert(msg);
+		return false;
+	}
+       
+        for(var i=0;i<cf.skeyword.length;i++)
+        {
+           if(cf.skeyword[i].checked)
+           cf.h_skeyword.value=cf.skeyword[i].id;
+        }
+        
+        cf.todo.value='save';
+	dataToHidden(cf);
+	cf.submit();       
+	return true;	
+}
+
+function AddKeyWord()
+{
+	var cf = document.forms[0];
+	var msg = "";
+	var tempStr = "";
+	var str = cf.cfKeyWord_Domain.value;
+        var bad_words = "\\\"";
+        var msg_invalid_char = "Invalid character(s) \"%s\" present. Please re-enter the string."
+	msg+= checkBlank(cf.cfKeyWord_Domain, "Keyword");
+       //msg+= checkLength(cf.cfKeyWord_Domain, "Keyword", 1, 60, true);//bug 693 Fix: string length in input box on web page is not checked
+
+    //Murthy : New requriement to restrict minimum keyword length to 3 characters
+	// this is to make sure that we wont see surprising behaviours when single character/number is used as keyword
+	if (str.length < 3)
+	{
+		alert(" Keyword must have minimum 3 characters");
+        cf.cfKeyWord_Domain.value="";
+		return;
+	}
+    if( (str.indexOf("\\")>-1) || (str.indexOf("\"") > -1) )
+    {
+        alert("Keyword must not contain doublequote[\"] or backslash[\\] characters");
+        return;
+    }
+
+	msg+= (inSelList(cf.KeyWordList,cf.cfKeyWord_Domain.value,false)) ? "This Keyword already exists": "" ;
+	cf.cfKeyWord_Domain.focus();
+	if (msg.length > 1)
+	{
+		alert(msg);
+		return ;
+	}
+        if (check_badwords(str, bad_words))
+        {
+            msg = addstr (msg_invalid_char, bad_words, str);
+            alert (msg);
+            return;
+        }
+     if(cf.KeyWordList.options.length >= 100)
+	 {
+		alert("You cannot add more key words, the maximum of 100 has been reached");
+		return ;
+	 }
+        AddselectList(cf.KeyWordList,cf.cfKeyWord_Domain.value);
+        //cf.h_KeyWordList.value=cf.cfKeyWord_Domain.value;
+	tempStr = cf.h_KeyWordList.value;
+	tempStr = tempStr.replace(/\\/g, '\\\\');
+	//cf.h_KeyWordList.value = tempStr.replace(/"/g, '\\"');
+	cf.h_KeyWordList.value+=cf.cfKeyWord_Domain.value+"^";
+        cf.cfKeyWord_Domain.value="";
+		cf.todo_urlAddaction.value="set_url";
+	//stdAction(cf,'set_url');
+}
+function AddselectList(sel_object, sel_text)
+{
+   var i=sel_object.options.length;
+   var selectopt=new Option(sel_text,sel_text);
+   sel_object.options[i]=selectopt;
+  if(i>=0)
+   sel_object.options[0].selected=true;
+
+   return true;
+}
+function inSelList(sel_object, sel_text,caseSensitive)
+// caseSensitive: true = exact match, false = ignore case
+{
+	if (sel_text.length == 0)
+		return  false; 
+	var size = sel_object.options.length;
+	var match;
+	for (var i = 0; i < size; i++)
+	{
+		if (caseSensitive)
+		  match = ( (sel_object.options[i].text == sel_text) || (sel_object.options[i].value == sel_text) )
+		else
+		  match =  ( (sel_object.options[i].text.toLowerCase() == sel_text.toLowerCase()) || (sel_object.options[i].value.toLowerCase() == sel_text.toLowerCase()) );
+		if (match)
+			return(true);
+	}
+	return false;  // if no match
+}
+
+function deleteKeyword()
+{
+	var cf = document.forms[0];
+	var msg = "No keyword has been selected";
+        var i=0;
+	var tempStr = "";
+	
+
+	if(optionSelected(cf.KeyWordList)) {
+		cf.h_KeyWordListRemove.value+=cf.KeyWordList.options[cf.KeyWordList.selectedIndex].value+"<br>";
+		cf.KeyWordList.remove(cf.KeyWordList.selectedIndex);
+/*
+         while(i<cf.KeyWordList.options.length)
+         {
+*/
+         /*
+           if(i!=cf.KeyWordList.selectedIndex && i<cf.KeyWordList.selectedIndex)
+           { 
+               i=i+1;
+               continue;
+           } 
+           else
+           {  
+              i=i+1;
+              cf.KeyWordList.options[i-1]=cf.KeyWordList.options[i];
+              break;
+           }  
+          */
+/*
+			if(i==cf.KeyWordList.selectedIndex)                
+			{	
+				tempStr=cf.KeyWordList.options[i].value;    
+           		//cf.h_KeyWordList.value=cf.KeyWordList.options[i].value;    
+				tempStr = tempStr.replace(/\\/g, '\\\\');
+				cf.h_KeyWordList.value = tempStr.replace(/"/g, '\\"');
+				cf.h_KeyWordList.value+='<br>';    
+			}
+           i++;
+		  
+         }
+*/		 
+   //	cf.h_ruleSelect.value=cf.KeyWordList.value;
+		cf.todo_urlRemoveaction.value="remove_url";
+		//stdAction(cf,'remove_url'); 
+	}
+	else alert(msg);
+}
+
+function clearlistkeyword()
+{
+   var cf = document.forms[0]; 
+   var i=0; 
+   var msg="No Keyword has been selected for removal";
+	var tempStr = "";
+   while(i<cf.KeyWordList.options.length)
+   {
+		tempStr=cf.KeyWordList.options[i].value;    
+		//cf.h_KeyWordList.value=cf.KeyWordList.options[i].value;    
+		tempStr = tempStr.replace(/\\/g, '\\\\');
+		cf.h_KeyWordList.value += tempStr.replace(/"/g, '\\"');
+       cf.h_KeyWordList.value+='<br>';    
+       i++;
+   }
+   if(cf.KeyWordList.options.length==0)
+    alert(msg);
+  else
+  {
+  	if_allow_submit=true;
+	 cf.todo.value="clear_list";
+	 cf.h_KeyWordList.value=""; /* No need to send long list*/
+   //stdAction(cf,'remove_url'); 
+   	cf.submit();
+  }
+  return;
+}
+function checkTrustIP()
+{
+	var cf = document.forms[0];
+        var urlsetting= cf.url_setting.value;
+        var arrsetting=urlsetting.split('<br>');
+/*
+        if(arrsetting[1]==1)
+        cf.trustipenable.checked=true;
+        else
+        cf.trustipenable.checked=false; 
+
+	var disableFlag = (!cf.trustipenable.checked);
+	cf.Trusted_IPAddress1.disabled = cf.Trusted_IPAddress2.disabled = cf.Trusted_IPAddress3.disabled = cf.Trusted_IPAddress4.disabled = disableFlag ;
+*/
+    if(cf.trustipenable.checked)
+    {   
+		cf.ip_type[0].disabled = false;
+		cf.ip_type[1].disabled = false;
+		if(isValidIpAddress6(arrsetting[2]) == true)
+		{
+			cf.Trusted_IPAddressV6.value = arrsetting[2];
+			cf.Trusted_IPAddress1.value=0;
+			cf.Trusted_IPAddress2.value=0;
+			cf.Trusted_IPAddress3.value=0;
+			cf.Trusted_IPAddress4.value=0;
+			cf.ip_type[1].checked = true;
+			cf.Trusted_IPAddressV6.disabled = false ;
+		}
+		else
+		{
+			cf.ip_type[0].checked = true;
+			cf.Trusted_IPAddressV6.value = "";
+			cf.Trusted_IPAddress1.disabled = cf.Trusted_IPAddress2.disabled = cf.Trusted_IPAddress3.disabled = cf.Trusted_IPAddress4.disabled = false ;
+			var Ipaddr=arrsetting[2].split('.');        
+			if(Ipaddr.length > 3)
+			{
+				cf.Trusted_IPAddress1.value=Ipaddr[0];
+				cf.Trusted_IPAddress2.value=Ipaddr[1];
+				cf.Trusted_IPAddress3.value=Ipaddr[2];
+				cf.Trusted_IPAddress4.value=Ipaddr[3];
+			}
+			else
+			{
+				cf.Trusted_IPAddress1.value=0;
+				cf.Trusted_IPAddress2.value=0;
+				cf.Trusted_IPAddress3.value=0;
+				cf.Trusted_IPAddress4.value=0;
+			}
+		}
+    }
+    else
+	{
+		cf.Trusted_IPAddress1.disabled = cf.Trusted_IPAddress2.disabled = cf.Trusted_IPAddress3.disabled = cf.Trusted_IPAddress4.disabled = true ;
+		cf.Trusted_IPAddressV6.disabled=true;
+		cf.ip_type[0].checked = true;
+		cf.ip_type[1].checked = false;
+		cf.ip_type[0].disabled = true;
+		cf.ip_type[1].disabled = true;
+	}
+
+
+}
+
+function ipSelection()
+{
+    var cf = document.forms[0];
+	if ( cf.ip_type[0].checked == true ) 
+	{		
+		cf.Trusted_IPAddress1.disabled=false;
+		cf.Trusted_IPAddress2.disabled=false;
+		cf.Trusted_IPAddress3.disabled=false;
+		cf.Trusted_IPAddress4.disabled=false;
+		cf.Trusted_IPAddressV6.disabled=true;
+	}
+	if ( cf.ip_type[1].checked == true ) 
+	{		
+		cf.Trusted_IPAddress1.disabled=true;
+		cf.Trusted_IPAddress2.disabled=true;
+		cf.Trusted_IPAddress3.disabled=true;
+		cf.Trusted_IPAddress4.disabled=true;
+		cf.Trusted_IPAddressV6.disabled=false;
+	}
+}
+
+     //-->
+   </script>
+</head>
+<body onload="formload();">
+<!-- head -->
+<div id="head">
+  <div id="header">
+	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li class="selected"><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-security" class="selected">
+          <li ><a href="sky_logs.html">Logs</a></li>
+          <li class="selected"><a href="sky_block_sites.html">Block Sites</a></li>
+          <li ><a href="sky_firewall_rules.html">Firewall Rules</a></li>
+          <li ><a href="sky_services.html">Services</a></li>
+          <li ><a href="sky_schedule.html">Schedule</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Block Sites</h1>
+        <p class="black">You can set your Sky Hub to filter web pages.</p>
+        <p>There are two ways to filter websites using your Sky Hub. You can:</p>
+        <ul>
+          <li>Block access to certain domain names (in the example www.bbc.co.uk the domain name is bbc.co.uk), or</li>
+          <li>Block sites that contains certain words in their URL (web address).</li>
+        </ul>
+        <p>Once a block is set a user trying to access a blocked site will see a message saying that the site has been blocked by the Sky Hub Administrator.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top" />
+        <form method="post" action="sky_blocksite.sky" onsubmit="return if_allow_submit;">
+          <div class="section-heading">
+            <h3>Keyword Blocking</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <div class="row-holder">
+            <input id="never" name="skeyword" value="0" type="radio"/>
+            <label for="never" class="right">Never</label>
+          </div>
+          <div class="row-holder">
+            <input id="per" name="skeyword" value="2" type="radio"/>
+            <label for="per" class="right">Per Schedule</label>
+          </div>
+          <div class="row-holder">
+            <input checked="" id="always" name="skeyword" value="1" type="radio"/>
+            <label for="always" class="right">Always</label>
+          </div>
+          <hr />
+          <div class="section-heading">
+            <h3>Type Keyword or Domain Name Here:</h3>
+            <a class="help-btn" href="#" name="help2">help</a></div>
+          <div class="row-holder">
+            <input name="cfKeyWord_Domain" size="32" maxlength="63" type="text"/>
+          </div>
+          <a href="javascript: if_allow_submit=false; AddKeyWord();" class="btn32 btn-clr-primary png"><span class="png">Add Keyword</span></a>
+          <hr />
+          <div class="section-heading">
+            <h3>Block Sites Containing these Keywords or Domain Names:</h3>
+            <a class="help-btn" href="#" name="help3">help</a></div>
+          <div class="row-holder">
+            <select name="ruleSelect" id="KeyWordList" size="6">
+              <!--<option selected="selected" value="sex">sex</option> -->
+            </select>
+          </div>
+          <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; clearlistkeyword();" class="btn32 btn-clr-secondary png"><span class="png">Clear List</span></a> <a href="javascript: if_allow_submit=false; deleteKeyword();" class="btn32 btn-clr-secondary png"><span class="png">Delete Keyword</span></a> </div>
+          <hr />
+          <div class="section-heading">
+            <h3>Allow Trusted IP Address</h3>
+            <a class="help-btn" href="#" name="help4">help</a></div>
+          <div class="row-holder">
+            <input id="trustedip" name="trustipenable" value="" onclick="checkTrustIP();" type="checkbox"/>
+            <label for="trustedip" class="right">Allow Trusted IP Address to Visit Blocked Sites</label>
+          </div>
+          <div class="row-holder">
+			<input id="send" name="ip_type" value="IPv4" type="radio" onclick="ipSelection()"/>
+            <label class="right">Trusted IPv4 Address:</label>
+            <input disabled="disabled" name="Trusted_IPAddress1" class="num" size="4" maxlength="3" value="0" type="text"/>
+            .
+            <input disabled="disabled" name="Trusted_IPAddress2" class="num" size="4" maxlength="3" value="0" type="text"/>
+            .
+            <input disabled="disabled" name="Trusted_IPAddress3" class="num" size="4" maxlength="3" value="0" type="text"/>
+            .
+            <input disabled="disabled" name="Trusted_IPAddress4" class="num" size="4" maxlength="3" value="0" type="text"/>
+          </div>
+		  <div class="row-holder">
+			<input id="send" name="ip_type" value="IPv6" type="radio" onclick="ipSelection()"/>
+            <label for="send" class="right">Trusted IPv6 Address:</label>
+            <input disabled="disabled" value="" name="Trusted_IPAddressV6" class="text" size="39" maxlength="43" type="text"/>
+          </div>
+          <!-- Server -->
+          <input name="h_skeyword" value="" type="hidden"/>
+          <input name="h_KeyWordList" value="" type="hidden"/>
+          <input name="h_KeyWordListRemove" value="" type="hidden"/>
+          <input name="h_ruleSelect" value="0" type="hidden"/>
+          <input name="h_trustipenable" value="disable" type="hidden"/>
+          <input name="c4_Trusted_IPAddress" value="" type="hidden"/>
+          <!-- ServerEnd -->
+          <input name="todo" value="" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+          <input name="todo_urlAddaction" value="" type="hidden"/>
+          <input name="todo_urlRemoveaction" value="" type="hidden"/>
+          <textarea name="url_setting" id="url_setting" style="display:none;">1<br>0<br>0.0.0.0<br></textarea>
+          <!-- addkeyword, clearallkeywords, delkeyword -->
+          <input name="this_file" value="sky_block_sites.html" type="hidden"/>
+          <input name="next_file" value="sky_block_sites.html" type="hidden"/>
+        </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_block_sites.html';" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a> <a href="javascript:;" onclick="javascript: if_allow_submit=true; return checkData();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <!-- HELP 1 -->
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>To Enable Block Sites</h3>
+            <ul>
+              <li>Select <b>Per Schedule</b> to turn on Block Sites and block according to the settings on the Schedule page.</li>
+              <li>Select <b>Always</b> to turn on Block Sites and apply the block at all times.</li>
+            </ul>
+            <p><b>Note: </b>On the Schedule page you can set at what time of day the keyword and domain name blocking occurs.</p>
+            <h3>To Allow Unrestricted Access To The Internet</h3>
+            <ul>
+              <li>Select <b>Never</b>.</li>
+              <li>Click <b>Apply</b>.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 2 -->
+        <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>To Block Keywords or Internet Domains</h3>
+            <ul>
+              <li>Select when to turn on Keyword Blocking (<b>Never</b>, <b>Per Schedule</b>, or <b>Always</b>).</li>
+              <li>In the box where you see <b>Type Keyword or Domain Name Here</b>, type the Keyword or Domain Name you wish to block.</li>
+              <li>Click <b>Add Keyword</b>.</li>
+              <li>The Keyword or Domain Name will appear in the list below.</li>
+              <li>Continue adding Names and Keywords.</li>
+              <li>Select <b>Apply</b> when finished.</li>
+            </ul>
+            <p>The list under the heading <b>Block Sites Containing these Keywords or Domain Names</b> contains the current list of Keywords or Domain Names to block.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 3 -->
+        <div class="pod pod-help" id="help3"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>To Delete A Keyword or Domain Name</h3>
+            <ul>
+              <li>Select the <b>Keyword or Domain Name</b> in the list.</li>
+              <li>Click <b>Delete Keyword</b>.</li>
+              <li>Continue selecting and deleting Names and Keywords until you are finished.</li>
+              <li>Select <b>Apply</b>.</li>
+            </ul>
+            <h3>To Delete All Keywords and Domain Names</h3>
+            <ul>
+              <li>Click <b>Clear List</b>.</li>
+              <li>Select <b>Apply</b>.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <!-- HELP 4 -->
+        <div class="pod pod-help" id="help4"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>To Allow One Device To Have Unrestricted Access To The Internet</h3>
+            <ul>
+              <li>Select the <b>Allow Trusted IP Address To Visit Blocked Sites</b> check box.</li>
+              <li><b>Trusted IPv4 Address</b> - Type the <b>IP address</b> of the device you wish to be exempt from the blocks in the Trusted IP Address area. You should only type numbers in the IP Address boxes.</li>
+              <li><b>Trusted IPv6 Address</b> - Type the <b>IP address</b> of the device you wish to be exempt from the blocks in the Trusted IP Address area.</li>
+              <li>Select <b>Apply</b>.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+   </div>
+</div>
+</body>
+</html>

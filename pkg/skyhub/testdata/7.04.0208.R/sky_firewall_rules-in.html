@@ -1,0 +1,651 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Firewall Rules</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript" src="assets/js/md5.js"></script>
+<script type="text/javascript" src="assets/js/util.js"></script>
+<script   type="text/javascript">
+     <!--//
+var cgnNetwork = '0';
+if_allow_submit=false;
+var	scr_start_disabled = false;
+var scr_finish_disabled = false;
+var wan_start_disabled = false;
+var wan_finish_disabled = false;
+var if_allow_submit_ip6=false;
+var sessionID = '1234567890';
+var good_words_ip6 = "0123456789abcdefABCDEF:";
+var good_words_ip6_prefix = "0123456789";
+
+function check_if_allow_submit()
+{
+	var cf=document.forms[0];
+	if (if_allow_submit==false)
+		return false;
+
+	return checkData();
+}
+
+function check_if_allow_submit_ip6()
+{
+	if (if_allow_submit_ip6==false)
+		return ;		
+	return checkDataIP6();
+}
+
+function checkData()
+{
+    var cf = document.forms[0];
+	cf.sessionKey.value=sessionID;
+    var wan_index = getSelected(cf.fw_waniptype);
+    var lan_index = getSelected(cf.fw_action);
+    var msg = "";
+	if(cgnNetwork == "1")
+		return false;
+
+        if (lan_index != "0"){
+	 	if(badIP(cf.lan_start_ip1,cf.lan_start_ip2,cf.lan_start_ip3,cf.lan_start_ip4,255))
+			msg+= "Invalid LAN IP address, please re-enter\n";
+	}
+
+	if(wan_index == "singleip" || wan_index == "rangeip")
+		if(badIP(cf.wan_start_ip1,cf.wan_start_ip2,cf.wan_start_ip3,cf.wan_start_ip4,255))
+			msg+= "Invalid WAN start IP address, please re-enter\n";
+	if(wan_index == "rangeip")
+	{
+		if(badIP(cf.wan_finish_ip1,cf.wan_finish_ip2,cf.wan_finish_ip3,cf.wan_finish_ip4,255))
+			msg+= "Invalid WAN finish IP address, please re-enter\n";
+        if(cp_ip(cf.wan_start_ip1,cf.wan_start_ip2,cf.wan_start_ip3,cf.wan_start_ip4,cf.wan_finish_ip1,cf.wan_finish_ip2,cf.wan_finish_ip3,cf.wan_finish_ip4))
+	        	msg+= "WAN start IP address must be lower than finish IP address!\n";
+	}
+	if (msg.length > 1)
+	{
+		alert(msg);
+		return false;
+	}
+        cf.fwall_action.value = "add";
+	dataToHidden(cf);
+	cf.submit();
+	return true;	
+}
+
+function checkDataIP6()
+{
+    var cfIP6 = document.forms[1];
+	cfIP6.sessionKey.value=sessionID;
+    var wan_index_ip6 = getSelected(cfIP6.fw_waniptype);
+    var msg = "";
+    var ip6_start_addr = "";
+
+    if (cfIP6.lan_start_ip6_prefix.value == "Global Prefix")
+    {
+        if ( cfIP6.lan_start_ip6.value.charAt(0) == ':' && cfIP6.lan_start_ip6.value.charAt(1) == ':' )
+        {
+            ip6_start_addr = "fe80" + cfIP6.lan_start_ip6.value;
+        }
+        else
+        {
+            ip6_start_addr = "fe80::" + cfIP6.lan_start_ip6.value;
+        }
+    }
+    else
+    {
+        if ( cfIP6.lan_start_ip6.value.charAt(0) == ':' && cfIP6.lan_start_ip6.value.charAt(1) == ':' )
+        {
+            ip6_start_addr = cfIP6.lan_start_ip6_prefix.value + cfIP6.lan_start_ip6.value;
+        }
+        else
+        {
+            ip6_start_addr = cfIP6.lan_start_ip6_prefix.value + ":" + cfIP6.lan_start_ip6.value;
+        }
+    }
+
+    if(skyCheckIPV6Address(ip6_start_addr) == false) 
+    {
+        alert("Invalid Interface ID for destination IPv6 address, please re-enter\n");
+        return false;
+    }
+
+    cfIP6.lan_ip6_start_comb.value = ip6_start_addr;
+	
+    if(wan_index_ip6 == "singleip" || wan_index_ip6 == "rangeip")
+    {
+        if(skyCheckIPV6Address(cfIP6.wan_start_ip6.value) == false)
+        {
+            alert("Invalid source IPv6 start address, please re-enter\n");
+            return false;
+        }
+    }
+		
+    if(wan_index_ip6 == "rangeip") 
+    {	
+        if(skyCheckIPV6Address(cfIP6.wan_finish_ip6.value) == false) 
+        {
+            alert("Invalid source IPv6 finish address, please re-enter\n");
+            return false;
+        }
+
+        if((inet_pton((cfIP6.wan_start_ip6.value).toLowerCase()))  >= (inet_pton((cfIP6.wan_finish_ip6.value).toLowerCase())))
+        {
+            alert("WAN start IPv6 address must be less than finish IPv6 address\n");
+            return false;
+        }
+    }
+	
+    if (msg.length > 1)
+    {
+        alert(msg);
+        return false;
+    }
+
+    cfIP6.fwall_action.value = "add";
+    dataToHidden(cfIP6);
+    cfIP6.submit();
+
+    return true;	
+}
+
+function setip(func_index,disable)
+{
+    var cf = document.forms[0];
+    if(func_index == 2)
+    {   cf.wan_start_ip1.disabled = disable;
+		cf.wan_start_ip2.disabled = disable;
+		cf.wan_start_ip3.disabled = disable;
+		cf.wan_start_ip4.disabled = disable;
+		wan_start_disabled = disable;
+	}
+	if(func_index == 3)
+    {   cf.wan_finish_ip1.disabled = disable;
+		cf.wan_finish_ip2.disabled = disable;
+		cf.wan_finish_ip3.disabled = disable;
+		cf.wan_finish_ip4.disabled = disable;
+		wan_finish_disabled = disable;
+	}
+}
+
+function setip6(func_index,disable)
+{
+    var cfIP6 = document.forms[1];
+    if(func_index == 0)
+    {
+		cfIP6.lan_start_ip6.disabled = disable;
+	}
+	if(func_index == 1)
+    {
+		cfIP6.lan_finish_ip6.disabled = disable;
+	}
+    if(func_index == 2)
+    {   
+		cfIP6.wan_start_ip6.disabled = disable;
+	}
+	if(func_index == 3)
+    {   
+		cfIP6.wan_finish_ip6.disabled = disable;
+	}
+}
+
+function setwan()
+{
+    var cf = document.forms[0];
+    var dst_index = cf.fw_waniptype.selectedIndex;
+	var cfIP6 = document.forms[1];
+    var wan_index_ip6 = cfIP6.fw_waniptype.selectedIndex;
+
+    if (dst_index == 0)//any
+    {
+        setip(2,true);
+        setip(3,true);
+    }
+    if (dst_index == 1)//single
+    {
+        setip(2,false);
+        setip(3,true);
+    }
+    if (dst_index == 2)//range
+    {
+        setip(2,false);
+        setip(3,false);
+    }
+	if (wan_index_ip6 == 0)//any
+    {
+        setip6(2,true);
+        setip6(3,true);
+    }
+    if (wan_index_ip6 == 1)//single
+    {
+        setip6(2,false);
+        setip6(3,true);
+    }
+    if (wan_index_ip6 == 2)//range
+    {
+        setip6(2,false);
+        setip6(3,false);
+    }
+}
+
+function checkCGN()
+{
+//CGN network configuration checking, disable IPV4 inbound configurations.
+	if(cgnNetwork == "1")
+	{
+        document.getElementById('showtext').style.display='';
+        document.getElementById('showip').style.display='none';
+    }
+    else
+    {
+        document.getElementById('showtext').style.display='none';
+        document.getElementById('showip').style.display='';
+    }
+}
+
+function setglobalprefix()
+{
+    var cfIP6 = document.forms[1];
+    var globalPrefix='2001:0db8:0000:3800';
+
+    cfIP6.lan_start_ip6_prefix.disabled = true;
+    cfIP6.lan_start_ip6_prefix.readonly = true;
+
+    if (globalPrefix == '')
+    {
+        cfIP6.lan_start_ip6_prefix.value  = "Global Prefix";
+    }
+    else
+    {
+        cfIP6.lan_start_ip6_prefix.value  = globalPrefix;
+    }
+}
+     //-->
+   </script>
+</head>
+<body onload="setwan();dataToVisible(document.forms[0]);loadhelp('_rulein');document.forms[0].elements[0].focus();checkCGN();setglobalprefix();">
+<!-- head -->
+<div id="head">
+  <div id="header">
+	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li class="selected"><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-security" class="selected">
+          <li ><a href="sky_logs.html">Logs</a></li>
+          <li ><a href="sky_block_sites.html">Block Sites</a></li>
+          <li class="selected"><a href="sky_firewall_rules.html">Firewall Rules</a></li>
+          <li ><a href="sky_services.html">Services</a></li>
+          <li ><a href="sky_schedule.html">Schedule</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Firewall Rules - Inbound services - Add</h1>
+      </div ->
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top" />
+        <form method="post" action="sky_firewall_rules.cmd" onsubmit="return check_if_allow_submit();">
+        <script type="text/javascript">
+        if(cgnNetwork == '1')
+        { 
+            document.write('<div name ="showip" id="showip" style="display:none">');
+        }else
+        {
+             document.write('<div name ="showip" id="showip">');
+        }
+        </script>
+          <div class="section-heading">
+            <h3>IPv4 Settings</h3>
+            <a class="help-btn" href="#" name="help1">help</a></div>
+          <div class="row-holder">
+            <label class="w300" id="service">Service</label>
+            <select name="service_list" size="1">
+              <option value="Any(TCP)">Any(TCP)(TCP:1:65535)</option>
+<option value="Any(UDP)">Any(UDP)(UDP:1:65535)</option>
+<option selected="selected" value="AIM">AIM(TCP:5190)</option>
+<option value="AH">AH</option>
+<option value="6IN4">IPv6InIPv4</option>
+<option value="BGP">BGP(TCP:179)</option>
+<option value="BOOTP CLIENT">BOOTP CLIENT(UDP:68)</option>
+<option value="BOOTP SERVER">BOOTP SERVER(UDP:67)</option>
+<option value="CU SEEME">CU SEEME(TCP/UDP:7648:24032)</option>
+<option value="DNS">DNS(TCP/UDP:53)</option>
+<option value="ESP">ESP</option>
+<option value="GRE">GRE</option>
+<option value="FINGER">FINGER(TCP:79)</option>
+<option value="FTP">FTP(TCP:20,21)</option>
+<option value="H323">H.323(TCP:1720)</option>
+<option selected="selected" value="HTTP">HTTP(TCP:80)</option>
+<option value="HTTPS">HTTPS(TCP:443)</option>
+<option value="ICMPECHOREQ">ICMP Echo Request</option>
+<option value="ICMPECHOREP">ICMP Echo Reply</option>
+<option value="IDENT">IDENT(TCP:113)</option>
+<option value="IPINIP">IPInIP</option>
+<option value="IRC">IRC(TCP/UDP:6667)</option>
+<option value="NEWS">NEWS(TCP:144)</option>
+<option value="NFS">NFS(UDP:2049)</option>
+<option value="NNTP">NNTP(TCP:119)</option>
+<option value="POP3">POP3(TCP:110)</option>
+<option value="RCMD">RCMD(TCP:512)</option>
+<option value="REAL AUDIO">REAL AUDIO(TCP:7070)</option>
+<option value="REXEC">REXEC(TCP:514)</option>
+<option value="RLOGIN">RLOGIN(TCP:513)</option>
+<option value="RTELNET">RTELNET(TCP:107)</option>
+<option value="RTSP">RTSP(TCP/UDP:554)</option>
+<option value="SCTP">SCTP</option>
+<option value="SFTP">SFTP(TCP:115)</option>
+<option value="SMTP">SMTP(TCP:25)</option>
+<option value="SNMP">SNMP(TCP/UDP:161)</option>
+<option value="SNMP TRAPS">SNMP TRAPS(TCP/UDP:162)</option>
+<option value="SQL NET">SQL NET(TCP:1521)</option>
+<option value="SSH">SSH(TCP/UDP:22)</option>
+<option value="STRM WORKS">STRM WORKS(UDP:1558)</option>
+<option value="TACACS">TACACS(UDP:49)</option>
+<option value="TELNET">TELNET(TCP:23)</option>
+<option value="TFTP">TFTP(UDP:69)</option>
+<option value="VDOLIVE">VDOLIVE(TCP:7000)</option>
+<option value="VPN L2TP">VPN L2TP(ESP,AH,UDP:1701)</option>
+<option value="VPN PPTP">VPN PPTP(GRE,TCP:1723)</option>
+
+              
+            </select>
+          </div>
+          <div class="row-holder">
+            <label class="w300" id="action">Action</label>
+            <select name="fw_action">
+              <option value="0">BLOCK always</option>
+              <option value="1">BLOCK by schedule</option>
+              <option selected="selected" value="2">ALLOW always</option>
+              <option value="3">ALLOW by schedule</option>
+            </select>
+          </div>
+          <div class="row-holder">
+            <label class="w300" id="sendtolan">Destination IPv4 LAN address:</label>
+            <input class="num" size="4" name="lan_start_ip1" value="0" maxlength="3" onfocus="if (this.disabled) this.blur()" type="text"/>
+            .
+            <input class="num" size="4" maxlength="3" name="lan_start_ip2" value="0" onfocus="if (this.disabled) this.blur()" type="text"/>
+            .
+            <input class="num" size="4" maxlength="3" name="lan_start_ip3" value="0" onfocus="if (this.disabled) this.blur()" type="text"/>
+            .
+            <input class="num" size="4" maxlength="3" name="lan_start_ip4" value="0" onfocus="if (this.disabled) this.blur()" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w300" id="wanuser">Access from</label>
+            <select name="fw_waniptype" onchange="setwan()">
+              <option selected="selected" value="anyip">Any</option>
+              <option value="singleip">Single address</option>
+              <option value="rangeip">Address Range</option>
+            </select>
+          </div>
+          <div class="row-holder">
+            <label class="w300" id="start">Source IPv4 start address:</label>
+            <input disabled="disabled" class="num" size="4" name="wan_start_ip1" value="0" maxlength="3" onfocus="if (this.disabled) this.blur()" type="text"/>
+            .
+            <input disabled="disabled" class="num" size="4" maxlength="3" name="wan_start_ip2" value="0" onfocus="if (this.disabled) this.blur()" type="text"/>
+            .
+            <input disabled="disabled" class="num" size="4" maxlength="3" name="wan_start_ip3" value="0" onfocus="if (this.disabled) this.blur()" type="text"/>
+            .
+            <input disabled="disabled" class="num" size="4" maxlength="3" name="wan_start_ip4" value="0" onfocus="if (this.disabled) this.blur()" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w300" id="finish">Source IPv4 finish address:</label>
+            <input disabled="disabled" class="num" size="4" name="wan_finish_ip1" value="0" maxlength="3" onfocus="if (this.disabled) this.blur()" type="text"/>
+            .
+            <input disabled="disabled" class="num" size="4" maxlength="3" name="wan_finish_ip2" value="0" onfocus="if (this.disabled) this.blur()" type="text"/>
+            .
+            <input disabled="disabled" class="num" size="4" maxlength="3" name="wan_finish_ip3" value="0" onfocus="if (this.disabled) this.blur()" type="text"/>
+            .
+            <input disabled="disabled" class="num" size="4" maxlength="3" name="wan_finish_ip4" value="0" onfocus="if (this.disabled) this.blur()" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w300" id="log">Log</label>
+            <select name="fw_logging">
+              <option selected="selected" value="0">Never</option>
+              <option value="1">Always</option>
+              <option value="2">Match</option>
+              <option value="3">Not Match</option>
+            </select>
+          </div>
+          <!-- ServerStart -->
+          <!---<input type="hidden" name="h_fwin_filter_name" value="{fw_in_editname}" />-->
+          <input name="fwall_action" value="" type="hidden"/>
+          <input name="h_fw_action" value="" type="hidden"/>
+          <input name="h_fw_waniptype" value="" type="hidden"/>
+          <input name="h_fw_logging" value="" type="hidden"/>
+          <input name="c4_lan_start_ip" value="" type="hidden"/>
+          <input name="c4_wan_start_ip" value="" type="hidden"/>
+          <input name="c4_wan_finish_ip" value="" type="hidden"/>
+          <!-- ServerEnd -->
+          <input name="fw_direction" value="1" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+          <input name="h_service_list" value="" type="hidden"/>
+          <input name="h_ruleSelect" value="" type="hidden"/>
+		  <input name="fw_ip_version" value="4" type="hidden"/>
+          <input name="edit" value="0" type="hidden"/>
+          <input name="todo" value="save" type="hidden"/>
+          <input name="this_file" value="sky_firewall_rules-in.html" type="hidden"/>
+          <input name="next_file" value="sky_firewall_rules.html" type="hidden"/>
+		  <br>
+          <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_firewall_rules.html';" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: if_allow_submit=true; return checkData();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+      </div>
+        <script type="text/javascript">
+        if(cgnNetwork == '1')
+        { 
+             document.write('<div name ="showtext" id="showtext">');
+        }else
+        {
+            document.write('<div name ="showtext" id="showtext" style="display:none">');
+        }
+        </script>
+            <h3>IPv4 Settings</h3>
+            <p>It is not possible to configure the inbound firewall rules  for IPv4 Port Forwarding due 
+               to a feature enabled on your Sky Broadband connection.</p>
+            <br> 
+            <p>If you wish to set up an inbound firewall rule please contact Sky Technical Support.</p>
+            <br>
+      </div>   
+        </form>
+        <hr />
+		
+				<form method="post" action="sky_firewall_rules.cmd" onsubmit="return check_if_allow_submit_ip6();">
+          <div class="section-heading">
+            <h3>IPv6 Settings</h3>
+            <a class="help-btn" href="#" name="help2">help</a></div>
+          <div class="row-holder">
+            <label class="w300">Service</label>
+            <select name="service_list" size="1">
+              <option value="Any(All)">Any(ALL)</option>
+<option value="Any(TCP)">Any(TCP)(TCP:1:65535)</option>
+<option value="Any(UDP)">Any(UDP)(UDP:1:65535)</option>
+<option selected="selected" value="AIM">AIM(TCP:5190)</option>
+<option value="AH">AH</option>
+<option value="6IN4">IPv6InIPv4</option>
+<option value="BGP">BGP(TCP:179)</option>
+<option value="BOOTP CLIENT">BOOTP CLIENT(UDP:68)</option>
+<option value="BOOTP SERVER">BOOTP SERVER(UDP:67)</option>
+<option value="CU SEEME">CU SEEME(TCP/UDP:7648:24032)</option>
+<option value="DNS">DNS(TCP/UDP:53)</option>
+<option value="ESP">ESP</option>
+<option value="GRE">GRE</option>
+<option value="FINGER">FINGER(TCP:79)</option>
+<option value="FTP">FTP(TCP:20,21)</option>
+<option value="H323">H.323(TCP:1720)</option>
+<option selected="selected" value="HTTP">HTTP(TCP:80)</option>
+<option value="HTTPS">HTTPS(TCP:443)</option>
+<option value="ICMPECHOREQ">ICMP Echo Request</option>
+<option value="ICMPECHOREP">ICMP Echo Reply</option>
+<option value="IDENT">IDENT(TCP:113)</option>
+<option value="IPINIP">IPInIP</option>
+<option value="IRC">IRC(TCP/UDP:6667)</option>
+<option value="NEWS">NEWS(TCP:144)</option>
+<option value="NFS">NFS(UDP:2049)</option>
+<option value="NNTP">NNTP(TCP:119)</option>
+<option value="POP3">POP3(TCP:110)</option>
+<option value="RCMD">RCMD(TCP:512)</option>
+<option value="REAL AUDIO">REAL AUDIO(TCP:7070)</option>
+<option value="REXEC">REXEC(TCP:514)</option>
+<option value="RLOGIN">RLOGIN(TCP:513)</option>
+<option value="RTELNET">RTELNET(TCP:107)</option>
+<option value="RTSP">RTSP(TCP/UDP:554)</option>
+<option value="SCTP">SCTP</option>
+<option value="SFTP">SFTP(TCP:115)</option>
+<option value="SMTP">SMTP(TCP:25)</option>
+<option value="SNMP">SNMP(TCP/UDP:161)</option>
+<option value="SNMP TRAPS">SNMP TRAPS(TCP/UDP:162)</option>
+<option value="SQL NET">SQL NET(TCP:1521)</option>
+<option value="SSH">SSH(TCP/UDP:22)</option>
+<option value="STRM WORKS">STRM WORKS(UDP:1558)</option>
+<option value="TACACS">TACACS(UDP:49)</option>
+<option value="TELNET">TELNET(TCP:23)</option>
+<option value="TFTP">TFTP(UDP:69)</option>
+<option value="VDOLIVE">VDOLIVE(TCP:7000)</option>
+<option value="VPN IPSEC">VPN IPSEC(ESP,AH,UDP:500)</option>
+<option value="VPN L2TP">VPN L2TP(ESP,AH,UDP:1701)</option>
+<option value="VPN PPTP">VPN PPTP(GRE,TCP:1723)</option>
+
+              <option value="SvcA">SvcA(TCP/UDP:7001:7001)</option>
+<option value="SvcB">SvcB(UDP:7002:7002)</option>
+<option value="SvcC">SvcC(TCP:7003:7003)</option>
+<option value="SvcD">SvcD(UDP:7100:7110)</option>
+
+            </select>
+          </div>
+          <div class="row-holder">
+            <label class="w300">Action</label>
+            <select name="fw_action">
+              <option value="0">BLOCK always</option>
+              <option value="1">BLOCK by schedule</option>
+              <option selected="selected" value="2">ALLOW always</option>
+              <option value="3">ALLOW by schedule</option>
+            </select>
+          </div>
+		  <div class="row-holder">
+            <label class="w300">Destination IPv6 LAN address:</label>
+            <input disabled="disabled" size="16" maxlength="19" name="lan_start_ip6_prefix" onfocus="if (this.disabled) this.blur()" type="text"/>
+            :
+            <input size="16" maxlength="19" name="lan_start_ip6" onfocus="if (this.disabled) this.blur()" type="text"/>
+          </div>
+          <div class="row-holder">
+            <label class="w300">Access from</label>
+            <select name="fw_waniptype" onchange="setwan()">
+              <option selected="selected" value="anyip">Any</option>
+              <option value="singleip">Single address</option>
+              <option value="rangeip">Address Range</option>
+            </select>
+          </div>
+		  
+          <div class="row-holder">
+            <label class="w300">Source IPv6 start address:</label>
+            <input disabled="disabled" size="30" maxlength="39" name="wan_start_ip6" onfocus="if (this.disabled) this.blur()" type="text"/>
+          </div>
+		  
+          <div class="row-holder">
+            <label class="w300">Source IPv6 finish address:</label>
+            <input disabled="disabled" size="30" maxlength="39" name="wan_finish_ip6" onfocus="if (this.disabled) this.blur()" type="text"/>
+          </div>
+
+          <div class="row-holder">
+            <label class="w300">Log</label>
+            <select name="fw_logging">
+              <option selected="selected" value="0">Never</option>
+              <option value="1">Always</option>
+              <option value="2">Match</option>
+              <option value="3">Not Match</option>
+            </select>
+          </div>
+          <!-- ServerStart -->
+          <!---<input type="hidden" name="h_fw_filter_name" value="{fw_out_editname}" />-->
+          <!--<input type="hidden" name="h_fw_action" value="Allow always" />-->
+          <input name="fwall_action" value="" type="hidden"/>
+          <input name="h_fw_action" value="" type="hidden"/>
+          <input name="h_fw_laniptype" value="" type="hidden"/>
+          <input name="h_fw_waniptype" value="" type="hidden"/>
+          <input name="h_fw_logging" value="" type="hidden"/>
+          <input name="lan_ip6_start_comb" value ="" type="hidden"/>
+          <!-- ServerEnd -->
+          <input name="fw_direction" value="1" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+          <input name="h_service_list" value="" type="hidden"/>
+          <input name="h_ruleSelect" value="" type="hidden"/>
+		  <input name="fw_ip_version" value="6" type="hidden"/>
+          <input name="edit" value="0" type="hidden"/>
+          <input name="todo" value="save" type="hidden"/>
+          <input name="this_file" value="sky_firewall_rules-in.html" type="hidden"/>
+          <input name="next_file" value="sky_firewall_rules.html" type="hidden"/>
+		  <br>
+		  <div class="buttons-holder"> <a href="javascript: if_allow_submit_ip6=false; window.location.href='sky_firewall_rules.html';" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: if_allow_submit_ip6=true; return checkDataIP6();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+		  <br>
+        </form><br>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+	   <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+        <h3>Inbound Services</h3>
+        <p>Configure firewall rules for inbound IPv4 traffic.<br>
+          Your Sky Hub will let you configure rules for a specific service and the respective LAN server.</p>
+	<p>It is not possible to configure inbound firewall rule in carrier grade network connections.</p>
+		 </div>
+         <span class="arrow arrow-l png"></span> </div>
+		 	   <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+          <div class="content">
+          <h3>Inbound Services</h3>
+          <p>Configure firewall rules for inbound IPv6 traffic.<br>
+          Please note that your Sky Hub will automatically use the global prefix for the LAN server
+          to configure the firewall rules. You only need to enter the Interface ID of your LAN
+          server to apply the rule.</p>
+		 </div>
+         <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>

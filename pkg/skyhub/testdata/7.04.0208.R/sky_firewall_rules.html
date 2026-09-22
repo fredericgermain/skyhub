@@ -1,0 +1,800 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Firewall Rules</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+     <!--//
+var if_allow_submit=false;
+var OutFwRulesSeqChanged = false;
+var InFwRulesSeqChanged = false;
+var cgnNetwork = '0';
+$(document).ready(function(){
+
+		$( "#enableipv6firewall" ).change(function() {
+			if(whetherInBoundShuffled() || whetherOutBoundShuffled())
+			{
+				alert("Please refresh the page since firewall rule positions already changed");
+				return;
+			}
+			if($("#enableipv6firewall").is(':checked') == false)            
+			{
+			var table = $("#in_fw_table");
+			table.find('tr:gt(0)').each(function (i, el) {
+				var ipv = $(this).find("[name=ip_version]");
+				var $tds = $(this).find('td');
+				var ip = $tds.eq(5).text();
+				if( ipv.val() == 6)
+				{
+					$("[name =in_enable_"+ (i+1) +"]").prop('disabled',true);
+					$(this).find("[name =in_sel]").prop('disabled',true);
+				}
+				});
+
+			var table = $("#out_fw_table");
+			table.find('tr:gt(0)').each(function (i, el) {
+
+				var ipv = $(this).find("[name=ip_version]");
+				var $tds = $(this).find('td');
+				var ip = $tds.eq(5).text();
+				if( ipv.val() == 6 )
+				{
+					$("[name =out_enable_"+ (i+1) +"]").prop('disabled',true);
+					$(this).find("[name =out_sel]").prop('disabled',true);
+				}
+				});
+			}
+			else
+			{	
+				var table = $("#in_fw_table");
+				table.find('tr:gt(0)').each(function (i, el) {
+						var ipv = $(this).find("[name=ip_version]");
+						var $tds = $(this).find('td');
+						var ip = $tds.eq(5).text();
+						if(  ipv.val() == 6)
+						{	
+
+							$("[name =in_enable_"+ (i+1) +"]").prop('disabled',false);
+							$(this).find("[name =in_sel]").prop('disabled',false);
+
+						}
+						});
+
+				var table = $("#out_fw_table");
+				table.find('tr:gt(0)').each(function (i, el) {
+						var ipv = $(this).find("[name=ip_version]");
+						var $tds = $(this).find('td');
+						var ip = $tds.eq(5).text();
+						if( ipv.val() == 6)
+						{	
+							$("[name =out_enable_"+ (i+1) +"]").prop('disabled',false);
+							$(this).find("[name =out_sel]").prop('disabled',false);
+						}
+						});
+
+			}
+		});     
+});
+
+//Any change in inbound firewall rule order
+function whetherInBoundShuffled()
+{
+    if(InFwRulesSeqChanged == true)
+        return 1;
+    else
+        return 0;
+}
+//Any change in outbound firewall rule order    
+function whetherOutBoundShuffled()
+{
+    if(OutFwRulesSeqChanged == true)
+        return 1;
+    else
+        return 0;
+}
+    
+function moveRule(fObj, radioObj, actionStr)
+{
+	var ptext = "\nNew position:" ; var pos ;
+	var radioIndex = radioSelectedIndex(radioObj);
+	if (radioIndex > -1)
+	{
+		do {
+			pos = prompt(ptext,"") ;
+			if(!pos) return;
+			if ((pos < 1)  || (pos > radioObj.length) || (parseInt(pos) == radioIndex+1))  // number from 1, not 0
+				ptext = "Invalid position. Please re-enter new position.";
+			} while ((pos < 1)  || (pos > radioObj.length) || (parseInt(pos) == radioIndex+1))
+			fObj.new_position.value = parseInt(pos) - 1;
+			stdAction(fObj, actionStr);
+			fw_new_position=fObj.new_position.value;
+	}
+	else alert("No entry has been selected. \nClick a radio button to select an entry");
+}
+
+function moveUpInRule(fObj, radioObj)
+{
+	var radioIndex = radioSelectedIndex(radioObj);
+	if (radioIndex > 0)
+	{
+		fObj.fwall_action.value='inmoveup';
+		fObj.next_file.value='sky_firewall_rules.html'; 
+		radioTable(fObj,radioObj,'moveup');
+	}
+	else alert("Cannot move Inbound firewall rule up as it is already at the top");
+}
+
+function moveDownInRule(fObj, radioObj)
+{
+	var radioIndex = radioSelectedIndex(radioObj);
+	if (radioIndex+1 < radioObj.length)
+	{
+		fObj.fwall_action.value='inmovedown';
+		fObj.next_file.value='sky_firewall_rules.html'; 
+		radioTable(fObj,radioObj,'movedown');
+	}
+	else alert("Cannot move Inbound firewall rule down as it is already at the bottom");
+}
+
+function moveUpOutRule(fObj, radioObj)
+{
+	var radioIndex = radioSelectedIndex(radioObj);
+	if (radioIndex > 0)
+	{
+		fObj.fwall_action.value='outmoveup';
+		fObj.next_file.value='sky_firewall_rules.html'; 
+		radioTable(fObj,radioObj,'moveup');
+	}
+	else alert("Cannot move Outbound firewall rule up as it is already at the top");
+}
+
+function moveDownOutRule(fObj, radioObj)
+{
+	var radioIndex = radioSelectedIndex(radioObj);
+	if (radioIndex+1 < radioObj.length)
+	{
+		fObj.fwall_action.value='outmovedown';
+		fObj.next_file.value='sky_firewall_rules.html'; 
+		radioTable(fObj,radioObj,'movedown');
+	}
+	else alert("Cannot move Outbound firewall rule down as it is already at the bottom");
+}
+
+function movefwRule(firewall_tbl, radioObj, move)
+{	
+    var radioIndex = radioSelectedIndex(radioObj);
+    var fw_tbl = document.getElementById(firewall_tbl);
+    var tblIndex = radioIndex+1;
+    var noRows = fw_tbl.rows.length;
+
+    if((move == "up") && (tblIndex > 1) && (tblIndex < noRows-1))
+    {
+        var cellA=fw_tbl.rows[tblIndex];
+        var cellB=fw_tbl.rows[tblIndex-1];
+        if(cellA&&cellB)
+        {
+            cellB.parentNode.insertBefore(cellA,cellB);
+        }
+
+        if(firewall_tbl == "out_fw_table")
+            OutFwRulesSeqChanged = true;
+        else
+            InFwRulesSeqChanged = true;
+
+    }
+    else if ((move == "down") && (tblIndex > 0) &&  (tblIndex < noRows-5))
+    {
+        var cellA=fw_tbl.rows[tblIndex];
+        var cellB=fw_tbl.rows[tblIndex+1];
+        if(cellA&&cellB)
+        {
+            cellA.parentNode.insertBefore(cellB,cellA);
+        }
+
+        if(firewall_tbl == "out_fw_table")
+            OutFwRulesSeqChanged = true;
+        else
+            InFwRulesSeqChanged = true;
+    }
+    else
+    {
+        return;
+    }
+}
+
+function saveEnable()
+{
+	var cf = document.forms[0];
+	var form_size = cf.elements.length;
+	cf.out_enable.value = "";
+	cf.in_enable.value = "";
+	
+	for (var i = 0; i < form_size; i++)
+	{
+		if (cf.elements[i].type == "checkbox")
+		{
+		    if(cf.elements[i].name.substring(0,10)=="out_enable")
+		        cf.out_enable.value+= (cf.elements[i].checked) ? "1" : "0";
+		    if(cf.elements[i].name.substring(0,9)=="in_enable")
+				cf.in_enable.value+= (cf.elements[i].checked) ? "1" : "0";
+			cf.elements[i].value=(cf.elements[i].checked) ? "1" : "0";
+			cf.elements[i].checked=false;
+	     }
+	}
+
+}
+
+function setChBoxes()
+{
+	var cf = document.forms[0]; 	var i;  var oref;
+	for (i = 0; i < cf.out_enable.value.length; i++)
+	{
+		if (oref = eval("cf.out_enable_" + (i+1) ))
+			oref.checked = (cf.out_enable.value.charAt(i) == "1" ) ? true : false;
+	}
+	for (i = 0; i < cf.in_enable.value.length; i++)
+	{
+		if (oref = eval("cf.in_enable_" + (i+1) ))
+			oref.checked = (cf.in_enable.value.charAt(i) == "1" ) ? true : false;
+	}
+
+	if(cf.ipv6firewallenable.value == "1")
+	{
+		cf.enable_ipv6_firewall.checked = true;
+	}
+	else
+	{
+		cf.enable_ipv6_firewall.checked = false;
+	}
+	$("#enableipv6firewall").trigger("change");
+
+	if(cf.ipsecfirewallenable.value == "1")
+	{
+		cf.enable_ipsec_firewall.checked = true;
+	}
+	else
+	{
+		cf.enable_ipsec_firewall.checked = false;
+	}
+    if(cf.icmpv6echoreqallow.value == "1")
+    {
+        cf.allow_inbound_icmpv6_echoreq.checked = true;
+    }
+    else
+    {
+        cf.allow_inbound_icmpv6_echoreq.checked = false;
+    }    
+}
+
+
+function check_data()
+{
+    var cf = document.forms[0];
+    var msg = "";
+	cf.todo.value = "save";
+	dataToHidden(cf);
+	if(InFwRulesSeqChanged)
+	{
+		buildInFwRuleSequence()
+	}
+
+	if(OutFwRulesSeqChanged)
+	{
+		buildOutFwRuleSequence()
+	}
+
+	if(cf.enable_ipv6_firewall.checked == true)
+	{
+		cf.ipv6firewallenable.value = "1";	
+	}
+	else
+	{
+		cf.ipv6firewallenable.value = "0";	
+	}
+
+	if(cf.enable_ipsec_firewall.checked == true)
+	{
+		cf.ipsecfirewallenable.value = "1";	
+	}
+	else
+	{
+		cf.ipsecfirewallenable.value = "0";	
+	}
+    if(cf.allow_inbound_icmpv6_echoreq.checked == true)
+    {
+        cf.icmpv6echoreqallow.value = "1"; 
+    }
+    else
+    {
+        cf.icmpv6echoreqallow.value = "0"; 
+    }    
+	saveEnable();  // must be after daaToHidden()
+	cf.submit();
+	return true;	
+}
+
+function checkOutboundAdd()
+{
+    var cf = document.forms[0];
+    
+    if(cf.outboundRuleCnt.value >= 32)
+        alert("Maximum number of Outbound Services already reached. Please delete an existing Service then create the new one.");
+    else
+        window.location.href='sky_firewall_rules-out.html';
+}
+
+function checkInboundAdd()
+{
+    var cf = document.forms[0];
+    
+    if(cf.inboundRuleCnt.value >= 32)
+        alert("Maximum number of Inbound Services already reached. Please delete an existing Service then create the new one.");
+    else
+        window.location.href='sky_firewall_rules-in.html';
+}
+
+function buildInFwRuleSequence()
+{
+	var cf = document.forms[0];
+	cf.in_fwrule_seq.value = "";
+	cf.in_fwrule_ipversion_seq.value = "";
+    var rule_count =  parseInt(cf.inboundRuleCnt.value);
+	var fw_tbl = document.getElementById('in_fw_table');
+	var noRows = $('#in_fw_table tr').length;
+
+	for (var i = 1; i <= rule_count; i++)
+	{
+		if(i > 1)
+		{
+			cf.in_fwrule_seq.value += '-';
+			cf.in_fwrule_ipversion_seq.value += '-';
+		}
+		cf.in_fwrule_seq.value += fw_tbl.rows[i].childNodes[1].childNodes[0].innerHTML;
+		cf.in_fwrule_ipversion_seq.value += fw_tbl.rows[i].childNodes[0].childNodes[1].value;
+	}
+}
+
+function buildOutFwRuleSequence()
+{
+	var cf = document.forms[0];
+	cf.out_fwrule_seq.value = "";
+	cf.out_fwrule_ipversion_seq.value = "";
+    var rule_count =  parseInt(cf.outboundRuleCnt.value);
+	var fw_tbl = document.getElementById('out_fw_table');
+	var noRows = $('#out_fw_table tr').length;
+
+	for (var i = 1; i <= rule_count ; i++)
+	{
+		if(i > 1)
+		{
+			cf.out_fwrule_seq.value += '-';
+			cf.out_fwrule_ipversion_seq.value += '-';
+		}
+		cf.out_fwrule_seq.value += fw_tbl.rows[i].childNodes[1].childNodes[0].innerHTML;
+		cf.out_fwrule_ipversion_seq.value += fw_tbl.rows[i].childNodes[0].childNodes[1].value;
+	}
+}
+
+function isChrome(){
+    if(navigator.userAgent.indexOf("Chrome") != -1)
+		return true;
+	else
+		return false;
+}
+/** @brief Handles deletion of a single inbound or outbound service firewall rule .  (jira: ER-1856)
+ *
+ *      Deletes the service rule selected with a radio button in the inbound or outbound services panel.
+ *      When no radio button is selected then an error dialog box is shown requesting the user to select a radio button.
+ *      When a  radio button is selected then a rule deletion confirmation dialog box is presented to the user.
+ *
+ *  @param in       Boolean flag indicating if an inbound service rule or an outbound service rule.
+ *                            - true  : delete the inbound service rule selected with the current radio button.
+ *                            - false : delete the outbound service rule selected with the current radio button.
+ */
+function handleFirewallRuleDeletion(isInboundServiceRule)
+{
+    var rulesHaveBeenShuffled = false;
+
+    /* assess if rules have been shuffled */
+    if(isInboundServiceRule) {
+        if (whetherInBoundShuffled() == 1)
+            rulesHaveBeenShuffled = true;
+    }
+    else {
+        if (whetherOutBoundShuffled() == 1)
+            rulesHaveBeenShuffled = true;
+    }
+
+    /* request the user to refresh the GUI if the order of rules has been shuffled */
+    if(rulesHaveBeenShuffled)
+    {
+        alert('Please refresh the page to proceed');
+    }
+    else
+    {
+        var radioObjectServiceRule;
+        var radioObjectServiceRule_unselect;
+
+        /* access a radio button associated with a service rule */
+        if(isInboundServiceRule)
+        {
+            radioObjectServiceRule = document.forms[0].in_sel;
+            radioObjectServiceRule_unselect = document.forms[0].out_sel;
+        }
+        else
+        {
+            radioObjectServiceRule = document.forms[0].out_sel;
+            radioObjectServiceRule_unselect = document.forms[0].in_sel;
+        }
+
+        /* service object rule has a selection.  */
+        if (radioObjectHasASelection(radioObjectServiceRule, 'No entry selected. \nClick a radio button to select an entry.'))
+        {
+            /* confirm deletion of a service rule */
+            if(confirm('\n\nClick \'OK\' to delete the selected rule.\nClick \'Cancel\' to keep the selected rule.\n'))
+            {
+                /* delete the rule and refresh the GUI */
+                document.forms[0].fwall_action.value='remove';
+                document.forms[0].next_file.value='sky_firewall_rules.html';
+                unselectFirewallRule(radioObjectServiceRule_unselect);
+                radioTable(document.forms[0],radioObjectServiceRule,'delete');
+            }
+        }
+    }
+}
+
+
+ /** @brief Validates whether a radio object  has a current selection or not.   (jira: ER-1856)
+ *
+ *  @param in       Radio object
+ *  @param in       A string which will be shown in an alert dialog box when the radio object does not have a selection.
+ *
+ *  @return true to indicate that the radio object has a selection or false to inidicate that no selection has been made.
+ */
+function radioObjectHasASelection(radioObj, strMessageToShowWhenNoSelection)
+{
+    var selectedIndex = radioSelectedIndex(radioObj);
+    if (selectedIndex > -1)
+    {
+        return true;
+    }
+    else
+    {
+        alert(strMessageToShowWhenNoSelection);
+        return false;
+    }
+}
+
+
+function unselectFirewallRule(radio_object)
+{
+    if (!radio_object)
+        return ;
+
+    var size = radio_object.length;
+
+    if(isNaN(size))
+    {
+        if(radio_object.checked == true)
+        radio_object.checked = false;
+        return;
+    }
+    for (var i = 0; i < size; i++)
+    {
+        if (radio_object[i].checked==true)
+        {
+            radio_object[i].checked=false;
+            break;
+        }
+    }
+    return;
+}
+     //-->
+   </script>
+</head>
+<body onload="dataToVisible(document.forms[0]);setChBoxes();loadhelp('_fwrl');">
+<!-- head -->
+<div id="head">
+  <div id="header">
+	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li class="selected"><a href="sky_logs.html">Security</a></li>
+          <li ><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-security" class="selected">
+          <li ><a href="sky_logs.html">Logs</a></li>
+          <li ><a href="sky_block_sites.html">Block Sites</a></li>
+          <li class="selected"><a href="sky_firewall_rules.html">Firewall Rules</a></li>
+          <li ><a href="sky_services.html">Services</a></li>
+          <li ><a href="sky_schedule.html">Schedule</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Create Firewall Rules</h1>
+        <p class="black">You can use this page to create Firewall rules to block or allow specific traffic used by certain applications, such as video conferencing or some online games, through your Sky Hub. </p>
+        <p><b>Note:</b> This feature is for Advanced Users only. Incorrect configuration may cause connection problems. Please check all configuration changes in the service or game user manual before applying.</p>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <hr class="top"/>
+	<div class="section-heading">
+          <h3>IPv6 Firewall</h3>
+          <a class="help-btn" href="#" name="helpipv6firewall">help</a></div>
+	<form name="fwrules" method="post" action="sky_firewall_rules.cmd" onsubmit="return if_allow_submit;">
+            	<input id="enableipv6firewall" name="enable_ipv6_firewall" type="checkbox" />
+            	<label for="broadcast" class="right"> Enable IPv6 firewall </label>
+        <hr/>
+        <div class="section-heading">
+          <h3>Outbound Services</h3>
+          <a class="help-btn" href="#" name="help1">help</a></div>
+        <table id="out_fw_table" style="" class="nospace" width="100%" border="0" cellpadding="0" cellspacing="0">
+          <tbody>
+            <tr class="header">
+            <td width="5%"></td>
+              <td width="10%">#</td>
+              <td width="10%">Enable</td>
+              <td>Service Name</td>
+              <td>Action</td>
+              <td>LAN Users</td>
+              <td>WAN Servers</td>
+              <td>Log</td>
+            </tr>
+            <tr style="display: none;"><input value="0" name="outboundRuleCnt" type="hidden"></tr><tr style="display: none;"></tr>
+            <tr>
+            <td>&nbsp;</td>
+              <td>Default</td>
+              <td>Yes</td>
+              <td>Any</td>
+              <td>ALLOW always</td>
+              <td>Any</td>
+              <td>Any</td>
+              <td>Never</td>
+            </tr>
+            <tr class="footer ">
+              <td colspan="8"><a href="javascript: if_allow_submit=false; checkOutboundAdd();" class="btn32 btn-clr-secondary png"><span class="png">Add</span></a> <a href="javascript: if(whetherOutBoundShuffled() == 1){alert('Please refresh the page to proceed');}else{ document.forms[0].fwall_action.value='retrieve'; document.forms[0].next_file.value='sky_firewall_rules-out-edit.html';radioTable(document.forms[0],document.forms[0].out_sel,'edit');}" class="btn32 btn-clr-secondary png"><span class="png">Edit</span></a> <a href="javascript: handleFirewallRuleDeletion(false);" class="btn32 btn-clr-secondary png"><span class="png">Delete</span></a> <a href="javascript: movefwRule('out_fw_table',document.forms[0].out_sel, 'up');" class="btn32 btn-clr-secondary png"><span class="png">Move Up</span></a> <a href="javascript: movefwRule('out_fw_table',document.forms[0].out_sel, 'down');" class="btn32 btn-clr-secondary png"><span class="png">Move Down</span></a></td>
+            </tr>
+          </tbody>
+        </table>
+        <hr />
+        <div class="section-heading">
+            <h3>Inbound Services</h3>
+        <script type="text/javascript">
+        if(cgnNetwork == '1')
+        { 
+             document.write('<a class="help-btn" href="#" name="help3">help</a></div>');
+        }
+        else
+        {
+             document.write('<a class="help-btn" href="#" name="help2">help</a></div>');
+        }
+        </script></br>
+        <input id="enableipsecfirewall" name="enable_ipsec_firewall" type="checkbox" />
+        <label for="broadcast" class="right"> Enable Inbound IPv6 IPSec firewall </label>
+        <br/><br/>
+        <input id="allowinboundicmpv6echoreq" name="allow_inbound_icmpv6_echoreq" type="checkbox" />
+        <label for="broadcast" class="right"> Allow Inbound ICMPv6 Echo Requests </label>
+        <br/><br/><br/>
+        <table id="in_fw_table" style="" class="nospace" width="650" border="0" cellpadding="0" cellspacing="0">
+          <tbody>
+            <tr class="header">
+              <td width="5%"></td>
+              <td width="10%">#</td>
+              <td width="10%">Enable</td>
+              <td>Service Name</td>
+              <td>Action</td>
+              <td>LAN Users</td>
+              <td>WAN Servers</td>
+              <td>Log</td>
+            </tr>
+            <tr><td align="center"><input value="SvcA" name="in_sel" type="radio" onclick="this.nextSibling.checked = true;"><input value="4" name="ip_version" type="radio" style="display:none;"></td><td align="center"><span class="thead">1</span></td><td align="center"> <input name="in_enable_1" value="SvcA" checked="checked" type="checkbox"></td><td align="center"><span class="thead">SvcA</span></td><td align="center"><span class="thead">ALLOW always</span></td><td align="center"><span class="thead">192.168.0.150 (7001:7001)</span></td><td align="center"><span class="thead">0.0.0.0 (1:65535)</span></td><td align="center"><span class="thead">Never</span></td> </tr> <tr><td align="center"><input value="VPN IPSEC" name="in_sel" type="radio" onclick="this.nextSibling.checked = true;"><input value="4" name="ip_version" type="radio" style="display:none;"></td><td align="center"><span class="thead">2</span></td><td align="center"> <input name="in_enable_2" value="VPN IPSEC" checked="checked" type="checkbox"></td><td align="center"><span class="thead">VPN IPSEC</span></td><td align="center"><span class="thead">ALLOW always</span></td><td align="center"><span class="thead">192.168.0.4 (500)</span></td><td align="center"><span class="thead">0.0.0.0 (1:65535)</span></td><td align="center"><span class="thead">Never</span></td> </tr> <tr><td align="center"><input value="SvcB" name="in_sel" type="radio" onclick="this.nextSibling.checked = true;"><input value="4" name="ip_version" type="radio" style="display:none;"></td><td align="center"><span class="thead">3</span></td><td align="center"> <input name="in_enable_3" value="SvcB" checked="checked" type="checkbox"></td><td align="center"><span class="thead">SvcB</span></td><td align="center"><span class="thead">ALLOW always</span></td><td align="center"><span class="thead">192.168.0.4 (7002:7002)</span></td><td align="center"><span class="thead">0.0.0.0 (1:65535)</span></td><td align="center"><span class="thead">Never</span></td> </tr> <tr><td align="center"><input value="SvcC" name="in_sel" type="radio" onclick="this.nextSibling.checked = true;"><input value="4" name="ip_version" type="radio" style="display:none;"></td><td align="center"><span class="thead">4</span></td><td align="center"> <input name="in_enable_4" value="SvcC" checked="checked" type="checkbox"></td><td align="center"><span class="thead">SvcC</span></td><td align="center"><span class="thead">ALLOW always</span></td><td align="center"><span class="thead">192.168.50.200 (7003:7003)</span></td><td align="center"><span class="thead">0.0.0.0 (1:65535)</span></td><td align="center"><span class="thead">Never</span></td> </tr> <tr><td align="center"><input value="Any(All)" name="in_sel" type="radio" onclick="this.nextSibling.checked = true;"><input value="4" name="ip_version" type="radio" style="display:none;"></td><td align="center"><span class="thead">5</span></td><td align="center"> <input name="in_enable_5" value="Any(All)" checked="checked" type="checkbox"></td><td align="center"><span class="thead">Any(All)</span></td><td align="center"><span class="thead">ALLOW always</span></td><td align="center"><span class="thead">192.168.50.200 (1:65535)</span></td><td align="center"><span class="thead">0.0.0.0 (1:65535)</span></td><td align="center"><span class="thead">Always</span></td> </tr> <tr><td align="center"><input value="SvcD" name="in_sel" type="radio" onclick="this.nextSibling.checked = true;"><input value="4" name="ip_version" type="radio" style="display:none;"></td><td align="center"><span class="thead">6</span></td><td align="center"> <input name="in_enable_6" value="SvcD" checked="checked" type="checkbox"></td><td align="center"><span class="thead">SvcD</span></td><td align="center"><span class="thead">ALLOW always</span></td><td align="center"><span class="thead">192.168.50.200 (7100:7110)</span></td><td align="center"><span class="thead">0.0.0.0 (1:65535)</span></td><td align="center"><span class="thead">Never</span></td> </tr> <tr style="display: none;"><input value="6" name="inboundRuleCnt" type="hidden"></tr><tr style="display: none;"></tr>
+            <tr>
+            <td>&nbsp;</td>
+              <td>Default</td>
+              <td>Yes</td>
+              <td>Any</td>
+              <td>BLOCK always</td>
+              <td>Any</td>
+              <td>Any</td>
+              <td>Never</td>
+            </tr>
+            <tr class="footer ">
+              <td colspan="8"><a href="javascript: if_allow_submit=false; checkInboundAdd();" class="btn32 btn-clr-secondary png"><span class="png">Add</span></a> <a href="javascript: if(whetherInBoundShuffled() == 1){alert('Please refresh the page to proceed');}else{ document.forms[0].fwall_action.value='retrieve';document.forms[0].next_file.value='sky_firewall_rules-in-edit.html';radioTable(document.forms[0],document.forms[0].in_sel,'edit');}" class="btn32 btn-clr-secondary png"><span class="png">Edit</span></a> <a href="javascript: handleFirewallRuleDeletion(true);" class="btn32 btn-clr-secondary png"><span class="png">Delete</span></a> <a href="javascript: movefwRule('in_fw_table',document.forms[0].in_sel, 'up');" class="btn32 btn-clr-secondary png"><span class="png">Move Up</span></a> <a href="javascript: movefwRule('in_fw_table',document.forms[0].in_sel, 'down');" class="btn32 btn-clr-secondary png"><span class="png">Move Down</span></a></td>
+            </tr>
+          </tbody>
+        </table>
+        
+          <input name="h_ip_version" value="" type="hidden"/>
+		  <input name="fwall_action" value="" type="hidden"/>
+          <!-- blank on load -->
+          <input name="h_in_sel" value="" type="hidden"/>
+          <!-- blank on load -->
+          <input name="h_out_sel" value="" type="hidden"/>
+          <!-- blank on load -->
+          <input name="in_enable" value="000111" type="hidden"/>
+          <input name="out_enable" value="" type="hidden"/>
+          <input name="in_fwrule_seq" value="" type="hidden">
+          <input name="out_fwrule_seq" value="" type="hidden">
+		  <input name="in_fwrule_ipversion_seq" value="" type="hidden">
+          <input name="out_fwrule_ipversion_seq" value="" type="hidden">
+          <input name="new_position" value="" type="hidden"/>
+          <input name="ipv6firewallenable" value="1" type="hidden"/>
+          <input name="ipsecfirewallenable" value="1" type="hidden"/>
+          <input name="icmpv6echoreqallow" value="1" type="hidden"/>
+          <input name="selected_index_edit_delete" value="" type="hidden"/>
+          <!-- blank on load -->
+          <input name="todo" value="save" type="hidden"/>
+          <!-- save, newfile, inedit, outedit, indelete, outdelete, inmove, outmove -->
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+          <input name="this_file" value="sky_firewall_rules.html" type="hidden"/>
+          <input name="next_file" value="sky_firewall_rules.html" type="hidden"/>
+        </form>
+        <hr />
+        <div class="buttons-holder"> <a href="javascript: if_allow_submit=false; window.location.href='sky_firewall_rules.html';" class="btn42 btn-clr-secondary png"><span class="png">Cancel</span></a><a href="javascript:;" onclick="javascript: if_allow_submit=true; document.forms[0].fwall_action.value='enable_disable'; return check_data();" class="btn42 btn-clr-primary png"><span class="png">Apply</span></a></div>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel">
+        <div class="pod pod-help" id="helpipv6firewall"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>IPv6 firewall rule</h3>
+            <p><b>Enable IPv6 Firewall:</b> This option will enable/disable only the user-defined Outbound and Inbound IPv6 firewall rules in the router.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <div class="pod pod-help" id="help1"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Outbound Services</h3>
+            <p>This lists all existing rules for outbound traffic. If you have not defined any rules, only the default rule will be listed. The default rule allows all outgoing traffic.</p>
+            <p>To create a new rule:</p>
+            <ul>
+              <li>Select <b>Add</b> (it doesn't matter which radio button is selected).</li>
+              <li>The Outbound Service screen will be displayed.</li>
+              <li>Complete the Outbound Service screen, and save the data. The new rule will be listed in the table when you return to this screen.</li>
+            </ul>
+            <p>To edit an existing rule:</p>
+            <ul>
+              <li>Tick the <b>radio button</b> next to a row in the table.</li>
+              <li>Select <b>Edit</b> to edit the selected rule.</li>
+            </ul>
+            <p>To delete an existing rule:</p>
+            <ul>
+              <li>Tick the <b>radio button</b> next to a row in the table.</li>
+              <li>Select <b>Delete</b> to delete the selected rule.</li>
+            </ul>
+            <p>To move up an existing rule:</p>
+            <ul>
+              <li>Tick the <b>radio button</b> next to a row in the table.</li>
+              <li>Select <b>Move Up</b> to move up the selected rule.</li>
+            </ul>
+            <p>To move down an existing rule:</p>
+            <ul>
+              <li>Tick the <b>radio button</b> next to a row in the table.</li>
+              <li>Select <b>Move Down</b> to move down the selected rule.</li>
+            </ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <div class="pod pod-help" id="help2"><a href="#close" class="help-close"></a>
+          <div class="content">
+            <h3>Inbound Services</h3>
+            <p><b>Enable Inbound IPv6 IPSec Firewall:</b></br>This option will enable/disable only the IPsec related inbound IPv6 firewall rules in router. It is independent of the <i>Enable IPv6 Firewall</i> option. Enabling this option allows devices to use IPv6 natively to improve connectivity to services like the Xbox One.</p>
+            <p><b>Allow Inbound ICMPv6 Echo Requests:</b></br>This option will allow/disallow ICMPv6 inbound echo requests to LAN hosts.</p>
+            <p><b>Inbound Services Table:</b></br>This lists all existing rules for inbound traffic. If you have not defined any rules, only the default rule will be listed. The default rule blocks all inbound traffic.</p>
+            <p>To create a new rule:</p>
+            <ul>
+              <li>Select <b>Add</b> (it does not matter which radio button is selected).</li>
+              <li>The Inbound Service screen will be displayed.</li>
+              <li>Complete the Inbound Service screen, and save the data. The new rule will be listed in the table when you return to this screen.</li>
+            </ul>
+            <p>To edit an existing rule:</p>
+						<ul>
+							<li>Tick the <b>radio button</b> next to a row in the table.</li>
+							<li>Select <b>Edit</b> to edit the selected rule.</li>
+						</ul>
+						<p>To delete an existing rule:</p>
+						<ul>
+							<li>Tick the <b>radio button</b> next to a row in the table.</li>
+							<li>Select <b>Delete</b> to delete the selected rule.</li>
+						</ul>
+						<p>To move up an existing rule:</p>
+						<ul>
+							<li>Tick the <b>radio button</b> next to a row in the table.</li>
+							<li>Select <b>Move Up</b> to move up the selected rule.</li>
+						</ul>
+						<p>To move down an existing rule:</p>
+						<ul>
+							<li>Tick the <b>radio button</b> next to a row in the table.</li>
+							<li>Select <b>Move Down</b> to move down the selected rule.</li>
+						</ul>
+		<p>It is not possible to configure IPv4 inbound firewall rules in carrier grade network connections.</p>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+        <div class="pod pod-help" id="help3"><a href="#close" class="help-close"></a>
+          <div class="content">
+              <h3>Inbound Services</h3>
+              <p>It is not possible to configure the inbound firewall rules for IPv4 Port Forwarding due to a feature enabled on your Sky Broadband connection.</p>
+              <p>If you wish to set up an inbound firewall rule please contact Sky Technical Support.</p>
+            <p>To create a new rule:</p>
+            <ul>
+              <li>Select <b>Add</b> (it does not matter which radio button is selected).</li>
+              <li>The Inbound Service screen will be displayed.</li>
+              <li>Complete the Inbound Service screen, and save the data. The new rule will be listed in the table when you return to this screen.</li>
+            </ul>
+            <p>To edit an existing rule:</p>
+						<ul>
+							<li>Tick the <b>radio button</b> next to a row in the table.</li>
+							<li>Select <b>Edit</b> to edit the selected rule.</li>
+						</ul>
+						<p>To delete an existing rule:</p>
+						<ul>
+							<li>Tick the <b>radio button</b> next to a row in the table.</li>
+							<li>Select <b>Delete</b> to delete the selected rule.</li>
+						</ul>
+						<p>To move up an existing rule:</p>
+						<ul>
+							<li>Tick the <b>radio button</b> next to a row in the table.</li>
+							<li>Select <b>Move Up</b> to move up the selected rule.</li>
+						</ul>
+						<p>To move down an existing rule:</p>
+						<ul>
+							<li>Tick the <b>radio button</b> next to a row in the table.</li>
+							<li>Select <b>Move Down</b> to move down the selected rule.</li>
+						</ul>
+          </div>
+          <span class="arrow arrow-l png"></span> </div>
+      </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>
