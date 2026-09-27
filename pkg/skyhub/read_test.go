@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/fredericgermain/skyhub/pkg/skyhub"
@@ -308,8 +310,21 @@ func TestParseErrorOnForeignPage(t *testing.T) {
 	}
 }
 
-var skyV6 = regexp.MustCompile(`(?i)2a02:0{0,2}c7c:`)
+var (
+	ipv4Tok = regexp.MustCompile(`\b(?:\d{1,3}\.){3}\d{1,3}\b`)
+	ipv6Tok = regexp.MustCompile(`(?i)[0-9a-f]{0,4}(?::[0-9a-f]{0,4}){2,7}\b`)
+	macTok  = regexp.MustCompile(`(?i)\b[0-9a-f]{2}(?::[0-9a-f]{2}){5}\b`)
+	docV4   = []netip.Prefix{
+		netip.MustParsePrefix("192.0.2.0/24"), netip.MustParsePrefix("198.51.100.0/24"), netip.MustParsePrefix("203.0.113.0/24"),
+	}
+	docV6 = netip.MustParsePrefix("2001:db8::/32")
+	ulaV6 = netip.MustParsePrefix("fd12:3456:789a::/48") // the fixtures' placeholder ULA
+)
 
+// TestFixturesSanitised rejects anything in the captured pages that could be
+// a real network's: public IPv4 outside the documentation ranges, global or
+// ULA IPv6 outside the placeholder prefixes, and MACs other than the
+// locally administered 02:00:00:... placeholders.
 func TestFixturesSanitised(t *testing.T) {
 	entries, err := os.ReadDir(fixtureDir)
 	if err != nil {
@@ -321,27 +336,29 @@ func TestFixturesSanitised(t *testing.T) {
 			t.Fatal(err)
 		}
 		s := string(b)
-		for _, bad := range []string{"3c:9e:c7", "2a02:c7c"} {
-			if contains(s, bad) {
-				t.Errorf("%s contains %q", e.Name(), bad)
+		for _, tok := range ipv4Tok.FindAllString(s, -1) {
+			a, err := netip.ParseAddr(tok)
+			if err != nil || a.IsPrivate() || a.IsLoopback() || a.IsUnspecified() || a.IsMulticast() || a.IsLinkLocalUnicast() || a.As4()[0] == 255 {
+				continue
+			}
+			if !slices.ContainsFunc(docV4, func(p netip.Prefix) bool { return p.Contains(a) }) {
+				t.Errorf("%s: public IPv4 %s", e.Name(), tok)
 			}
 		}
-		// The hub also writes IPv6 groups zero-padded ('2a02:0c7c:...'), which
-		// the plain substring above missed: the real prefix sat in the firewall
-		// pages until 2026-09-27. Match Sky's 2a02:c7c::/32 in either form.
-		if skyV6.MatchString(s) {
-			t.Errorf("%s contains a Sky IPv6 prefix (2a02:c7c::/32)", e.Name())
+		for _, tok := range ipv6Tok.FindAllString(s, -1) {
+			a, err := netip.ParseAddr(tok)
+			if err != nil || !a.Is6() || a.IsLinkLocalUnicast() || a.IsLoopback() || a.IsUnspecified() || a.IsMulticast() {
+				continue
+			}
+			if a.IsPrivate() && !ulaV6.Contains(a) || a.IsGlobalUnicast() && !a.IsPrivate() && !docV6.Contains(a) {
+				t.Errorf("%s: real-looking IPv6 %s", e.Name(), tok)
+			}
+		}
+		for _, tok := range macTok.FindAllString(s, -1) {
+			m := strings.ToLower(tok)
+			if !strings.HasPrefix(m, "02:00:00:") && m != "ff:ff:ff:ff:ff:ff" && m != "00:00:00:00:00:00" {
+				t.Errorf("%s: real-looking MAC %s", e.Name(), tok)
+			}
 		}
 	}
-}
-
-func contains(s, sub string) bool {
-	return len(sub) > 0 && len(s) >= len(sub) && (func() bool {
-		for i := 0; i+len(sub) <= len(s); i++ {
-			if s[i:i+len(sub)] == sub {
-				return true
-			}
-		}
-		return false
-	})()
 }

@@ -19,3 +19,7 @@ require (
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 )
+
+// Versions before v0.3.0 were withdrawn when the repository history was
+// rewritten; use v0.3.0 or later.
+retract [v0.1.0, v0.2.3]

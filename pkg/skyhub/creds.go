@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultURL is the factory address of the Sky Hub admin UI.
-const DefaultURL = "http://192.168.50.1/"
+const DefaultURL = "http://192.168.0.1/"
 
 // Credentials holds what is needed to talk to a hub.
 type Credentials struct {

@@ -12,7 +12,7 @@ Terraform provider: <https://github.com/fredericgermain/terraform-provider-skyhu
 
 ## Credentials
 
-`SKYHUB_URL` (default `http://192.168.50.1/`), `SKYHUB_USER` (default `admin`), `SKYHUB_PASSWORD`,
+`SKYHUB_URL` (default `http://192.168.0.1/`), `SKYHUB_USER` (default `admin`), `SKYHUB_PASSWORD`,
 or a `~/skyhub` file with `USER=` / `PASSWORD=` lines (`SKYHUB_CREDENTIALS_FILE` overrides the path).
 
 ## Development

@@ -22,7 +22,7 @@ import (
 var version = "dev"
 
 func main() {
-	url := flag.String("url", "", "hub URL (default $SKYHUB_URL or http://192.168.50.1/)")
+	url := flag.String("url", "", "hub URL (default $SKYHUB_URL or http://192.168.0.1/)")
 	timeout := flag.Duration("timeout", 30*time.Second, "per-request timeout ($SKYHUB_TIMEOUT)")
 	debug := flag.Bool("debug", os.Getenv("SKYHUB_DEBUG") != "", "log every hub request to stderr")
 	showVersion := flag.Bool("version", false, "print version and exit")

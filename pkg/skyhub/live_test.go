@@ -23,6 +23,19 @@ func liveClient(t *testing.T) *Client {
 	return c
 }
 
+// liveHostIP is the throwaway LAN address the write tests use: host .250 on
+// the hub's own /24, so no network's addresses live in the code.
+func liveHostIP(t *testing.T, c *Client) netip.Addr {
+	t.Helper()
+	lan, err := c.LANConfig(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := lan.IP.Addr.As4()
+	b[3] = 250
+	return netip.AddrFrom4(b)
+}
+
 func TestLiveGet(t *testing.T) {
 	c := liveClient(t)
 	ctx := context.Background()
@@ -58,6 +71,7 @@ func TestLiveBadPassword(t *testing.T) {
 // firewall rule on it. Everything is cleaned up, including on failure.
 func TestLiveWriteCycle(t *testing.T) {
 	c := liveClient(t)
+	ip := liveHostIP(t, c)
 	ctx := context.Background()
 	mac, _ := net.ParseMAC("02:00:00:00:00:01")
 
@@ -68,7 +82,7 @@ func TestLiveWriteCycle(t *testing.T) {
 	})
 
 	// --- DHCP reservation ---
-	if err := c.AddDHCPReservation(ctx, DHCPReservation{MAC: MAC{mac}, IP: Addr{netip.MustParseAddr("192.168.50.250")}, Name: "tftest"}); err != nil {
+	if err := c.AddDHCPReservation(ctx, DHCPReservation{MAC: MAC{mac}, IP: Addr{ip}, Name: "tftest"}); err != nil {
 		t.Fatalf("add reservation: %v", err)
 	}
 	res, err := c.DHCPReservations(ctx)
@@ -85,7 +99,7 @@ func TestLiveWriteCycle(t *testing.T) {
 		t.Fatalf("reservation not found after add: %+v", res)
 	}
 	t.Logf("reservation added: %+v", *got)
-	if got.IP.String() != "192.168.50.250" || got.Name != "tftest" {
+	if got.IP.Addr != ip || got.Name != "tftest" {
 		t.Errorf("reservation mismatch: %+v", *got)
 	}
 	if err := c.RemoveDHCPReservation(ctx, mac); err != nil {
@@ -122,7 +136,7 @@ func TestLiveWriteCycle(t *testing.T) {
 	t.Log("service added")
 
 	// --- firewall rule ---
-	rule := FirewallRule{Direction: Inbound, Service: "tfTest", Action: ActionAllowAlways, Logging: LogNever, LANStart: "192.168.50.250", WANType: IPTypeAny}
+	rule := FirewallRule{Direction: Inbound, Service: "tfTest", Action: ActionAllowAlways, Logging: LogNever, LANStart: ip.String(), WANType: IPTypeAny}
 	if err := c.AddFirewallRule(ctx, rule); err != nil {
 		t.Fatalf("add firewall rule: %v", err)
 	}
