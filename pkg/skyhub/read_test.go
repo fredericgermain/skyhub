@@ -4,6 +4,7 @@ import (
 	"net/netip"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/fredericgermain/skyhub/pkg/skyhub"
@@ -307,6 +308,8 @@ func TestParseErrorOnForeignPage(t *testing.T) {
 	}
 }
 
+var skyV6 = regexp.MustCompile(`(?i)2a02:0{0,2}c7c:`)
+
 func TestFixturesSanitised(t *testing.T) {
 	entries, err := os.ReadDir(fixtureDir)
 	if err != nil {
@@ -322,6 +325,12 @@ func TestFixturesSanitised(t *testing.T) {
 			if contains(s, bad) {
 				t.Errorf("%s contains %q", e.Name(), bad)
 			}
+		}
+		// The hub also writes IPv6 groups zero-padded ('2a02:0c7c:...'), which
+		// the plain substring above missed: the real prefix sat in the firewall
+		// pages until 2026-09-27. Match Sky's 2a02:c7c::/32 in either form.
+		if skyV6.MatchString(s) {
+			t.Errorf("%s contains a Sky IPv6 prefix (2a02:c7c::/32)", e.Name())
 		}
 	}
 }
