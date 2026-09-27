@@ -178,6 +178,7 @@ type WirelessRadio struct {
 	AuthMode     string `json:"auth_mode"`
 	Cipher       string `json:"cipher"`
 	WPSEnabled   bool   `json:"wps_enabled"`
+	PSKSet       bool   `json:"psk_set"` // a WPA key is configured (the key itself is never read out)
 }
 
 // ---- syslog ----

@@ -2,6 +2,7 @@
 //
 //	skyhub get <page>            print a raw page (digest-authed)
 //	skyhub capture --out DIR     save sanitised fixtures of every known page
+//	skyhub backup --out FILE     download the hub configuration backup (secrets!)
 //	skyhub proxy --listen :8089  authenticating reverse proxy that records form POSTs
 //	skyhub <reader>              stats | wan | info | devices | wifi | syslog |
 //	                             lan | dhcp | firewall | services | wanconfig |
@@ -69,15 +70,35 @@ func main() {
 		if err := runProxy(cr, *listen, *record, *allowAll); err != nil {
 			fatal(err)
 		}
-	case "capture":
-		fs := flag.NewFlagSet("capture", flag.ExitOnError)
-		out := fs.String("out", "", "output directory (required)")
-		raw := fs.Bool("raw", false, "do not sanitise (never commit the result)")
+	case "backup":
+		fs := flag.NewFlagSet("backup", flag.ExitOnError)
+		out := fs.String("out", "", "file to write the hub configuration backup to (required; contains secrets)")
 		_ = fs.Parse(args)
 		if *out == "" {
 			fatal(fmt.Errorf("--out is required"))
 		}
-		if err := capture(ctx, c, *out, !*raw); err != nil {
+		b, err := c.Backup(ctx)
+		if err != nil {
+			fatal(err)
+		}
+		if err := os.WriteFile(*out, b, 0o600); err != nil {
+			fatal(err)
+		}
+		fmt.Fprintf(os.Stderr, "wrote %d bytes to %s (mode 0600; contains secrets)\n", len(b), *out)
+	case "capture":
+		fs := flag.NewFlagSet("capture", flag.ExitOnError)
+		out := fs.String("out", "", "output directory (required)")
+		raw := fs.Bool("raw", false, "do not sanitise (never commit the result)")
+		only := fs.String("only", "", "comma-separated pages to capture instead of all")
+		_ = fs.Parse(args)
+		if *out == "" {
+			fatal(fmt.Errorf("--out is required"))
+		}
+		pages := CapturePages
+		if *only != "" {
+			pages = strings.Split(*only, ",")
+		}
+		if err := capture(ctx, c, *out, pages, !*raw); err != nil {
 			fatal(err)
 		}
 	default:
@@ -117,18 +138,19 @@ var CapturePages = []string{
 	"sky_block_sites.html",
 	"sky_schedule.html",
 	"sky_backup_settings.html",
+	"sky_set_password.html",
 }
 
 func fixtureName(page string) string {
 	return strings.NewReplacer("/", "_", "?", "_", "=", "_").Replace(page)
 }
 
-func capture(ctx context.Context, c *skyhub.Client, dir string, sanitize bool) error {
+func capture(ctx context.Context, c *skyhub.Client, dir string, pages []string, sanitize bool) error {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
 	san := skyhubtest.NewSanitizer()
-	for _, page := range CapturePages {
+	for _, page := range pages {
 		start := time.Now()
 		p, err := c.Get(ctx, page)
 		if err != nil {
@@ -193,7 +215,7 @@ func runReader(ctx context.Context, c *skyhub.Client, cmd string, args []string)
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR | proxy [--listen ADDR --record FILE] | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
+	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR [--only P,Q] | backup --out FILE | proxy [--listen ADDR --record FILE] | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
 }
 
 func fatal(err error) {

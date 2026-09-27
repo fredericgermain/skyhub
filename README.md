@@ -114,6 +114,7 @@ go run ./cmd/skyhub stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|service
 go run ./cmd/skyhub get sky_system.html                 # raw page, digest auth added
 go run ./cmd/skyhub capture --out pkg/skyhub/testdata/X # sanitised fixtures
 go run ./cmd/skyhub proxy --listen 127.0.0.1:8089 --record posts.jsonl
+go run ./cmd/skyhub backup --out /safe/skyhub-backup.conf    # full hub config file (contains secrets)
 ```
 
 `skyhub proxy` serves the hub UI to a browser without asking for the password, records every form
@@ -127,3 +128,7 @@ settings (`--allow-all` to forward everything). Useful for reverse-engineering w
 - Firewall rules: the enable flags are stored in the `in_enable`/`out_enable` bitmask; the row checkboxes always render checked.
 - The reservation UI offers to reboot after add/remove; the client never sends `todo=reboot`.
 - Ethernet changes reboot the hub; LAN IP/subnet/DHCP changes restart it. `SetEthernet` is a no-op when nothing changes.
+- `SetLANConfig` returns `ErrHubRestarting` when the change restarts the hub (do not read back at the old address); `SetEthernet` waits until the hub answers again.
+- `ChangeAdminPassword` switches the client to the new password in place and verifies it; on rejection it reverts and reports the hub's reason.
+- `SetWireless` always writes WPA2-PSK/AES; isolation, WPS and the 2.4/5 GHz sync flag keep their current values. 5 GHz offers channel 36 at 80 MHz, or 36/44 at 40 MHz.
+- Several clients (exporter, MCP server, Terraform) can race on the digest nonce; a client that has authenticated before retries a rejection twice.

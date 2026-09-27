@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math/rand/v2"
 	"net"
 	"net/http"
 	"net/url"
@@ -18,13 +19,25 @@ import (
 // embedded web server is single-session and the CSRF sessionKey it issues
 // changes on every page load.
 type Client struct {
-	base      *url.URL
-	hc        *http.Client
-	mu        *sync.Mutex
-	timeout   time.Duration
-	postDelay time.Duration
-	log       *slog.Logger
-	userAgent string
+	base        *url.URL
+	hc          *http.Client
+	mu          *sync.Mutex
+	timeout     time.Duration
+	postDelay   time.Duration
+	log         *slog.Logger
+	userAgent   string
+	authedOK    bool          // at least one request authenticated; guarded by mu
+	rebootPause time.Duration // pause before polling after a reboot-causing change
+}
+
+func (c *Client) digest() *digestTransport { return c.hc.Transport.(*digestTransport) }
+
+// HasPassword reports whether the client currently authenticates with pass.
+func (c *Client) HasPassword(pass string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	_, p := c.digest().credentials()
+	return p == pass
 }
 
 // Option configures a Client.
@@ -40,6 +53,10 @@ func WithTimeout(d time.Duration) Option { return func(c *Client) { c.timeout = 
 
 // WithLogger sets a logger (default: discard).
 func WithLogger(l *slog.Logger) Option { return func(c *Client) { c.log = l } }
+
+// WithRebootPause sets how long to wait before polling the hub after a
+// change that reboots it (default 15s).
+func WithRebootPause(d time.Duration) Option { return func(c *Client) { c.rebootPause = d } }
 
 // WithPostDelay sets the pause after a successful form POST, giving the hub
 // time to commit to NVRAM before the next read (default 300ms).
@@ -98,11 +115,12 @@ func New(baseURL, user, password string, opts ...Option) (*Client, error) {
 				return http.ErrUseLastResponse
 			},
 		},
-		mu:        hubLock(u.Host),
-		timeout:   30 * time.Second,
-		postDelay: 300 * time.Millisecond,
-		log:       slog.New(slog.DiscardHandler),
-		userAgent: "skyhub-go",
+		mu:          hubLock(u.Host),
+		timeout:     30 * time.Second,
+		postDelay:   300 * time.Millisecond,
+		rebootPause: 15 * time.Second,
+		log:         slog.New(slog.DiscardHandler),
+		userAgent:   "skyhub-go",
 	}
 	for _, o := range opts {
 		o(c)
@@ -159,6 +177,25 @@ func (c *Client) Get(ctx context.Context, path string) (*Page, error) {
 }
 
 func (c *Client) getLocked(ctx context.Context, path string) (*Page, error) {
+	p, err := c.getOnceLocked(ctx, path)
+	// Another client (MCP server, exporter, Terraform) authenticating at the
+	// same moment can make the hub reject a nonce we just used. Once this
+	// client has authenticated successfully, retry a rejection twice with
+	// jitter before calling the credentials wrong.
+	for attempt := 0; err == ErrAuth && c.authedOK && attempt < 2; attempt++ {
+		d := 500*time.Millisecond + time.Duration(rand.Int64N(int64(1500*time.Millisecond)))
+		c.log.Debug("skyhub: auth rejected after earlier success, retrying", "path", path, "in", d)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(d):
+		}
+		p, err = c.getOnceLocked(ctx, path)
+	}
+	return p, err
+}
+
+func (c *Client) getOnceLocked(ctx context.Context, path string) (*Page, error) {
 	req, err := http.NewRequest(http.MethodGet, c.url(path), nil)
 	if err != nil {
 		return nil, err
@@ -173,6 +210,7 @@ func (c *Client) getLocked(ctx context.Context, path string) (*Page, error) {
 	case resp.StatusCode != http.StatusOK:
 		return nil, &HTTPError{Method: "GET", Path: path, Status: resp.StatusCode, Body: snippet(body, 200)}
 	}
+	c.authedOK = true
 	return &Page{Path: path, Body: body}, nil
 }
 

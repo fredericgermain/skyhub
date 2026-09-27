@@ -138,6 +138,21 @@ func (t *digestTransport) authorize(req *http.Request) {
 	req.Header.Set("Authorization", b.String())
 }
 
+func (t *digestTransport) credentials() (string, string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.user, t.pass
+}
+
+// setCredentials swaps user/password in place (after an admin password
+// change) and forgets the cached challenge so the next request re-auths.
+func (t *digestTransport) setCredentials(user, pass string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.user, t.pass = user, pass
+	t.chal, t.nc = nil, 0
+}
+
 func (t *digestTransport) setChallenge(c *digestChallenge) {
 	t.mu.Lock()
 	defer t.mu.Unlock()

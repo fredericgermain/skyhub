@@ -2,8 +2,13 @@ package skyhub
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"net"
 	"strconv"
+	"syscall"
+	"time"
 )
 
 // SetALG sets the SIP and H.323 application layer gateways.
@@ -115,7 +120,12 @@ func (c *Client) SetEthernet(ctx context.Context, e EthernetConfig) error {
 	if err == errNoChange {
 		return nil
 	}
-	return err
+	if err != nil && !isConnDrop(err) {
+		return err
+	}
+	// The hub reboots to apply the change; wait until it answers again.
+	c.log.Warn("skyhub: Ethernet change submitted, waiting for the hub to reboot", "post_err", err)
+	return c.WaitReachable(ctx, c.rebootPause, 4*time.Minute)
 }
 
 // SetLANConfig saves LAN IP, netmask and DHCP pool. Changing the LAN IP,
@@ -124,7 +134,13 @@ func (c *Client) SetLANConfig(ctx context.Context, l LANConfig) error {
 	if !l.IP.Is4() || !l.Netmask.Is4() || !l.PoolStart.Is4() || !l.PoolEnd.Is4() {
 		return fmt.Errorf("skyhub: LAN config needs IPv4 ip, netmask, pool start and end")
 	}
-	_, err := c.PostForm(ctx, "sky_lan_ip_setup.sky", "sky_lan_ip_setup.html", "name=frmLan", func(_ *Page, f *Form) error {
+	restart := false
+	_, err := c.PostForm(ctx, "sky_lan_ip_setup.sky", "sky_lan_ip_setup.html", "name=frmLan", func(host *Page, f *Form) error {
+		cur, err := ParseLANConfigPage(host)
+		if err != nil {
+			return err
+		}
+		restart = cur.IP.Addr != l.IP.Addr || cur.Netmask.Addr != l.Netmask.Addr || cur.DHCPEnabled != l.DHCPEnabled
 		f.SetIPv4("sysLANIPAddr", l.IP.Addr)
 		f.SetIPv4("sysLANSubnetMask", l.Netmask.Addr)
 		f.SetCheckbox("dhcp_server", l.DHCPEnabled)
@@ -133,7 +149,25 @@ func (c *Client) SetLANConfig(ctx context.Context, l LANConfig) error {
 		f.Set("todo", "save")
 		return nil
 	})
+	if restart && (err == nil || isConnDrop(err)) {
+		c.log.Warn("skyhub: LAN change submitted, hub restarting", "new_ip", l.IP.String(), "post_err", err)
+		return ErrHubRestarting
+	}
 	return err
+}
+
+// isConnDrop reports errors that mean the hub went away mid-request (it
+// restarts itself for LAN and Ethernet changes).
+func isConnDrop(err error) bool {
+	if err == nil {
+		return false
+	}
+	var ne net.Error
+	if errors.As(err, &ne) {
+		return true
+	}
+	return errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, context.DeadlineExceeded) ||
+		errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.ECONNREFUSED)
 }
 
 // SetWirelessEnabled switches the WiFi access point on or off globally.

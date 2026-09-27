@@ -14,6 +14,10 @@ var (
 	// ErrNotFound is returned when an entry (reservation, rule, service)
 	// does not exist on the hub.
 	ErrNotFound = errors.New("skyhub: not found")
+	// ErrHubRestarting is returned by writers whose change makes the hub
+	// restart (LAN IP/subnet/DHCP flag). The change was submitted; the hub is
+	// unreachable at its old address for a while and must not be read back.
+	ErrHubRestarting = errors.New("skyhub: change submitted, hub is restarting")
 )
 
 // HTTPError is returned for unexpected HTTP status codes.

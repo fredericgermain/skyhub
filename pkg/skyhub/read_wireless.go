@@ -64,7 +64,7 @@ func ParseWirelessRadio(p *Page) (*WirelessRadio, error) {
 	v, _ = p.JSVar("sky_wlChannel")
 	r.Channel = parseIntDef(v, 0)
 	v, _ = p.JSVar("sky_wlBandwidth")
-	r.Bandwidth = bandwidthName(v)
+	r.Bandwidth = bandwidthName(v, r.Band)
 	v, _ = p.JSVar("sky_wlSyncSettings")
 	r.SyncSettings = isTruthy(v)
 	r.AuthMode, _ = p.JSVar("sky_wlAuthMode")
@@ -74,10 +74,21 @@ func ParseWirelessRadio(p *Page) (*WirelessRadio, error) {
 	if s, ok := p.JSVar("sky_ssid"); ok {
 		r.SSID = jsString(s)
 	}
+	if k, ok := p.JSVar("wpaPskKey"); ok {
+		r.PSKSet = jsString(k) != ""
+	}
 	return r, nil
 }
 
-func bandwidthName(v string) string {
+func bandwidthName(v, band string) string {
+	if band == "5" {
+		switch strings.TrimSpace(v) {
+		case "3":
+			return "80"
+		case "1", "2":
+			return "40"
+		}
+	}
 	switch strings.TrimSpace(v) {
 	case "0":
 		return "20"

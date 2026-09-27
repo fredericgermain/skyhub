@@ -18,7 +18,7 @@ const fixtureDir = "testdata/7.04.0208.R"
 func newFake(t *testing.T) (*skyhubtest.FakeHub, *skyhub.Client) {
 	t.Helper()
 	h := skyhubtest.NewFakeHub(t, fixtureDir, "admin", "secret12")
-	c, err := skyhub.New(h.URL(), "admin", "secret12", skyhub.WithPostDelay(0), skyhub.WithTimeout(5*time.Second))
+	c, err := skyhub.New(h.URL(), "admin", "secret12", skyhub.WithPostDelay(0), skyhub.WithTimeout(5*time.Second), skyhub.WithRebootPause(10*time.Millisecond))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -205,4 +205,9 @@ func TestSerialised(t *testing.T) {
 	for err := range errs {
 		t.Error(err)
 	}
+}
+
+func newFakeHubOnly(t *testing.T) *skyhubtest.FakeHub {
+	t.Helper()
+	return skyhubtest.NewFakeHub(t, fixtureDir, "admin", "secret12")
 }

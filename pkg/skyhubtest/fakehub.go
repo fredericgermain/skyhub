@@ -51,6 +51,10 @@ type FakeHub struct {
 	RotateNonceEvery int
 	// RejectPostsOnce makes the next POST answer 401 even with a valid key.
 	RejectPostsOnce bool
+	// FailAuthCount makes the next N authenticated requests get a fresh
+	// (non-stale) challenge, like a hub whose nonce another client just
+	// rotated.
+	FailAuthCount int
 }
 
 // FixtureName maps a page path (possibly with a query) to its fixture file.
@@ -225,6 +229,12 @@ func (h *FakeHub) serve(w http.ResponseWriter, r *http.Request) {
 		h.challenge(w, stale)
 		return
 	}
+	if h.FailAuthCount > 0 {
+		h.FailAuthCount--
+		h.rotateNonce()
+		h.challenge(w, false)
+		return
+	}
 	h.requests++
 	if h.RotateNonceEvery > 0 && h.requests%h.RotateNonceEvery == 0 {
 		h.rotateNonce()
@@ -232,6 +242,14 @@ func (h *FakeHub) serve(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		b, ok := h.fixtures[FixtureName(page)]
+		if !ok && r.URL.Query().Has("sessionKey") {
+			// Pages fetched with a live key in the query (backup download).
+			if r.URL.Query().Get("sessionKey") != h.currentKey {
+				h.challenge(w, false)
+				return
+			}
+			b, ok = h.fixtures[FixtureName(strings.TrimPrefix(r.URL.Path, "/"))]
+		}
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
 			return
