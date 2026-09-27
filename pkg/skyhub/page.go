@@ -41,7 +41,7 @@ func jsVarRE(name string) *regexp.Regexp {
 	if re, ok := jsVarCache[name]; ok {
 		return re
 	}
-	re := regexp.MustCompile(`\bvar\s+` + regexp.QuoteMeta(name) + `\s*=\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|([^;\n]+?))\s*;`)
+	re := regexp.MustCompile(`\bvar\s+` + regexp.QuoteMeta(name) + `\s*=\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|((?:'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|[^;\n'"])+?))\s*;`)
 	jsVarCache[name] = re
 	return re
 }
@@ -73,7 +73,9 @@ func jsUnescape(s string) string {
 }
 
 // JSVar returns the value of the first `var NAME = '...';` (or "...", or an
-// unquoted literal) statement in the page's inline JavaScript.
+// unquoted literal) statement in the page's inline JavaScript. An unquoted
+// expression may contain quoted strings with semicolons in them, such as
+// decodeHtml('Tom&amp;Jerry').
 func (p *Page) JSVar(name string) (string, bool) {
 	m := jsVarRE(name).FindSubmatch(p.Body)
 	if m == nil {

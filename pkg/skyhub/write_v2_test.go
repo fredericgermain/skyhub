@@ -5,11 +5,14 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/fredericgermain/skyhub/pkg/skyhub"
+	"github.com/fredericgermain/skyhub/pkg/skyhubtest"
 )
 
 func TestChangeAdminPassword(t *testing.T) {
@@ -233,5 +236,26 @@ func TestSetWirelessHostPageFailureIsNotSubmitted(t *testing.T) {
 	}
 	if time.Since(start) > 5*time.Second {
 		t.Errorf("took %s", time.Since(start))
+	}
+}
+
+func TestWirelessReaderEntitiesInSSIDAndKey(t *testing.T) {
+	// The hub HTML-escapes inside decodeHtml('...'): "&amp;" holds a ";",
+	// which must not end the JS statement.
+	body, err := os.ReadFile(filepath.Join(fixtureDir, skyhubtest.FixtureName(skyhub.WirelessPage24)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := strings.Replace(string(body), "decodeHtml('TestSSID')", `decodeHtml('Tom&amp;Jerry; x\'s')`, 1)
+	s = strings.Replace(s, "var wpaPskKey = decodeHtml('REDACTED')", "var wpaPskKey = decodeHtml('&amp;;')", 1)
+	r, err := skyhub.ParseWirelessRadio(&skyhub.Page{Path: skyhub.WirelessPage24, Body: []byte(s)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.SSID != "Tom&Jerry; x's" {
+		t.Errorf("SSID = %q", r.SSID)
+	}
+	if !r.PSKSet {
+		t.Error("PSKSet = false")
 	}
 }
