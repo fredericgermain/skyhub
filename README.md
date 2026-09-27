@@ -132,4 +132,4 @@ settings (`--allow-all` to forward everything). Useful for reverse-engineering w
 - `ChangeAdminPassword` switches the client to the new password in place and verifies it; on rejection it reverts and reports the hub's reason.
 - `SetWireless` always writes WPA2-PSK/AES; isolation, WPS and the 2.4/5 GHz sync flag keep their current values. 5 GHz offers channel 36 at 80 MHz, or 36/44 at 40 MHz.
 - A WiFi save restarts the radio. `SetWireless` (like `SetEthernet` for its reboot) waits until the hub answers steadily again, holding the client lock, so a caller on that WiFi and concurrent requests ride through the gap.
-- Several clients (exporter, MCP server, Terraform) can race on the digest nonce; a client that has authenticated before retries a rejection twice.
+- The hub keeps a single digest nonce, so several clients (exporter, MCP server, Terraform) invalidate each other's logins; a rejection is retried with jitter (three times for a new client, twice once it has authenticated) before it counts as wrong credentials.

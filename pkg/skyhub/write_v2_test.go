@@ -159,14 +159,17 @@ func TestAuthRetryAfterNonceRace(t *testing.T) {
 	if _, err := c.SystemStats(context.Background()); err != nil {
 		t.Fatalf("not retried: %v", err)
 	}
-	// A client that never authenticated does not retry: wrong credentials fail fast.
+	// A new client whose very first request collides with another client's
+	// login is retried too (Terraform starts a fresh provider per command).
+	fresh, _ := skyhub.New(h.URL(), "admin", "secret12")
+	h.FailAuthCount = 3
+	if _, err := fresh.SystemStats(context.Background()); err != nil {
+		t.Fatalf("first request not retried: %v", err)
+	}
+	// Wrong credentials still end in ErrAuth, after the retries.
 	bad, _ := skyhub.New(h.URL(), "admin", "wrong")
-	start := time.Now()
 	if _, err := bad.SystemStats(context.Background()); !errors.Is(err, skyhub.ErrAuth) {
 		t.Fatalf("err = %v", err)
-	}
-	if time.Since(start) > 400*time.Millisecond {
-		t.Error("bad credentials were retried")
 	}
 }
 

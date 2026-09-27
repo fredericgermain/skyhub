@@ -178,13 +178,19 @@ func (c *Client) Get(ctx context.Context, path string) (*Page, error) {
 
 func (c *Client) getLocked(ctx context.Context, path string) (*Page, error) {
 	p, err := c.getOnceLocked(ctx, path)
-	// Another client (MCP server, exporter, Terraform) authenticating at the
-	// same moment can make the hub reject a nonce we just used. Once this
-	// client has authenticated successfully, retry a rejection twice with
-	// jitter before calling the credentials wrong.
-	for attempt := 0; err == ErrAuth && c.authedOK && attempt < 2; attempt++ {
+	// The hub keeps one digest nonce: another client (exporter, MCP server,
+	// Terraform) authenticating at the same moment invalidates ours, even on
+	// a client's very first request. Retry a rejection with jitter before
+	// calling the credentials wrong: twice more for a client that has
+	// authenticated before, three times for a new one (its first request is
+	// the likeliest to collide, and there is no earlier success to go by).
+	retries := 3
+	if c.authedOK {
+		retries = 2
+	}
+	for attempt := 0; err == ErrAuth && attempt < retries; attempt++ {
 		d := 500*time.Millisecond + time.Duration(rand.Int64N(int64(1500*time.Millisecond)))
-		c.log.Debug("skyhub: auth rejected after earlier success, retrying", "path", path, "in", d)
+		c.log.Debug("skyhub: auth rejected, retrying (nonce race?)", "path", path, "in", d)
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
