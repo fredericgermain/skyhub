@@ -179,3 +179,56 @@ func TestWirelessReaderPSKSetAndBandwidth(t *testing.T) {
 		t.Errorf("5 GHz = %+v", r)
 	}
 }
+
+func TestSetWirelessRidesThroughRadioRestart(t *testing.T) {
+	h, c := newFake(t)
+	const gap = 300 * time.Millisecond
+	posted := make(chan struct{})
+	h.Handle("sky_wireless_settings.cgi", func(w http.ResponseWriter, r *http.Request, v url.Values) bool {
+		// The radio restarts: this client's WiFi is gone for a while.
+		h.GoOffline(gap)
+		if hj, ok := w.(http.Hijacker); ok {
+			conn, _, _ := hj.Hijack()
+			conn.Close()
+		}
+		close(posted)
+		return true
+	})
+	start := time.Now()
+	wifiDone := make(chan time.Time, 1)
+	go func() {
+		err := c.SetWireless(context.Background(), skyhub.WirelessSettings{Band: "2.4", Enabled: true, SSID: "Home Net", PSK: "correct horse battery", Channel: 6, Bandwidth: "20/40"})
+		if err != nil {
+			t.Error(err)
+		}
+		wifiDone <- time.Now()
+	}()
+	<-posted
+	// Another resource applying in parallel queues behind the outage
+	// instead of failing in it.
+	if _, err := c.Get(context.Background(), "sky_system.html"); err != nil {
+		t.Fatalf("concurrent read failed during the WiFi gap: %v", err)
+	}
+	getDone := time.Now()
+	done := <-wifiDone
+	if getDone.Before(done) {
+		t.Error("concurrent read ran before SetWireless finished waiting")
+	}
+	if done.Sub(start) < gap {
+		t.Errorf("SetWireless returned after %s, before the hub was back", done.Sub(start))
+	}
+}
+
+func TestSetWirelessHostPageFailureIsNotSubmitted(t *testing.T) {
+	// Nothing listens: fetching the host page fails before any POST, which
+	// must be an error straight away, not a wait for a radio restart.
+	c, _ := skyhub.New("http://127.0.0.1:1/", "admin", "secret12", skyhub.WithTimeout(time.Second))
+	start := time.Now()
+	err := c.SetWireless(context.Background(), skyhub.WirelessSettings{Band: "5", Enabled: true, SSID: "x", Channel: 36, Bandwidth: "80"})
+	if err == nil {
+		t.Fatal("no error")
+	}
+	if time.Since(start) > 5*time.Second {
+		t.Errorf("took %s", time.Since(start))
+	}
+}

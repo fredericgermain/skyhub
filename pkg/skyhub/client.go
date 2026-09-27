@@ -55,7 +55,7 @@ func WithTimeout(d time.Duration) Option { return func(c *Client) { c.timeout = 
 func WithLogger(l *slog.Logger) Option { return func(c *Client) { c.log = l } }
 
 // WithRebootPause sets how long to wait before polling the hub after a
-// change that reboots it (default 15s).
+// change that reboots it (default 15s); WiFi saves wait half of it.
 func WithRebootPause(d time.Duration) Option { return func(c *Client) { c.rebootPause = d } }
 
 // WithPostDelay sets the pause after a successful form POST, giving the hub
@@ -246,19 +246,34 @@ type FormBuilder func(host *Page, f *Form) error
 // sequence is retried once. A redirect to an *_error.html page is reported
 // as *HubError.
 func (c *Client) PostForm(ctx context.Context, handler, hostPage, formSel string, build FormBuilder) (*PostResult, error) {
+	return c.postForm(ctx, handler, hostPage, formSel, build, nil)
+}
+
+// postForm is PostForm with an optional after hook that sees the POST
+// outcome and runs while the hub lock is still held. Writers that knock the
+// hub (or this machine's WiFi) offline wait there, so concurrent callers
+// queue behind the outage instead of failing in it.
+func (c *Client) postForm(ctx context.Context, handler, hostPage, formSel string, build FormBuilder, after func(*PostResult, error) error) (*PostResult, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	var last error
+	var (
+		res *PostResult
+		err error
+	)
 	for attempt := 0; attempt < 2; attempt++ {
-		res, err := c.postFormLocked(ctx, handler, hostPage, formSel, build)
-		if err == ErrStaleKey {
-			last = err
-			c.log.Warn("skyhub: sessionKey rejected, retrying", "handler", handler)
-			continue
+		res, err = c.postFormLocked(ctx, handler, hostPage, formSel, build)
+		if err != ErrStaleKey || attempt == 1 {
+			break
 		}
-		return res, err
+		c.log.Warn("skyhub: sessionKey rejected, retrying", "handler", handler)
 	}
-	return nil, last
+	if err == ErrStaleKey {
+		res = nil
+	}
+	if after != nil {
+		return res, after(res, err)
+	}
+	return res, err
 }
 
 func (c *Client) postFormLocked(ctx context.Context, handler, hostPage, formSel string, build FormBuilder) (*PostResult, error) {
@@ -296,7 +311,8 @@ func (c *Client) postFormLocked(ctx context.Context, handler, hostPage, formSel 
 	req.Header.Set("Referer", c.url(hostPage))
 	resp, rbody, err := c.do(ctx, req)
 	if err != nil {
-		return nil, err
+		// A non-nil result tells callers the POST itself went out.
+		return &PostResult{Sent: form.Values}, err
 	}
 	res := &PostResult{Status: resp.StatusCode, Location: resp.Header.Get("Location"), Body: rbody, Sent: form.Values}
 	switch {

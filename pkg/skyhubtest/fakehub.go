@@ -13,7 +13,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 // RecordedPost is one form POST the fake hub received.
@@ -55,6 +57,8 @@ type FakeHub struct {
 	// (non-stale) challenge, like a hub whose nonce another client just
 	// rotated.
 	FailAuthCount int
+
+	offlineUntil atomic.Int64 // unix nanos; see GoOffline
 }
 
 // FixtureName maps a page path (possibly with a query) to its fixture file.
@@ -207,7 +211,21 @@ func newKey() string {
 	return strconv.FormatUint(uint64(b[0])<<24|uint64(b[1])<<16|uint64(b[2])<<8|uint64(b[3])|1, 10)
 }
 
+// GoOffline drops every connection for d, like a hub restarting its radio
+// or rebooting. Safe to call from a PostHandler.
+func (h *FakeHub) GoOffline(d time.Duration) { h.offlineUntil.Store(time.Now().Add(d).UnixNano()) }
+
 func (h *FakeHub) serve(w http.ResponseWriter, r *http.Request) {
+	if time.Now().UnixNano() < h.offlineUntil.Load() {
+		if hj, ok := w.(http.Hijacker); ok {
+			if conn, _, err := hj.Hijack(); err == nil {
+				conn.Close()
+				return
+			}
+		}
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {

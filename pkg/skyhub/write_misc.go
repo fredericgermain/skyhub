@@ -101,7 +101,7 @@ func (c *Client) SetWANConfig(ctx context.Context, w WANConfig) error {
 // SetEthernet changes the LAN port speed / EEE setting. A change REBOOTS the
 // hub; when the values already match nothing is posted.
 func (c *Client) SetEthernet(ctx context.Context, e EthernetConfig) error {
-	_, err := c.PostForm(ctx, "sky_eth_setup.sky", "sky_eth_setup.html", "name=frm1Rules", func(host *Page, f *Form) error {
+	_, err := c.postForm(ctx, "sky_eth_setup.sky", "sky_eth_setup.html", "name=frm1Rules", func(host *Page, f *Form) error {
 		cur, err := ParseEthernetConfig(host)
 		if err != nil {
 			return err
@@ -116,16 +116,19 @@ func (c *Client) SetEthernet(ctx context.Context, e EthernetConfig) error {
 			f.Set("ethernet_eee", "disabled")
 		}
 		return nil
+	}, func(res *PostResult, err error) error {
+		if err == errNoChange {
+			return nil
+		}
+		if err != nil && !postDropped(res, err) {
+			return err
+		}
+		// The hub reboots to apply the change; wait (holding the hub lock)
+		// until it answers again.
+		c.log.Warn("skyhub: Ethernet change submitted, waiting for the hub to reboot", "post_err", err)
+		return c.WaitReachable(ctx, c.rebootPause, 4*time.Minute)
 	})
-	if err == errNoChange {
-		return nil
-	}
-	if err != nil && !isConnDrop(err) {
-		return err
-	}
-	// The hub reboots to apply the change; wait until it answers again.
-	c.log.Warn("skyhub: Ethernet change submitted, waiting for the hub to reboot", "post_err", err)
-	return c.WaitReachable(ctx, c.rebootPause, 4*time.Minute)
+	return err
 }
 
 // SetLANConfig saves LAN IP, netmask and DHCP pool. Changing the LAN IP,
@@ -135,7 +138,7 @@ func (c *Client) SetLANConfig(ctx context.Context, l LANConfig) error {
 		return fmt.Errorf("skyhub: LAN config needs IPv4 ip, netmask, pool start and end")
 	}
 	restart := false
-	_, err := c.PostForm(ctx, "sky_lan_ip_setup.sky", "sky_lan_ip_setup.html", "name=frmLan", func(host *Page, f *Form) error {
+	res, err := c.PostForm(ctx, "sky_lan_ip_setup.sky", "sky_lan_ip_setup.html", "name=frmLan", func(host *Page, f *Form) error {
 		cur, err := ParseLANConfigPage(host)
 		if err != nil {
 			return err
@@ -149,12 +152,16 @@ func (c *Client) SetLANConfig(ctx context.Context, l LANConfig) error {
 		f.Set("todo", "save")
 		return nil
 	})
-	if restart && (err == nil || isConnDrop(err)) {
+	if restart && (err == nil || postDropped(res, err)) {
 		c.log.Warn("skyhub: LAN change submitted, hub restarting", "new_ip", l.IP.String(), "post_err", err)
 		return ErrHubRestarting
 	}
 	return err
 }
+
+// postDropped reports a connection that dropped on the POST itself, as
+// opposed to while fetching the host page (nothing was submitted then).
+func postDropped(res *PostResult, err error) bool { return res != nil && isConnDrop(err) }
 
 // isConnDrop reports errors that mean the hub went away mid-request (it
 // restarts itself for LAN and Ethernet changes).

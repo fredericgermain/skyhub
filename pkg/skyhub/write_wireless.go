@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 )
 
 // WirelessSettings is what SetWireless writes for one band.
@@ -21,7 +22,8 @@ type WirelessSettings struct {
 // mirroring the page's checkData(): WPA2-PSK/AES security, the hidden
 // wl* mirrors, and the band-specific channel/bandwidth encoding. Isolation,
 // WPS and the 2.4/5 GHz sync flag keep their current values. Saving drops
-// WiFi clients on that band for a few seconds.
+// WiFi clients on that band for a few seconds; SetWireless returns once the
+// hub answers steadily again, so a caller on that WiFi can go on.
 func (c *Client) SetWireless(ctx context.Context, s WirelessSettings) error {
 	host := WirelessPage24
 	if s.Band == "5" {
@@ -35,7 +37,7 @@ func (c *Client) SetWireless(ctx context.Context, s WirelessSettings) error {
 	if s.PSK != "" && (len(s.PSK) < 8 || len(s.PSK) > 63) {
 		return fmt.Errorf("skyhub: WPA2 key must be 8-63 characters")
 	}
-	_, err := c.PostForm(ctx, "sky_wireless_settings.cgi", host, "action=sky_wireless_settings.cgi", func(p *Page, f *Form) error {
+	_, err := c.postForm(ctx, "sky_wireless_settings.cgi", host, "action=sky_wireless_settings.cgi", func(p *Page, f *Form) error {
 		cur, err := ParseWirelessRadio(p)
 		if err != nil {
 			return err
@@ -102,6 +104,20 @@ func (c *Client) SetWireless(ctx context.Context, s WirelessSettings) error {
 			f.Set("wlBntWth", "0")
 		}
 		return nil
-	})
+	}, func(res *PostResult, err error) error { return c.waitRadio(ctx, res, err) })
 	return err
+}
+
+// waitRadio runs after a WiFi save, under the hub lock. The hub restarts the
+// radio right after answering (or before, dropping the connection), so a
+// client on that WiFi goes offline for a few seconds, longer when the SSID or
+// key changed and it has to rejoin. Wait until the hub has answered steadily
+// for a while; a wired client pays about one pause plus a few polls.
+func (c *Client) waitRadio(ctx context.Context, res *PostResult, err error) error {
+	if err != nil && !postDropped(res, err) {
+		return err
+	}
+	c.log.Warn("skyhub: WiFi settings submitted, waiting for the hub to be reachable again", "post_err", err)
+	// Half the reboot pause (default 7.5s), then 5 answers in a row.
+	return c.waitReachable(ctx, c.rebootPause/2, 3*time.Minute, 5)
 }

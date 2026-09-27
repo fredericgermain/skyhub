@@ -38,6 +38,11 @@ func (c *Client) Backup(ctx context.Context) ([]byte, error) {
 // twice in a row, after an initial pause that lets a reboot take the hub
 // down first.
 func (c *Client) WaitReachable(ctx context.Context, pause, limit time.Duration) error {
+	return c.waitReachable(ctx, pause, limit, 2)
+}
+
+// waitReachable is WaitReachable needing oks answers in a row.
+func (c *Client) waitReachable(ctx context.Context, pause, limit time.Duration, oks int) error {
 	ctx, cancel := context.WithTimeout(ctx, limit)
 	defer cancel()
 	select {
@@ -54,7 +59,7 @@ func (c *Client) WaitReachable(ctx context.Context, pause, limit time.Duration) 
 			resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
 				ok++
-				if ok == 2 {
+				if ok == oks {
 					return nil
 				}
 			}
