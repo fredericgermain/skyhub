@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -35,13 +36,16 @@ func (c *Client) Backup(ctx context.Context) ([]byte, error) {
 }
 
 // WaitReachable polls the unauthenticated home page until the hub answers
-// twice in a row, after an initial pause that lets a reboot take the hub
+// twice in a row (its own home page, not another device on the same
+// address), after an initial pause that lets a reboot take the hub
 // down first.
 func (c *Client) WaitReachable(ctx context.Context, pause, limit time.Duration) error {
 	return c.waitReachable(ctx, pause, limit, 2)
 }
 
-// waitReachable is WaitReachable needing oks answers in a row.
+// waitReachable is WaitReachable needing oks answers in a row. Only the
+// Sky Hub's own home page counts: after a reboot or a WiFi change the client
+// may be talking to another router that took the same address.
 func (c *Client) waitReachable(ctx context.Context, pause, limit time.Duration, oks int) error {
 	ctx, cancel := context.WithTimeout(ctx, limit)
 	defer cancel()
@@ -55,13 +59,10 @@ func (c *Client) waitReachable(ctx context.Context, pause, limit time.Duration, 
 	ok := 0
 	for {
 		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, c.url("sky_index.html"), nil)
-		if resp, err := plain.Do(req); err == nil {
-			resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
-				ok++
-				if ok == oks {
-					return nil
-				}
+		if resp, err := plain.Do(req); err == nil && isHubHome(resp) {
+			ok++
+			if ok == oks {
+				return nil
 			}
 		} else {
 			ok = 0
@@ -72,4 +73,15 @@ func (c *Client) waitReachable(ctx context.Context, pause, limit time.Duration, 
 		case <-time.After(interval):
 		}
 	}
+}
+
+// isHubHome reports a 200 answer whose body is the Sky Hub home page (its
+// title reads "Sky Hub > Home"). It closes the body.
+func isHubHome(resp *http.Response) bool {
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+	b, _ := io.ReadAll(io.LimitReader(resp.Body, 64<<10))
+	return bytes.Contains(b, []byte("Sky Hub"))
 }

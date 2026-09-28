@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -257,5 +258,23 @@ func TestWirelessReaderEntitiesInSSIDAndKey(t *testing.T) {
 	}
 	if !r.PSKSet {
 		t.Error("PSKSet = false")
+	}
+}
+
+func TestWaitReachableWantsTheHub(t *testing.T) {
+	// Another router on the hub's address (a stand-in taking over the LAN
+	// while the hub was down) answers 200 with its own page: not the hub.
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("<html><head><meta http-equiv='refresh' content='1; url=/#' /></head><body></body></html>"))
+	}))
+	defer other.Close()
+	c, _ := skyhub.New(other.URL, "admin", "secret12")
+	if err := c.WaitReachable(context.Background(), 10*time.Millisecond, 500*time.Millisecond); err == nil {
+		t.Error("another device's page was taken for the hub")
+	}
+	h := newFakeHubOnly(t)
+	c, _ = skyhub.New(h.URL(), "admin", "secret12")
+	if err := c.WaitReachable(context.Background(), 10*time.Millisecond, 5*time.Second); err != nil {
+		t.Errorf("the hub's own home page was not accepted: %v", err)
 	}
 }
