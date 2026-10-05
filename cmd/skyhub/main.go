@@ -85,6 +85,12 @@ func main() {
 			fatal(err)
 		}
 		fmt.Fprintf(os.Stderr, "wrote %d bytes to %s (mode 0600; contains secrets)\n", len(b), *out)
+	case "factory-reset":
+		// Wipes the hub; refused unless SKYHUB_ALLOW_DESTRUCTIVE=1.
+		if err := c.FactoryReset(ctx); err != nil {
+			fatal(err)
+		}
+		fmt.Fprintf(os.Stderr, "factory reset started; the hub comes back on %s with the sticker password and WiFi\n", skyhub.DefaultURL)
 	case "capture":
 		fs := flag.NewFlagSet("capture", flag.ExitOnError)
 		out := fs.String("out", "", "output directory (required)")
@@ -215,7 +221,7 @@ func runReader(ctx context.Context, c *skyhub.Client, cmd string, args []string)
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR [--only P,Q] | backup --out FILE | proxy [--listen ADDR --record FILE] | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
+	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR [--only P,Q] | backup --out FILE | factory-reset (needs SKYHUB_ALLOW_DESTRUCTIVE=1) | proxy [--listen ADDR --record FILE] | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
 }
 
 func fatal(err error) {

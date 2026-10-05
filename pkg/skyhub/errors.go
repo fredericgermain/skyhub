@@ -3,6 +3,7 @@ package skyhub
 import (
 	"errors"
 	"fmt"
+	"os"
 )
 
 var (
@@ -18,7 +19,17 @@ var (
 	// restart (LAN IP/subnet/DHCP flag). The change was submitted; the hub is
 	// unreachable at its old address for a while and must not be read back.
 	ErrHubRestarting = errors.New("skyhub: change submitted, hub is restarting")
+	// ErrDestructive is returned for a reboot or factory reset while
+	// AllowDestructiveEnv is not set to 1.
+	ErrDestructive = errors.New("skyhub: refusing to reboot or factory-reset the hub (set " + AllowDestructiveEnv + "=1 to allow)")
 )
+
+// AllowDestructiveEnv, set to 1, lets this process reboot or factory-reset
+// the hub (FactoryReset, a todo=reboot or todo=factory form). Unset, those
+// are refused, so no other caller wipes or restarts the hub by mistake.
+const AllowDestructiveEnv = "SKYHUB_ALLOW_DESTRUCTIVE"
+
+func allowDestructive() bool { return os.Getenv(AllowDestructiveEnv) == "1" }
 
 // HTTPError is returned for unexpected HTTP status codes.
 type HTTPError struct {

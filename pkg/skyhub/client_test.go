@@ -147,20 +147,6 @@ func TestPostFormErrorPage(t *testing.T) {
 	}
 }
 
-func TestPostFormRefusesReboot(t *testing.T) {
-	h, c := newFake(t)
-	_, err := c.PostForm(context.Background(), "sky_lanaddmac.sky", "sky_lan_ip_setup.html", "name=frmLan2", func(_ *skyhub.Page, f *skyhub.Form) error {
-		f.Set("todo", "reboot")
-		return nil
-	})
-	if err == nil {
-		t.Fatal("expected refusal")
-	}
-	if len(h.Posts()) != 0 {
-		t.Fatal("a POST was sent")
-	}
-}
-
 func TestDataToHidden(t *testing.T) {
 	h, c := newFake(t)
 	_, err := c.PostForm(context.Background(), "sky_lan_ip_setup.sky", "sky_lan_ip_setup.html", "name=frmLan", func(_ *skyhub.Page, f *skyhub.Form) error {

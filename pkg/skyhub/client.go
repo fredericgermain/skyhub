@@ -302,8 +302,8 @@ func (c *Client) postFormLocked(ctx context.Context, handler, hostPage, formSel 
 	}
 	form.Set("sessionKey", key)
 	form.ApplyDataToHidden()
-	if form.Get("todo") == "reboot" || form.Get("todo") == "factory" {
-		return nil, fmt.Errorf("skyhub: refusing to post todo=%s", form.Get("todo"))
+	if (form.Get("todo") == "reboot" || form.Get("todo") == "factory") && !allowDestructive() {
+		return nil, fmt.Errorf("%w: todo=%s", ErrDestructive, form.Get("todo"))
 	}
 	if handler == "" {
 		handler = form.Action
