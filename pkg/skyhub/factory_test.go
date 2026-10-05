@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,72 +13,62 @@ import (
 	"github.com/fredericgermain/skyhub/pkg/skyhubtest"
 )
 
-// offlineOnGet takes the fake hub offline for gap after it answers a GET of
-// path, like a hub that acts on a page load.
-type offlineOnGet struct {
-	hub  *skyhubtest.FakeHub
-	path string
-	gap  time.Duration
+// resetRecorder takes the fake hub offline after it answers the factory
+// reset GET (sky_restoreinfo.scgi), as the real hub erases and restarts, and
+// keeps the query it was sent.
+type resetRecorder struct {
+	hub   *skyhubtest.FakeHub
+	mu    sync.Mutex
+	query url.Values
 }
 
-func (o offlineOnGet) RoundTrip(req *http.Request) (*http.Response, error) {
+func (r *resetRecorder) RoundTrip(req *http.Request) (*http.Response, error) {
 	resp, err := http.DefaultTransport.RoundTrip(req)
-	if err == nil && o.path != "" && req.Method == http.MethodGet && req.URL.Path == "/"+o.path && resp.StatusCode == http.StatusOK {
-		o.hub.GoOffline(o.gap)
+	if err == nil && req.Method == http.MethodGet && req.URL.Path == "/sky_restoreinfo.scgi" && resp.StatusCode == http.StatusOK {
+		r.mu.Lock()
+		r.query = req.URL.Query()
+		r.mu.Unlock()
+		r.hub.GoOffline(time.Second)
 	}
 	return resp, err
 }
 
-func factoryHub(t *testing.T, erasePage, offlinePath string) (*skyhubtest.FakeHub, *skyhub.Client) {
+func factoryHub(t *testing.T) (*skyhubtest.FakeHub, *skyhub.Client, *resetRecorder) {
 	t.Helper()
 	t.Setenv(skyhub.AllowDestructiveEnv, "1")
 	h := newFakeHubOnly(t)
-	h.SetFixture("sky_backup_settings-erase.html", []byte(erasePage))
+	h.SetFixture("sky_restoreinfo.scgi", []byte("<html><head><title>Sky Hub &gt; Restore</title></head></html>"))
+	rec := &resetRecorder{hub: h}
 	c, err := skyhub.New(h.URL(), "admin", "secret12", skyhub.WithPostDelay(0), skyhub.WithTimeout(5*time.Second),
-		skyhub.WithRebootPause(10*time.Millisecond), skyhub.WithTransport(offlineOnGet{hub: h, path: offlinePath, gap: time.Second}))
+		skyhub.WithRebootPause(10*time.Millisecond), skyhub.WithTransport(rec))
 	if err != nil {
 		t.Fatal(err)
 	}
-	return h, c
+	return h, c, rec
 }
 
-func TestFactoryResetOnPageLoad(t *testing.T) {
-	h, c := factoryHub(t, "<html><head><title>Sky Hub &gt; Erasing</title></head></html>", "sky_backup_settings-erase.html")
+func TestFactoryReset(t *testing.T) {
+	h, c, rec := factoryHub(t)
 	if err := c.FactoryReset(context.Background()); err != nil {
 		t.Fatal(err)
+	}
+	rec.mu.Lock()
+	q := rec.query
+	rec.mu.Unlock()
+	if q.Get("todo") != "defaultsettings" || q.Get("sessionKey") == "" || q.Get("sessionKey") == skyhubtest.SessionKeyPlaceholder {
+		t.Fatalf("reset query = %v, want todo=defaultsettings with the live sessionKey", q)
 	}
 	if n := len(h.Posts()); n != 0 {
-		t.Errorf("%d POSTs sent; loading the page was enough", n)
+		t.Errorf("%d POSTs sent; the reset is a GET form", n)
 	}
 }
 
-func TestFactoryResetPostsConfirmForm(t *testing.T) {
-	page := `<html><head><script>var sessionId = '` + skyhubtest.SessionKeyPlaceholder + `';</script></head><body>
-<form name="erase" method="post" action="">
-<input name="todo" value="factory" type="hidden"/>
-<input name="sessionKey" value="" type="hidden"/>
-<input name="this_file" value="sky_backup_settings-erase.html" type="hidden"/>
-<input name="next_file" value="sky_rebootinfo.html" type="hidden"/>
-</form></body></html>`
-	h, c := factoryHub(t, page, "")
-	h.Handle("sky_backup_settings-erase.html", func(w http.ResponseWriter, r *http.Request, v url.Values) bool {
-		h.GoOffline(time.Second) // the hub erases and restarts
-		return false
-	})
-	if err := c.FactoryReset(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	posts := h.Posts()
-	if len(posts) != 1 || posts[0].Handler != "sky_backup_settings-erase.html" || posts[0].Values.Get("todo") != "factory" {
-		t.Fatalf("posts = %+v, want one todo=factory to the erase page", posts)
-	}
-}
-
-func TestFactoryResetFailsWhenHubStaysUp(t *testing.T) {
-	_, c := factoryHub(t, "<html><body>nothing to submit</body></html>", "")
-	err := c.FactoryReset(context.Background())
-	if err == nil || !strings.Contains(err.Error(), "no todo=factory form") {
-		t.Fatalf("err = %v", err)
+func TestFactoryResetNoForm(t *testing.T) {
+	h, c, _ := factoryHub(t)
+	h.SetFixture("sky_backup_settings-erase.html", []byte("<html><body>nothing to submit</body></html>"))
+	var pe *skyhub.ParseError
+	if err := c.FactoryReset(context.Background()); !errors.As(err, &pe) {
+		t.Fatalf("err = %v, want ParseError", err)
 	}
 }
 

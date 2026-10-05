@@ -302,7 +302,7 @@ func (c *Client) postFormLocked(ctx context.Context, handler, hostPage, formSel 
 	}
 	form.Set("sessionKey", key)
 	form.ApplyDataToHidden()
-	if (form.Get("todo") == "reboot" || form.Get("todo") == "factory") && !allowDestructive() {
+	if (form.Get("todo") == "reboot" || form.Get("todo") == "factory" || form.Get("todo") == "defaultsettings") && !allowDestructive() {
 		return nil, fmt.Errorf("%w: todo=%s", ErrDestructive, form.Get("todo"))
 	}
 	if handler == "" {

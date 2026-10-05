@@ -130,8 +130,8 @@ settings (`--allow-all` to forward everything). Useful for reverse-engineering w
 - The reservation UI offers to reboot after add/remove; the client sends `todo=""` instead of `todo=reboot`.
 - Ethernet changes reboot the hub; LAN IP/subnet/DHCP changes restart it. `SetEthernet` is a no-op when nothing changes.
 - Those saves are only staged: the hub answers with a redirect to `sky_rebootinfo.html`, and loading that page is what restarts it to apply them. The client loads it, then waits for the hub to go down.
-- "Revert to Factory Default Settings" is a page load of `sky_backup_settings-erase.html`. `FactoryReset` loads it (and posts its `todo=factory` form if the hub stays up), then waits for the hub to go down.
-- Rebooting or factory-resetting (`FactoryReset`, a `todo=reboot`/`todo=factory` form) is refused with `ErrDestructive` unless `SKYHUB_ALLOW_DESTRUCTIVE=1` is set in the environment.
+- "Revert to Factory Default Settings" opens `sky_backup_settings-erase.html`, whose Yes is a GET form: `sky_restoreinfo.scgi?todo=defaultsettings&sessionKey=…`. `FactoryReset` submits it, then waits for the hub to go down.
+- Rebooting or factory-resetting (`FactoryReset`, a `todo=reboot`/`factory`/`defaultsettings` form) is refused with `ErrDestructive` unless `SKYHUB_ALLOW_DESTRUCTIVE=1` is set in the environment.
 - `SetLANConfig` returns `ErrHubRestarting` when the change restarts the hub (do not read back at the old address); `SetEthernet` waits until the hub answers again.
 - `ChangeAdminPassword` switches the client to the new password in place and verifies it; on rejection it reverts and reports the hub's reason.
 - `SetWireless` always writes WPA2-PSK/AES; isolation, WPS and the 2.4/5 GHz sync flag keep their current values. 5 GHz offers channel 36 at 80 MHz, or 36/44 at 40 MHz.

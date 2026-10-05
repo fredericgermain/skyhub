@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- v4.2 -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sky Hub &gt; Backup Settings</title>
+<link type="text/css" rel="stylesheet" href="assets/css/fonts.css"/>
+<link type="text/css" rel="stylesheet" href="assets/css/main.css"/>
+<!-- jh scripts start -->
+<script type="text/javascript" src="assets/js/libs/jquery/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="assets/js/libs/jquery/jquery.effects.core.js"></script>
+<!--[if LT IE 7]>
+			<script type="text/javascript" src="assets/js/libs/DD_belatedPNG_0.0.8a.js"></script>
+		<![endif]-->
+<script type="text/javascript" src="assets/js/utilities.js"></script>
+<script type="text/javascript" src="assets/js/libs/modernizr.touch.js"></script>
+<script type="text/javascript" src="assets/js/init.js"></script>
+<!-- jh scripts end -->
+<script type="text/javascript" src="assets/js/sky_utility.js"></script>
+<script type="text/javascript" src="assets/js/sky_linux.js"></script>
+<script type="text/javascript" src="assets/js/sky_script.js"></script>
+<script type="text/javascript">
+if_allow_submit=false;
+</script>
+</head>
+<body>
+<!-- head -->
+<div id="head">
+  <div id="header">
+	<div class="layout"><span id="header-logo"></span> <span id="header-title"><a href="sky_index.html">Sky Hub</a></span></div>
+  </div>
+  <!-- nav -->
+  <div id="nav">
+    <div id="main-nav">
+      <div class="layout">
+        <ul id="topmenu">
+          <li ><a href="sky_wireless_settings.html">WiFi</a></li>
+          
+          
+          <li ><a href="sky_eth_setup.html">Ethernet</a></li>
+          <li ><a href="sky_logs.html">Security</a></li>
+          <li class="selected"><a href="sky_router_status.html">Maintenance</a></li>
+          <li ><a href="sky_wan_setup.html">Advanced</a></li>
+          <li ><a href="sky_support.html">Support</a></li>
+          <li ><a href="sky_license.html">Licence Information</a></li>
+        </ul>
+        <a id="logout" href="sky_logout.html">Logout</a>
+        </div>
+    </div>
+    <div id="sub-nav">
+      <div class="layout">
+        <ul id="submenu-maintenance" class="selected">
+          <li ><a href="sky_router_status.html">Router Status</a></li>
+          <li ><a href="sky_attached_devices.html">Attached Devices</a></li>
+          <li class="selected"><a href="sky_backup_settings.html">Backup Settings</a></li>
+          <li ><a href="sky_set_password.html">Set Password</a></li>
+          <li ><a href="sky_diagnostics.html">Diagnostics</a></li>
+          <li ><a href="sky_router_upgrade.html">Router Upgrade</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- nav end -->
+</div>
+<!-- head end -->
+<!-- content -->
+<div id="content">
+  <!-- layout -->
+  <div class="layout">
+    <div id="content-header">
+      <div id="content-header-copy">
+        <h1>Revert to Factory Settings</h1>
+        <p class="black">Selecting <b>Yes</b> to revert to default settings will erase your current Sky Hub settings.</p>
+        <script>
+        var skyExtender = '';
+        if (skyExtender == '')
+        {
+            document.write("<p>After you reset your Sky Hub to its default settings, the password will be your default wireless password as labelled on the rear of the router, the LAN IP address will be 192.168.0.1, and the Sky Hub will act as a DHCP server on the LAN and as a DHCP client to the Internet.</p>");
+        }
+        else
+        {
+            document.write("<p>After you reset your Sky Hub to its default settings, the password will be your default wireless password as labelled on the rear of the router, and the Sky Hub will act as a DHCP client on the LAN.</p>");
+        }
+</script>
+      </div>
+      <div id="content-header-image"></div>
+      <br class="clear-break" />
+    </div>
+    <div id="content-body">
+      <!-- main-panel -->
+      <div class="main-panel">
+        <div class="buttons-holder">
+          <script>
+            var sky_extender = '';
+            if (sky_extender == '')
+            {
+             document.write("<a href=\"javascript: if_allow_submit=false;window.location.href='sky_backup_settings.html';\" class=\"btn42 btn-clr-secondary png\"><span class=\"png\">No</span></a>");
+            }
+            else
+            {
+             document.write("<a href=\"javascript: if_allow_submit=false;window.location.href='sky_backup_settings-erase.html';\" class=\"btn42 btn-clr-secondary png\"><span class=\"png\">No</span></a>");
+            }
+          </script>
+          <a href="javascript: if_allow_submit=true;document.forms[0].submit();" class="btn42 btn-clr-primary png"><span class="png">Yes</span></a>
+        </div>
+        <form method="get" action="sky_restoreinfo.scgi" onsubmit="return if_allow_submit;">
+          <input name="todo" value="defaultsettings" type="hidden"/>
+          <input name="sessionKey" value="1234567890" type="hidden"/>
+          <input name="this_file" value="sky_backup_settings-erase.html" type="hidden"/>
+          <input name="next_file" value="sky_backup_settings.html" type="hidden"/>
+        </form>
+      </div>
+      <!-- main-panel end -->
+      <!-- side-panel -->
+      <div class="side-panel"> </div>
+      <!-- side-panel end -->
+      <br class="clear-break" />
+    </div>
+  </div>
+  <!-- layout end -->
+</div>
+<!-- content end -->
+</div>
+</body>
+</html>
