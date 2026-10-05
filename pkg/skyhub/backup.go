@@ -75,6 +75,30 @@ func (c *Client) waitReachable(ctx context.Context, pause, limit time.Duration, 
 	}
 }
 
+// waitGone polls the unauthenticated home page until the hub stops
+// answering with it (it went down to restart), for at most limit.
+func (c *Client) waitGone(ctx context.Context, limit time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, limit)
+	defer cancel()
+	plain := &http.Client{Timeout: 3 * time.Second}
+	interval := min(max(c.rebootPause/5, 50*time.Millisecond), 3*time.Second)
+	for {
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, c.url("sky_index.html"), nil)
+		resp, err := plain.Do(req)
+		if ctx.Err() != nil {
+			return fmt.Errorf("skyhub: hub did not restart within %s: %w", limit, ctx.Err())
+		}
+		if err != nil || !isHubHome(resp) {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("skyhub: hub did not restart within %s: %w", limit, ctx.Err())
+		case <-time.After(interval):
+		}
+	}
+}
+
 // isHubHome reports a 200 answer whose body is the Sky Hub home page (its
 // title reads "Sky Hub > Home"). It closes the body.
 func isHubHome(resp *http.Response) bool {

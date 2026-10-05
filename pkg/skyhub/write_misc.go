@@ -1,12 +1,14 @@
 package skyhub
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -123,6 +125,12 @@ func (c *Client) SetEthernet(ctx context.Context, e EthernetConfig) error {
 		if err != nil && !postDropped(res, err) {
 			return err
 		}
+		if err == nil && rebootRedirect(res) {
+			// The save is only staged until the reboot page is loaded.
+			if err := c.restartStagedLocked(ctx); err != nil {
+				return err
+			}
+		}
 		// The hub reboots to apply the change; wait (holding the hub lock)
 		// until it answers again.
 		c.log.Warn("skyhub: Ethernet change submitted, waiting for the hub to reboot", "post_err", err)
@@ -138,7 +146,7 @@ func (c *Client) SetLANConfig(ctx context.Context, l LANConfig) error {
 		return fmt.Errorf("skyhub: LAN config needs IPv4 ip, netmask, pool start and end")
 	}
 	restart := false
-	res, err := c.PostForm(ctx, "sky_lan_ip_setup.sky", "sky_lan_ip_setup.html", "name=frmLan", func(host *Page, f *Form) error {
+	res, err := c.postForm(ctx, "sky_lan_ip_setup.sky", "sky_lan_ip_setup.html", "name=frmLan", func(host *Page, f *Form) error {
 		cur, err := ParseLANConfigPage(host)
 		if err != nil {
 			return err
@@ -151,12 +159,41 @@ func (c *Client) SetLANConfig(ctx context.Context, l LANConfig) error {
 		f.SetIPv4("sysPoolFinishAddr", l.PoolEnd.Addr)
 		f.Set("todo", "save")
 		return nil
+	}, func(res *PostResult, err error) error {
+		if err == nil && restart && rebootRedirect(res) {
+			// The save is only staged until the reboot page is loaded.
+			return c.restartStagedLocked(ctx)
+		}
+		return err
 	})
 	if restart && (err == nil || postDropped(res, err)) {
 		c.log.Warn("skyhub: LAN change submitted, hub restarting", "new_ip", l.IP.String(), "post_err", err)
 		return ErrHubRestarting
 	}
 	return err
+}
+
+// rebootInfoPage is where the hub sends the browser after a LAN or Ethernet
+// save that needs a restart (a meta refresh, with a matching Location
+// header). The save is only staged: loading this page is what restarts the
+// hub to apply it.
+const rebootInfoPage = "sky_rebootinfo.html"
+
+// rebootRedirect reports a POST answer that redirects to rebootInfoPage.
+func rebootRedirect(res *PostResult) bool {
+	return res != nil && (strings.Contains(res.Location, rebootInfoPage) || bytes.Contains(res.Body, []byte(rebootInfoPage)))
+}
+
+// restartStagedLocked loads rebootInfoPage, as the browser does, then waits
+// (up to two minutes) for the hub to go down, so callers polling for it to
+// come back do not see it before the restart. The connection may drop as
+// the hub goes: that counts as loaded. Caller holds the hub lock.
+func (c *Client) restartStagedLocked(ctx context.Context) error {
+	if _, err := c.getOnceLocked(ctx, rebootInfoPage); err != nil && !isConnDrop(err) {
+		return fmt.Errorf("skyhub: load %s to apply the change: %w", rebootInfoPage, err)
+	}
+	c.log.Warn("skyhub: loaded the reboot page, waiting for the hub to go down")
+	return c.waitGone(ctx, 2*time.Minute)
 }
 
 // postDropped reports a connection that dropped on the POST itself, as
