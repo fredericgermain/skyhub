@@ -116,6 +116,7 @@ go run ./cmd/skyhub capture --out pkg/skyhub/testdata/X # sanitised fixtures
 go run ./cmd/skyhub proxy --listen 127.0.0.1:8089 --record posts.jsonl
 go run ./cmd/skyhub backup --out /safe/skyhub-backup.conf    # full hub config file (contains secrets)
 SKYHUB_ALLOW_DESTRUCTIVE=1 go run ./cmd/skyhub factory-reset   # wipes the hub: back on 192.168.0.1, sticker password and WiFi
+SKYHUB_WIFI_KEY=… go run ./cmd/skyhub set-wifi --ssid NAME     # both bands: WPA2 key from the environment
 ```
 
 `skyhub proxy` serves the hub UI to a browser without asking for the password, records every form

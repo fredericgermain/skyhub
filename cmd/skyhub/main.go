@@ -85,6 +85,29 @@ func main() {
 			fatal(err)
 		}
 		fmt.Fprintf(os.Stderr, "wrote %d bytes to %s (mode 0600; contains secrets)\n", len(b), *out)
+	case "set-wifi":
+		// Both bands, same SSID and key; the key comes from the environment so
+		// it stays off the command line.
+		fs := flag.NewFlagSet("set-wifi", flag.ExitOnError)
+		ssid := fs.String("ssid", "", "network name, both bands (required)")
+		ch24 := fs.Int("channel24", 0, "2.4 GHz channel, 0 = auto")
+		bw24 := fs.String("bandwidth24", "20", "2.4 GHz bandwidth: 20 | 20/40")
+		ch5 := fs.Int("channel5", 36, "5 GHz channel: 36 | 44")
+		bw5 := fs.String("bandwidth5", "80", "5 GHz bandwidth: 80 (channel 36 only) | 40")
+		_ = fs.Parse(args)
+		key := os.Getenv("SKYHUB_WIFI_KEY")
+		if *ssid == "" || key == "" {
+			fatal(fmt.Errorf("--ssid and SKYHUB_WIFI_KEY (the WPA2 key) are required"))
+		}
+		for _, s := range []skyhub.WirelessSettings{
+			{Band: "2.4", Enabled: true, SSID: *ssid, PSK: key, Channel: *ch24, Bandwidth: *bw24},
+			{Band: "5", Enabled: true, SSID: *ssid, PSK: key, Channel: *ch5, Bandwidth: *bw5},
+		} {
+			if err := c.SetWireless(ctx, s); err != nil {
+				fatal(fmt.Errorf("%s GHz: %w", s.Band, err))
+			}
+			fmt.Fprintf(os.Stderr, "%s GHz: %q saved\n", s.Band, *ssid)
+		}
 	case "factory-reset":
 		// Wipes the hub; refused unless SKYHUB_ALLOW_DESTRUCTIVE=1.
 		if err := c.FactoryReset(ctx); err != nil {
@@ -221,7 +244,7 @@ func runReader(ctx context.Context, c *skyhub.Client, cmd string, args []string)
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR [--only P,Q] | backup --out FILE | factory-reset (needs SKYHUB_ALLOW_DESTRUCTIVE=1) | proxy [--listen ADDR --record FILE] | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
+	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR [--only P,Q] | backup --out FILE | factory-reset (needs SKYHUB_ALLOW_DESTRUCTIVE=1) | set-wifi --ssid NAME (key in SKYHUB_WIFI_KEY) | proxy [--listen ADDR --record FILE] | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
 }
 
 func fatal(err error) {
