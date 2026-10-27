@@ -9,6 +9,12 @@ import (
 var (
 	// ErrAuth is returned when the hub rejects the digest credentials.
 	ErrAuth = errors.New("skyhub: authentication failed")
+	// ErrHubBusy is returned by a client built WithYield when the hub
+	// rejects a nonce that was working: another client (usually someone in
+	// the admin UI) has taken the hub's single nonce. The request was not
+	// retried; the next one, made by the caller after a pause, tries the
+	// hub's current nonce.
+	ErrHubBusy = errors.New("skyhub: hub nonce taken by another login")
 	// ErrStaleKey is returned when the hub rejects a form POST because the
 	// sessionKey it carried is no longer the current one.
 	ErrStaleKey = errors.New("skyhub: stale sessionKey rejected by hub")

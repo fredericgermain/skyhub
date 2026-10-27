@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"strconv"
@@ -226,6 +227,114 @@ func TestOfflineAfterThreeFailures(t *testing.T) {
 	}
 }
 
+// countingHub counts the hub calls the poller makes.
+type countingHub struct {
+	hub
+	calls int
+}
+
+func (c *countingHub) SystemStats(ctx context.Context) (*skyhub.SystemStats, error) {
+	c.calls++
+	return c.hub.SystemStats(ctx)
+}
+
+func (c *countingHub) WANStatus(ctx context.Context) (*skyhub.WANStatus, error) {
+	c.calls++
+	return c.hub.WANStatus(ctx)
+}
+
+func (c *countingHub) WirelessRadios(ctx context.Context) ([]skyhub.WirelessRadio, error) {
+	c.calls++
+	return c.hub.WirelessRadios(ctx)
+}
+
+func (c *countingHub) AttachedDevices(ctx context.Context) ([]skyhub.AttachedDevice, error) {
+	c.calls++
+	return c.hub.AttachedDevices(ctx)
+}
+
+func newYieldingPoller(t *testing.T) (*skyhubtest.FakeHub, *Poller, *recorder, *countingHub, *time.Time) {
+	t.Helper()
+	h := skyhubtest.NewFakeHub(t, fixtureDir, "admin", "secret12")
+	c, err := skyhub.New(h.URL(), "admin", "secret12", skyhub.WithTimeout(5*time.Second), skyhub.WithYield())
+	if err != nil {
+		t.Fatal(err)
+	}
+	ch := &countingHub{hub: c}
+	cfg := Config{BaseTopic: "skyhub", DeviceTTL: time.Minute, StatsInterval: 10 * time.Second, SlowInterval: time.Minute, BusyPause: time.Minute}
+	rec := &recorder{}
+	p := NewPoller(cfg, ch, rec, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	now := time.Date(2026, 10, 27, 20, 0, 0, 0, time.UTC)
+	p.now = func() time.Time { return now }
+	return h, p, rec, ch, &now
+}
+
+func TestPausesWhileHubBusy(t *testing.T) {
+	h, p, rec, ch, now := newYieldingPoller(t)
+	ctx := context.Background()
+	if err := p.FastTick(ctx); err != nil {
+		t.Fatal(err)
+	}
+	h.FailAuthCount = 1 // someone logs in to the admin UI
+	if err := p.FastTick(ctx); !errors.Is(err, skyhub.ErrHubBusy) {
+		t.Fatalf("err = %v, want ErrHubBusy", err)
+	}
+	if v, _ := rec.get("skyhub/status"); v != "online" || p.failures != 0 {
+		t.Fatalf("status = %q, failures = %d: busy must not count as a failure", v, p.failures)
+	}
+	calls := ch.calls
+	for i := 0; i < 5; i++ {
+		*now = now.Add(10 * time.Second)
+		_ = p.FastTick(ctx)
+		_ = p.SlowTick(ctx)
+	}
+	if ch.calls != calls {
+		t.Fatalf("hub calls during the pause = %d, want 0", ch.calls-calls)
+	}
+	*now = now.Add(11 * time.Second) // 61s after the rejection
+	if err := p.FastTick(ctx); err != nil {
+		t.Fatalf("after the pause: %v", err)
+	}
+	if ch.calls != calls+1 {
+		t.Fatalf("hub calls after the pause = %d, want 1", ch.calls-calls)
+	}
+}
+
+func TestSlowTickStopsAtBusy(t *testing.T) {
+	h, p, _, ch, _ := newYieldingPoller(t)
+	ctx := context.Background()
+	if err := p.FastTick(ctx); err != nil {
+		t.Fatal(err)
+	}
+	h.FailAuthCount = 1
+	calls := ch.calls
+	if err := p.SlowTick(ctx); !errors.Is(err, skyhub.ErrHubBusy) {
+		t.Fatalf("err = %v, want ErrHubBusy", err)
+	}
+	if got := ch.calls - calls; got != 1 {
+		t.Fatalf("hub calls in the tick = %d, want 1 (stop at the first busy)", got)
+	}
+}
+
+func TestPausesAfterBadPassword(t *testing.T) {
+	h := skyhubtest.NewFakeHub(t, fixtureDir, "admin", "secret12")
+	c, _ := skyhub.New(h.URL(), "admin", "wrong", skyhub.WithTimeout(5*time.Second), skyhub.WithYield())
+	ch := &countingHub{hub: c}
+	cfg := Config{BaseTopic: "skyhub", DeviceTTL: time.Minute, StatsInterval: 10 * time.Second, SlowInterval: time.Minute, BusyPause: time.Minute}
+	p := NewPoller(cfg, ch, &recorder{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	now := time.Date(2026, 10, 27, 20, 0, 0, 0, time.UTC)
+	p.now = func() time.Time { return now }
+	ctx := context.Background()
+	if err := p.FastTick(ctx); !errors.Is(err, skyhub.ErrAuth) {
+		t.Fatalf("err = %v, want ErrAuth", err)
+	}
+	now = now.Add(30 * time.Second)
+	_ = p.FastTick(ctx)
+	if ch.calls != 1 {
+		t.Fatalf("hub calls = %d, want 1 (paused after the rejected login)", ch.calls)
+	}
+}
+
 func TestParseConfigDefaults(t *testing.T) {
 	t.Setenv("MQTT_BROKER", "tcp://broker:1883")
 	t.Setenv("HA_DISCOVERY_PREFIX", "")
@@ -233,7 +342,7 @@ func TestParseConfigDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.Broker != "tcp://broker:1883" || c.HAPrefix != "" || c.StatsInterval != 5*time.Second || c.SlowInterval != time.Minute || c.BaseTopic != "skyhub" {
+	if c.Broker != "tcp://broker:1883" || c.HAPrefix != "" || c.StatsInterval != 5*time.Second || c.SlowInterval != time.Minute || c.BaseTopic != "skyhub" || c.BusyPause != time.Minute {
 		t.Errorf("cfg = %+v", c)
 	}
 	if _, err := ParseConfig([]string{"--stats-interval", "1s"}, io.Discard); err == nil {

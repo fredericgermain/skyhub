@@ -58,6 +58,56 @@ func TestDigestStaleNonceRecovery(t *testing.T) {
 	}
 }
 
+func TestYieldGivesNonceAway(t *testing.T) {
+	h := skyhubtest.NewFakeHub(t, fixtureDir, "admin", "secret12")
+	c, err := skyhub.New(h.URL(), "admin", "secret12", skyhub.WithTimeout(5*time.Second), skyhub.WithYield())
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	if _, err := c.Get(ctx, "sky_system.html"); err != nil {
+		t.Fatal(err)
+	}
+	// Another login takes the hub's nonce.
+	h.FailAuthCount = 1
+	before := h.Challenges()
+	if _, err := c.Get(ctx, "sky_system.html"); !errors.Is(err, skyhub.ErrHubBusy) {
+		t.Fatalf("err = %v, want ErrHubBusy", err)
+	}
+	if got := h.Challenges() - before; got != 1 {
+		t.Errorf("challenges = %d, want 1 (no retry)", got)
+	}
+	// The next call uses the hub's current nonce without a new challenge.
+	before = h.Challenges()
+	if _, err := c.Get(ctx, "sky_system.html"); err != nil {
+		t.Fatalf("after busy: %v", err)
+	}
+	if got := h.Challenges() - before; got != 0 {
+		t.Errorf("challenges = %d, want 0 (kept nonce)", got)
+	}
+}
+
+func TestYieldBadPasswordIsErrAuth(t *testing.T) {
+	h := skyhubtest.NewFakeHub(t, fixtureDir, "admin", "secret12")
+	c, _ := skyhub.New(h.URL(), "admin", "wrong", skyhub.WithYield())
+	_, err := c.Get(context.Background(), "sky_system.html")
+	if !errors.Is(err, skyhub.ErrAuth) {
+		t.Fatalf("err = %v, want ErrAuth", err)
+	}
+}
+
+func TestNoYieldRecoversNonce(t *testing.T) {
+	h, c := newFake(t)
+	ctx := context.Background()
+	if _, err := c.Get(ctx, "sky_system.html"); err != nil {
+		t.Fatal(err)
+	}
+	h.FailAuthCount = 1
+	if _, err := c.Get(ctx, "sky_system.html"); err != nil {
+		t.Fatalf("err = %v, want transparent re-auth without WithYield", err)
+	}
+}
+
 func TestGetNotFound(t *testing.T) {
 	_, c := newFake(t)
 	_, err := c.Get(context.Background(), "nope.html")

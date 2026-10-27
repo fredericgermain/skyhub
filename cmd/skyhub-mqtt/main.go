@@ -39,7 +39,7 @@ func main() {
 	if cfg.HubURL != "" {
 		creds.URL = cfg.HubURL
 	}
-	hubClient, err := skyhub.New(creds.URL, creds.User, creds.Password, skyhub.WithTimeout(cfg.Timeout), skyhub.WithLogger(log))
+	hubClient, err := skyhub.New(creds.URL, creds.User, creds.Password, skyhub.WithTimeout(cfg.Timeout), skyhub.WithLogger(log), skyhub.WithYield())
 	if err != nil {
 		log.Error("hub client", "err", err)
 		os.Exit(1)
@@ -55,7 +55,7 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	log.Info("skyhub-mqtt starting", "version", version, "hub", creds.URL, "base_topic", cfg.BaseTopic, "stats_interval", cfg.StatsInterval, "slow_interval", cfg.SlowInterval)
+	log.Info("skyhub-mqtt starting", "version", version, "hub", creds.URL, "base_topic", cfg.BaseTopic, "stats_interval", cfg.StatsInterval, "slow_interval", cfg.SlowInterval, "busy_pause", cfg.BusyPause)
 	NewPoller(cfg, hubClient, pub, log).Run(ctx)
 	log.Info("skyhub-mqtt stopped")
 }

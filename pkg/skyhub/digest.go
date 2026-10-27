@@ -20,6 +20,12 @@ type digestTransport struct {
 	user string
 	pass string
 
+	// yield: once a request has authenticated, a 401 is not re-challenged
+	// but answered with ErrHubBusy (the new challenge is kept for the next
+	// request). See WithYield.
+	yield  bool
+	authed bool // a request has authenticated with these credentials
+
 	mu   sync.Mutex
 	chal *digestChallenge
 	nc   uint32
@@ -151,6 +157,7 @@ func (t *digestTransport) setCredentials(user, pass string) {
 	defer t.mu.Unlock()
 	t.user, t.pass = user, pass
 	t.chal, t.nc = nil, 0
+	t.authed = false
 }
 
 func (t *digestTransport) setChallenge(c *digestChallenge) {
@@ -198,6 +205,7 @@ func (t *digestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusUnauthorized {
+		t.markAuthed(first)
 		return resp, nil
 	}
 	chal, ok := parseDigestChallenge(resp.Header.Get("WWW-Authenticate"))
@@ -208,13 +216,38 @@ func (t *digestTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 1<<16))
 	resp.Body.Close()
 	t.setChallenge(chal)
+	if t.yielding() {
+		// Retrying now would take the nonce back from whoever just took
+		// it. Keep their nonce and let the caller pause.
+		return nil, ErrHubBusy
+	}
 
 	second, err := cloneRequest(req)
 	if err != nil {
 		return nil, err
 	}
 	t.authorize(second)
-	return t.next.RoundTrip(second)
+	resp, err = t.next.RoundTrip(second)
+	if err == nil && resp.StatusCode != http.StatusUnauthorized {
+		t.markAuthed(second)
+	}
+	return resp, err
+}
+
+// markAuthed records that req authenticated, when it carried credentials.
+func (t *digestTransport) markAuthed(req *http.Request) {
+	if req.Header.Get("Authorization") == "" {
+		return
+	}
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.authed = true
+}
+
+func (t *digestTransport) yielding() bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.yield && t.authed
 }
 
 // NewDigestTransport returns an http.RoundTripper that adds HTTP Digest

@@ -41,6 +41,7 @@ MQTT discovery. Configuration is flags with environment fallbacks:
 | `SLOW_INTERVAL` (`--slow-interval`) | `60s` | WAN, WiFi and device poll |
 | `INFO_INTERVAL` (`--info-interval`) | `6h` | firmware refresh and discovery republish |
 | `DEVICE_TTL` (`--device-ttl`) | `5m` | device becomes `not_home` after this long unseen |
+| `BUSY_PAUSE` (`--busy-pause`) | `1m` | no polling for this long after another login takes the hub or ours is rejected |
 | `SKYHUB_URL`, `SKYHUB_USER`, `SKYHUB_PASSWORD`, `SKYHUB_TIMEOUT` | see above | hub access |
 
 Topics (all retained, QoS 1):
@@ -59,6 +60,13 @@ skyhub/stats                           JSON snapshot of the statistics page
 
 Statistics topics are published every `STATS_INTERVAL`; the others only when they change.
 After three consecutive poll failures `skyhub/status` goes `offline`.
+
+The hub keeps a single digest nonce, so a poller that logs straight back in
+logs a person out of the admin UI within one poll. When the hub rejects a
+nonce that was working, the exporter takes it as someone else logging in: it
+does not log back in, but stops polling for `BUSY_PAUSE` and then tries the
+hub's current nonce. This is not counted as a failure. A rejected password
+pauses it the same way, so it does not pile up failed logins.
 
 Home Assistant gets sensors for DSL rates, noise margin, attenuation, uptime and per-port bit
 rates, a connectivity binary sensor for the WAN, and one `device_tracker` per client seen.

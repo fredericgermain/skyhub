@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -46,6 +47,9 @@ type Poller struct {
 	devices  map[string]*deviceState
 	failures int
 	online   bool
+	// pausedUntil: no hub request before this time. Set when another login
+	// took the hub (ErrHubBusy) or ours was rejected (ErrAuth).
+	pausedUntil time.Time
 
 	// identity for discovery
 	firmware string
@@ -96,7 +100,20 @@ func (p *Poller) ok() {
 	}
 }
 
+func (p *Poller) paused() bool { return p.now().Before(p.pausedUntil) }
+
 func (p *Poller) fail(what string, err error) {
+	switch {
+	case errors.Is(err, skyhub.ErrHubBusy):
+		// Someone is in the admin UI: give them the hub. Not a failure,
+		// the hub is up.
+		p.pausedUntil = p.now().Add(p.cfg.BusyPause)
+		p.log.Info("hub in use by another login, pausing", "what", what, "for", p.cfg.BusyPause)
+		return
+	case errors.Is(err, skyhub.ErrAuth):
+		// Wrong password: retrying every tick only piles up failed logins.
+		p.pausedUntil = p.now().Add(p.cfg.BusyPause)
+	}
 	p.failures++
 	p.log.Error("poll failed", "what", what, "err", err, "consecutive", p.failures)
 	if p.failures >= maxFailures && p.online {
@@ -141,6 +158,9 @@ func macKey(m skyhub.MAC) string {
 
 // FastTick publishes the statistics topics.
 func (p *Poller) FastTick(ctx context.Context) error {
+	if p.paused() {
+		return nil
+	}
 	s, err := p.hub.SystemStats(ctx)
 	if err != nil {
 		p.fail("stats", err)
@@ -180,6 +200,9 @@ func (p *Poller) FastTick(ctx context.Context) error {
 
 // SlowTick publishes WAN, wifi and device topics (on change only).
 func (p *Poller) SlowTick(ctx context.Context) error {
+	if p.paused() {
+		return nil
+	}
 	var firstErr error
 	if w, err := p.hub.WANStatus(ctx); err != nil {
 		p.fail("wan", err)
@@ -187,6 +210,9 @@ func (p *Poller) SlowTick(ctx context.Context) error {
 	} else {
 		p.ok()
 		p.publishWAN(w)
+	}
+	if p.paused() {
+		return firstErr
 	}
 	if radios, err := p.hub.WirelessRadios(ctx); err != nil {
 		p.fail("wifi", err)
@@ -205,6 +231,9 @@ func (p *Poller) SlowTick(ctx context.Context) error {
 			p.publishChanged(t("hidden"), b2s(r.Hidden))
 			p.publishChanged(t("wps"), b2s(r.WPSEnabled))
 		}
+	}
+	if p.paused() {
+		return firstErr
 	}
 	if devs, err := p.hub.AttachedDevices(ctx); err != nil {
 		p.fail("devices", err)
@@ -290,6 +319,9 @@ func (p *Poller) publishDevices(devs []skyhub.AttachedDevice) {
 
 // InfoTick refreshes firmware/model and republishes discovery.
 func (p *Poller) InfoTick(ctx context.Context) error {
+	if p.paused() {
+		return nil
+	}
 	ri, err := p.hub.RouterInfo(ctx)
 	if err != nil {
 		p.fail("info", err)

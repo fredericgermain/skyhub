@@ -3,6 +3,7 @@ package skyhub
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -57,6 +58,17 @@ func WithLogger(l *slog.Logger) Option { return func(c *Client) { c.log = l } }
 // WithRebootPause sets how long to wait before polling the hub after a
 // change that reboots it (default 15s); WiFi saves wait half of it.
 func WithRebootPause(d time.Duration) Option { return func(c *Client) { c.rebootPause = d } }
+
+// WithYield makes the client give way to other logins, for long-running
+// pollers. The hub keeps a single digest nonce, so a client that answers
+// every rejection by authenticating again logs a person out of the admin
+// UI within one poll. With WithYield, once a request has authenticated, a
+// rejected nonce is neither re-challenged nor retried: the call fails with
+// ErrHubBusy and the next call uses the hub's current nonce. A client that
+// has never authenticated (wrong password) still gets ErrAuth as before.
+func WithYield() Option {
+	return func(c *Client) { c.digest().yield = true }
+}
 
 // WithPostDelay sets the pause after a successful form POST, giving the hub
 // time to commit to NVRAM before the next read (default 300ms).
@@ -157,6 +169,9 @@ func (c *Client) do(ctx context.Context, req *http.Request) (*http.Response, []b
 	req.Header.Set("User-Agent", c.userAgent)
 	start := time.Now()
 	resp, err := c.hc.Do(req)
+	if errors.Is(err, ErrHubBusy) {
+		return nil, nil, ErrHubBusy
+	}
 	if err != nil {
 		return nil, nil, err
 	}

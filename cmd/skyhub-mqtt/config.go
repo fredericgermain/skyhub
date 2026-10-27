@@ -23,6 +23,7 @@ type Config struct {
 	SlowInterval  time.Duration
 	InfoInterval  time.Duration
 	DeviceTTL     time.Duration
+	BusyPause     time.Duration // polls skipped after the hub rejects our login
 
 	HubURL  string
 	Timeout time.Duration
@@ -69,6 +70,7 @@ func ParseConfig(args []string, stderr io.Writer) (Config, error) {
 	fs.DurationVar(&c.SlowInterval, "slow-interval", envDuration("SLOW_INTERVAL", 60*time.Second), "devices/wifi/wan poll interval (SLOW_INTERVAL)")
 	fs.DurationVar(&c.InfoInterval, "info-interval", envDuration("INFO_INTERVAL", 6*time.Hour), "firmware + discovery republish interval (INFO_INTERVAL)")
 	fs.DurationVar(&c.DeviceTTL, "device-ttl", envDuration("DEVICE_TTL", 5*time.Minute), "mark a device not_home after this long unseen (DEVICE_TTL)")
+	fs.DurationVar(&c.BusyPause, "busy-pause", envDuration("BUSY_PAUSE", time.Minute), "stop polling this long when another login takes the hub, or ours is rejected (BUSY_PAUSE)")
 	fs.StringVar(&c.HubURL, "url", envOr("SKYHUB_URL", ""), "hub URL, default from credentials (SKYHUB_URL)")
 	fs.DurationVar(&c.Timeout, "timeout", envDuration("SKYHUB_TIMEOUT", 30*time.Second), "hub request timeout (SKYHUB_TIMEOUT)")
 	fs.BoolVar(&c.Debug, "debug", envBool("SKYHUB_DEBUG", false), "debug logging (SKYHUB_DEBUG)")
