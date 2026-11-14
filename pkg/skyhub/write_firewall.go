@@ -135,17 +135,23 @@ func buildIPv6Rule(f *Form, r FirewallRule) error {
 	if f.Has("fw_laniptype") {
 		f.Set("fw_laniptype", ipTypeValue(r.LANType))
 	}
-	f.Enable("lan_start_ip6_prefix")
-	f.Enable("lan_start_ip6")
-	f.Set("lan_start_ip6_prefix", prefix)
-	f.Set("lan_start_ip6", iface)
 	// checkDataIP6() combines prefix + interface id into lan_ip6_start_comb.
+	// "Global Prefix" is the hub's own choice, and it means link-local: the
+	// rule matches fe80::<id>, which no packet from the internet carries. To
+	// reach a LAN host from outside, give the /64 explicitly.
 	comb := iface
 	if strings.HasPrefix(iface, "::") {
 		if prefix == "Global Prefix" {
 			comb = "fe80" + iface
 		} else {
 			comb = prefix + iface
+			// A full 4-group id after a 4-group prefix makes "::" stand for
+			// no group at all, which is not an address; the hub's page joins
+			// those with a single ":".
+			if _, err := netip.ParseAddr(comb); err != nil {
+				iface = strings.TrimPrefix(iface, "::")
+				comb = prefix + ":" + iface
+			}
 		}
 	} else if prefix == "Global Prefix" {
 		comb = "fe80::" + iface
@@ -155,6 +161,10 @@ func buildIPv6Rule(f *Form, r FirewallRule) error {
 	if _, err := netip.ParseAddr(comb); err != nil {
 		return fmt.Errorf("skyhub: lan_ipv6 %q gives invalid address %q", r.LANIPv6, comb)
 	}
+	f.Enable("lan_start_ip6_prefix")
+	f.Enable("lan_start_ip6")
+	f.Set("lan_start_ip6_prefix", prefix)
+	f.Set("lan_start_ip6", iface)
 	f.Set("lan_ip6_start_comb", comb)
 	wt := ipTypeValue(r.WANType)
 	f.Set("fw_waniptype", wt)

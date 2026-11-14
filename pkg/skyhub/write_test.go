@@ -165,6 +165,22 @@ func TestAddFirewallRuleOutboundAndIPv6Body(t *testing.T) {
 		"fw_ip_version": "6", "lan_start_ip6_prefix": "2001:db8:1:2", "lan_start_ip6": "::10",
 		"lan_ip6_start_comb": "2001:db8:1:2::10", "fw_waniptype": "singleip", "wan_start_ip6": "2001:db8::5",
 	})
+	// A full 4-group interface id after a 4-group prefix: "::" would stand for
+	// no group, so they are joined with ":" (with or without the "::").
+	for _, id := range []string{"::204:4bff:fee5:444f", "204:4bff:fee5:444f"} {
+		err = c.AddFirewallRule(context.Background(), skyhub.FirewallRule{
+			Direction: skyhub.Inbound, IPVersion: 6, Service: "HTTP", Action: skyhub.ActionAllowAlways,
+			LANIPv6: "2a02:c7c:ecfa:1000|" + id,
+		})
+		if err != nil {
+			t.Fatalf("%s: %v", id, err)
+		}
+		v = lastPost(t, h, "sky_firewall_rules.cmd")
+		expect(t, v, map[string]string{
+			"lan_start_ip6_prefix": "2a02:c7c:ecfa:1000", "lan_start_ip6": "204:4bff:fee5:444f",
+			"lan_ip6_start_comb": "2a02:c7c:ecfa:1000:204:4bff:fee5:444f",
+		})
+	}
 }
 
 func TestRemoveFirewallRuleBody(t *testing.T) {
