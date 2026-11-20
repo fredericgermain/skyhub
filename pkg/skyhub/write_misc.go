@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -226,3 +227,42 @@ func (c *Client) SetWirelessEnabled(ctx context.Context, on bool) error {
 }
 
 var errNoChange = fmt.Errorf("skyhub: no change")
+
+// Reboot restarts the hub: the Diagnostics page's reboot form, POST
+// sky_rebootinfo.cgi with todo=refresh. Refused unless SKYHUB_ALLOW_DESTRUCTIVE=1
+// (ErrDestructive). Every connection drops; the hub is back on the same
+// address a few minutes later. The form only serves the Reboot page; its
+// sky_rebootCPE.cgi?todo=reboot call, made here, restarts the hub. Returns once the hub has gone down, so a
+// caller polling for it to come back does not see it before the restart.
+func (c *Client) Reboot(ctx context.Context) error {
+	if !allowDestructive() {
+		return ErrDestructive
+	}
+	_, err := c.postForm(ctx, "sky_rebootinfo.cgi", "sky_diagnostics.html", "name=reboot", func(_ *Page, f *Form) error {
+		f.Set("todo", "refresh")
+		return nil
+	}, func(res *PostResult, err error) error {
+		if err != nil && !postDropped(res, err) {
+			return err
+		}
+		if err != nil {
+			return c.waitGone(ctx, 2*time.Minute)
+		}
+		// The form only serves the "Reboot" page, whose script then calls
+		// sky_rebootCPE.cgi?todo=reboot with the page's session key: that GET
+		// is what restarts the hub.
+		m := rebootCPERE.FindSubmatch(res.Body)
+		if m == nil {
+			return fmt.Errorf("skyhub: reboot form accepted but the answer has no sky_rebootCPE.cgi call")
+		}
+		if _, err := c.getOnceLocked(ctx, string(m[1])); err != nil && !isConnDrop(err) {
+			return fmt.Errorf("skyhub: sky_rebootCPE.cgi: %w", err)
+		}
+		c.log.Warn("skyhub: reboot requested, waiting for the hub to go down")
+		return c.waitGone(ctx, 2*time.Minute)
+	})
+	return err
+}
+
+// rebootCPERE finds the reboot call in the page the reboot form answers with.
+var rebootCPERE = regexp.MustCompile(`(sky_rebootCPE\.cgi\?todo=reboot&sessionKey=[0-9A-Za-z]+)`)

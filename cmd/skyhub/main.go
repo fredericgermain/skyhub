@@ -4,6 +4,8 @@
 //	skyhub capture --out DIR     save sanitised fixtures of every known page
 //	skyhub backup --out FILE     download the hub configuration backup (secrets!)
 //	skyhub proxy --listen :8089  authenticating reverse proxy that records form POSTs
+//	skyhub wifi-power on|off     global access-point switch (off then on restarts the radios)
+//	skyhub reboot                restart the hub (needs SKYHUB_ALLOW_DESTRUCTIVE=1)
 //	skyhub <reader>              stats | wan | info | devices | wifi | syslog |
 //	                             lan | dhcp | firewall | services | wanconfig |
 //	                             upnp | alg | eth   (JSON output)
@@ -109,6 +111,23 @@ func main() {
 			}
 			fmt.Fprintf(os.Stderr, "%s GHz: %q saved\n", s.Band, *ssid)
 		}
+	case "wifi-power":
+		// Global access-point switch, both radios: "off" then "on" restarts
+		// the wireless driver without rebooting the hub.
+		if len(args) != 1 || (args[0] != "on" && args[0] != "off") {
+			usage()
+			os.Exit(2)
+		}
+		if err := c.SetWirelessEnabled(ctx, args[0] == "on"); err != nil {
+			fatal(err)
+		}
+		fmt.Fprintf(os.Stderr, "WiFi %s\n", args[0])
+	case "reboot":
+		// Restarts the hub; refused unless SKYHUB_ALLOW_DESTRUCTIVE=1.
+		if err := c.Reboot(ctx); err != nil {
+			fatal(err)
+		}
+		fmt.Fprintln(os.Stderr, "reboot submitted, the hub is going down; it is back on the same address in a few minutes")
 	case "factory-reset":
 		// Wipes the hub; refused unless SKYHUB_ALLOW_DESTRUCTIVE=1.
 		if err := c.FactoryReset(ctx); err != nil {
@@ -245,7 +264,7 @@ func runReader(ctx context.Context, c *skyhub.Client, cmd string, args []string)
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR [--only P,Q] | backup --out FILE | factory-reset (needs SKYHUB_ALLOW_DESTRUCTIVE=1) | set-wifi --ssid NAME (new key in SKYHUB_WIFI_KEY, unset keeps the current one) | proxy [--listen ADDR --record FILE] | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
+	fmt.Fprintln(os.Stderr, "usage: skyhub get <page> | capture --out DIR [--only P,Q] | backup --out FILE | factory-reset (needs SKYHUB_ALLOW_DESTRUCTIVE=1) | set-wifi --ssid NAME (new key in SKYHUB_WIFI_KEY, unset keeps the current one) | wifi-power on|off | reboot (needs SKYHUB_ALLOW_DESTRUCTIVE=1) | proxy [--listen ADDR --record FILE] | stats|wan|info|devices|wifi|syslog|lan|dhcp|firewall|services|wanconfig|upnp|alg|eth")
 }
 
 func fatal(err error) {
