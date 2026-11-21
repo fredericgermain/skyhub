@@ -24,3 +24,6 @@ lists what the hub does that the code works around. Read it before touching a wr
 - Releases: annotated tag `vX.Y.Z` on main; GitHub Actions builds the binaries and ghcr
   images. The Terraform provider (`terraform-provider-skyhub`) pins this module: release here
   first when it needs a library change.
+- CI builds with the `toolchain` line of go.mod (setup-go `go-version-file`); without it, the `go` line
+  (1.26.0) and its stdlib CVEs. When Trivy flags `stdlib` in the ghcr image, raise `toolchain` to the
+  current patch (`go mod edit -toolchain=go1.X.Y`) and the flagged modules, then tag a patch release.
