@@ -10,6 +10,15 @@ API: HTTP Digest auth, server-rendered HTML and per-page CSRF `sessionKey` token
 
 Terraform provider: <https://github.com/fredericgermain/terraform-provider-skyhub>.
 
+> **Disclaimer.** Unofficial, independent project — not affiliated with, endorsed by or
+> supported by Sky UK Ltd or Sagemcom; "Sky" and "Sky Hub" are trademarks of their respective
+> owners. It works by reverse-engineering the router's own admin web UI, which a firmware update
+> can change or break at any time. **Use at your own risk, with no warranty** (see `LICENSE`): it
+> writes to an undocumented interface, so a bad or interrupted save can leave the hub
+> mis-configured — including a radio that comes back advertising WEP (see "Known hub firmware
+> issues" below) — and, worst case, needing a factory reset. Config saves and reboots drop your
+> connection while the hub restarts.
+
 ## Credentials
 
 `SKYHUB_URL` (default `http://192.168.0.1/`), `SKYHUB_USER` (default `admin`), `SKYHUB_PASSWORD`,
@@ -146,3 +155,15 @@ settings (`--allow-all` to forward everything). Useful for reverse-engineering w
 - `SetWireless` always writes WPA2-PSK/AES; isolation, WPS and the 2.4/5 GHz sync flag keep their current values. 5 GHz offers channel 36 at 80 MHz, or 36/44 at 40 MHz.
 - A WiFi save restarts the radio. `SetWireless` (like `SetEthernet` for its reboot) waits until the hub answers steadily again, holding the client lock, so a caller on that WiFi and concurrent requests ride through the gap.
 - The hub keeps a single digest nonce, so several clients (exporter, MCP server, Terraform) invalidate each other's logins; a rejection is retried with jitter (three times for a new client, twice once it has authenticated) before it counts as wrong credentials.
+
+## Known hub firmware issues
+
+- **A band can come back advertising WEP instead of WPA2.** The hub's firmware sometimes
+  re-initialises a radio so its beacon has the privacy bit set with no RSN element — it
+  advertises WEP — while the stored config still reads WPA2-PSK/AES. WPA2-only devices then
+  cannot join that band; dual-band clients quietly stay on the healthy band, so it goes unnoticed
+  until a 2.4 GHz-only device (a smart plug, an energy monitor) drops off. Seen both spontaneously
+  and around a wireless save. Re-saving the band or toggling the AP off/on does not reliably clear
+  it — a hub reboot does (`SKYHUB_ALLOW_DESTRUCTIVE=1 skyhub reboot`), restoring WPA2 on both
+  bands. Check from another machine: `nmcli -f SSID,BSSID,SECURITY,RSN-FLAGS dev wifi list` — a
+  healthy band shows `WPA2` with `pair_ccmp group_ccmp psk`.
