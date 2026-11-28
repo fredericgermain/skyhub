@@ -8,6 +8,10 @@ API: HTTP Digest auth, server-rendered HTML and per-page CSRF `sessionKey` token
 - `cmd/skyhub-mcp`: read-only MCP server (stdio) exposing the readers as tools.
 - `cmd/skyhub-mqtt`: polling exporter publishing retained MQTT topics with Home Assistant discovery.
 
+**Runs on your LAN.** The hub's admin interface is only reachable from the home network (default
+`http://192.168.0.1/`), so the CLI, the read-only MCP server and the MQTT exporter must run on a
+machine on the same network as the hub. There is no remote or cloud API.
+
 Terraform provider: <https://github.com/fredericgermain/terraform-provider-skyhub>.
 
 > **Disclaimer.** Unofficial, independent project — not affiliated with, endorsed by or

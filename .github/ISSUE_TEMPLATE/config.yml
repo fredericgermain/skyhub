@@ -1,0 +1,7 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Sky Hub firmware, device or account problems
+    url: https://www.sky.com/help
+    about: >-
+      This is an unofficial, independent project and cannot help with Sky Hub firmware, the
+      Sagemcom device or your Sky account. Please contact Sky for those.
